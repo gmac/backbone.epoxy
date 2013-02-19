@@ -1,4 +1,5 @@
 (function( Backbone, _ ) {
+	
 	Backbone.Epoxy = {};
 	
 	// Epoxy.Model
@@ -15,14 +16,20 @@
 		constructor: function() {
 			this._computed = {};
 			this._super( "constructor", arguments );
-			this.bindComputed();
+			
+			// Adds all computed properties to the model:
+			if ( this.computed ) {
+				_.each(this.computed, function( param, property ) {
+					this.addComputed( property, param );
+				}, this);
+			}
 		},
 		
 		// Backbone.Model.get() override:
 		// provides virtual properties & registers bindings while mapping computed dependencies.
 		get: function( propName ) {
 			
-			if ( this._computed.hasOwnProperty(propName) ) {
+			if ( this.hasComputed(propName) ) {
 				// Requested property is computed:
 				// return virtualized value, otherwise defer to standard get process.
 				var computed = this._computed[ propName ];
@@ -44,7 +51,7 @@
 			var args = [];
 			var computed;
 		
-			if ( typeof(param) == "string" && this._computed.hasOwnProperty(param) ) {
+			if ( typeof(param) == "string" && this.hasComputed(param) ) {
 				// Form 1: "field", "value"
 				// replace name and value args with definition of mutated value(s).
 				computed = this._computed[ param ];
@@ -55,7 +62,7 @@
 				// Test all setting properties against the computed table:
 				// replace all computed fields with their mutated value(s).
 				_.each(param, function( value, propName ) {
-					if ( this._computed.hasOwnProperty(propName) ) {
+					if ( this.hasComputed(propName) ) {
 						delete param[ propName ];
 						computed = this._computed[ propName ];
 						_.extend(param, computed.set.call( this, value ));
@@ -69,30 +76,49 @@
 			return this._super( "set", args );
 		},
 		
-		// Binds computed properties:
-		bindComputed: function() {
-			this.unbindComputed();
-			
-			if ( this.computed ) {
-				_.each(this.computed, function( param, propName ) {
-					this._computed[ propName ] = new EpoxyModel.Computed( propName, param, this );
-				}, this);
+		previous: function( property ) {
+			if ( this.hasComputed(property) ) {
+				return this._computed[ property ].previous;
+			}
+			return this._super( "previous", arguments );
+		},
+		
+		// Backbone.Model.destroy() override:
+		// clears all computed properties before destroying.
+		destroy: function() {
+			this.clearComputed();
+			return this._super( "destroy", arguments );
+		},
+		
+		addComputed: function( property, param ) {
+			// Clear any existing property, then define new computed:
+			this.removeComputed( property );
+			this._computed[ property ] = new EpoxyModel.Computed( this, property, param );
+		},
+		
+		removeComputed: function( property ) {
+			if ( this.hasComputed(property) ) {
+				this._computed[ property ].dispose();
+				delete this._computed[ property ];
 			}
 		},
 		
+		hasComputed: function( property ) {
+			return this._computed.hasOwnProperty( property );
+		},
+		
 		// Unbinds computed properties:
-		unbindComputed: function() {
-			_.each(this._computed, function( computed, propName ) {
-				computed.dispose();
-				delete this._computed[ propName ];
-			}, this);
+		clearComputed: function() {
+			for ( var property in this._computed ) {
+				this.removeComputed( property );
+			}
 		}
 	});
 	
 	
 	// Epoxy.Model.Computed
 	// --------------------
-	EpoxyModel.Computed = function( name, param, model ) {
+	EpoxyModel.Computed = function( model, name, param ) {
 
 		// Set function param as getter, or extend with params object:
 		if ( typeof(param) == "function" ) this.get = param;
@@ -119,12 +145,13 @@
 		name: "",
 		events: null,
 		value: null,
+		previous: null,
 		virtual: false,
 	
 		update: function() {
-			var value = this.get.call( this.model );
-			var changed = value !== this.value;
-			this.value = value;
+			this.previous = this.value;
+			this.value = this.get.call( this.model );
+			var changed = (this.value !== this.previous);
 			
 			if ( this.virtual && changed ) {
 				// Virtual value (does not write to model):
@@ -144,9 +171,10 @@
 		set: function() {
 			throw( "No setter defined." );
 		},
-
+		
 		dispose: function() {
 			this.stopListening();
+			if ( !this.virtual ) this.model.unset( this.name );
 			this.model = null;
 		}
 		
