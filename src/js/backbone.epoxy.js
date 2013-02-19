@@ -14,7 +14,7 @@
 		// Constructor function override:
 		// configures computed model around default Backbone model.
 		constructor: function() {
-			this._computed = {};
+			this._com = {};
 			this._super( "constructor", arguments );
 			
 			// Adds all computed properties to the model:
@@ -27,18 +27,17 @@
 		
 		// Backbone.Model.get() override:
 		// provides virtual properties & registers bindings while mapping computed dependencies.
-		get: function( propName ) {
+		get: function( property ) {
 			
-			if ( this.hasComputed(propName) ) {
+			if ( this.hasComputed(property) ) {
 				// Requested property is computed:
 				// return virtualized value, otherwise defer to standard get process.
-				var computed = this._computed[ propName ];
+				var computed = this._com[ property ];
 				if ( computed.virtual ) return computed.value;
 
 			} else if ( EpoxyModel._map ) {
 				// Automatically register bindings into computed dependency graph:
-				var evt = "change:"+propName;
-				EpoxyModel._map[ evt ] = this;
+				EpoxyModel._map[ "change:"+property ] = this;
 			}
 			
 			return this._super( "get", arguments );
@@ -46,39 +45,39 @@
 		
 		// Backbone.Model.set() override:
 		// defers to computed setters for defining writable values.
-		set: function() {
-			var param = arguments[0];
-			var args = [];
-			var computed;
-		
-			if ( typeof(param) == "string" && this.hasComputed(param) ) {
-				// Form 1: "field", "value"
-				// replace name and value args with definition of mutated value(s).
-				computed = this._computed[ param ];
-				args.push( computed.set.call( this, arguments[1] ), arguments[2] );
+		set: function( key, value, options ) {
+			var args;
 			
-			} else {
+			if ( typeof key === "object" ) {
+				options = value;
+				value = key;
+				
 				// Form 2: {field0:"value0", field1:"value1"}
 				// Test all setting properties against the computed table:
 				// replace all computed fields with their mutated value(s).
-				_.each(param, function( value, propName ) {
-					if ( this.hasComputed(propName) ) {
-						delete param[ propName ];
-						computed = this._computed[ propName ];
-						_.extend(param, computed.set.call( this, value ));
+				_.each(value, function( val, property ) {	
+					
+					if ( this.isSetter(property) && !options.unset ) {
+						delete value[property];
+						_.extend(value, this._com[property].set.call( this, val ));
 					}
+				
 				}, this);
-			
-				// Rewrite arguments with mutated params and original options:
-				args.push( param, arguments[1] );
+				
+				args = [value, options];
+				
+			} else if ( this.isSetter(key) && !options.unset ) {
+				// Form 1: "field", "value"
+				// replace name and value args with definition of mutated value(s).
+				args = [this._com[key].set.call(this, value), options];
 			}
-		
-			return this._super( "set", args );
+			
+			return this._super( "set", args || arguments );
 		},
 		
 		previous: function( property ) {
 			if ( this.hasComputed(property) ) {
-				return this._computed[ property ].previous;
+				return this._com[ property ].previous;
 			}
 			return this._super( "previous", arguments );
 		},
@@ -93,23 +92,35 @@
 		addComputed: function( property, param ) {
 			// Clear any existing property, then define new computed:
 			this.removeComputed( property );
-			this._computed[ property ] = new EpoxyModel.Computed( this, property, param );
+			this._com[ property ] = new EpoxyModel.Computed( this, property, param );
 		},
 		
 		removeComputed: function( property ) {
 			if ( this.hasComputed(property) ) {
-				this._computed[ property ].dispose();
-				delete this._computed[ property ];
+				this._com[ property ].dispose();
+				delete this._com[ property ];
 			}
 		},
 		
 		hasComputed: function( property ) {
-			return this._computed.hasOwnProperty( property );
+			return this._com.hasOwnProperty( property );
+		},
+		
+		isGetter: function( property ) {
+			if ( this.hasComputed(property) ) {
+				return typeof this._com[ property ].get == "function";
+			}
+		},
+		
+		isSetter: function( property ) {
+			if ( this.hasComputed(property) ) {
+				return typeof this._com[ property ].set == "function";
+			}
 		},
 		
 		// Unbinds computed properties:
 		clearComputed: function() {
-			for ( var property in this._computed ) {
+			for ( var property in this._com ) {
 				this.removeComputed( property );
 			}
 		}
@@ -121,7 +132,7 @@
 	EpoxyModel.Computed = function( model, name, param ) {
 
 		// Set function param as getter, or extend with params object:
-		if ( typeof(param) == "function" ) this.get = param;
+		if ( typeof param  == "function" ) this.get = param;
 		else _.extend( this, param );
 
 		// Set model and bindings table:
@@ -147,16 +158,21 @@
 		value: null,
 		previous: null,
 		virtual: false,
-	
+		
+		// Getter and setter stubs:
+		// to be filled in with functions.
+		get: null,
+		set: null,
+		
 		update: function() {
 			this.previous = this.value;
 			this.value = this.get.call( this.model );
 			var changed = (this.value !== this.previous);
 			
-			if ( this.virtual && changed ) {
+			if ( this.virtual ) {
 				// Virtual value (does not write to model):
 				// manually trigger change event when appropriate.
-				this.model.trigger( "change change:"+this.name );
+				changed && this.model.trigger( "change change:"+this.name );
 			} else {
 				// Standard value:
 				// perform model set and let model sort out change.
@@ -164,14 +180,6 @@
 			}
 		},
 	
-		get: function() {
-			throw( "No getter defined." );
-		},
-	
-		set: function() {
-			throw( "No setter defined." );
-		},
-		
 		dispose: function() {
 			this.stopListening();
 			if ( !this.virtual ) this.model.unset( this.name );
