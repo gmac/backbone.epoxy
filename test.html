@@ -49,13 +49,15 @@
 	<div id="binding-declare">
 		<p><span class="user-first"></span> <span class="user-last"></span></p>
 		<p class="payment"></p>
+		<input type="text" class="user-name">
 	</div>
 	
 	<hr>
 	
 	<div id="binding-dom">
-		<p><span data-bind="text:firstName"></span> <span data-bind="text:lastName"></span></p>
-		<p data-bind="text:payment"></p>
+		<p><span class="user-first" data-bind="text:firstName"></span> <span  class="user-last" data-bind="text:lastName"></span></p>
+		<p class="payment" data-bind="text:payment"></p>
+		<input type="text" class="user-name" data-bind="value:firstName">
 	</div>
 	
 	<hr>
