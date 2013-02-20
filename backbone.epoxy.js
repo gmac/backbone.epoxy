@@ -297,9 +297,22 @@
 		
 		// Backbone.View.constructor override:
 		// sets up binding controls, then runs super.
-		constructor: function() {
+		constructor: function( options ) {
 			// Create bindings list:
 			this._bound = [];
+
+			// Set passed options template:
+			if ( options && options.template ) {
+				this.template = options.template;
+			}
+			
+			// Generate element dom from template:
+			if ( this.template ) {
+				var tmpl = this.template;
+				tmpl = (typeof tmpl == "function") ? tmpl() : tmpl;
+				this.el = this.$el = $( tmpl );
+			}
+			
 			Backbone.View.prototype.constructor.call( this, arguments );
 		},
 		
@@ -387,8 +400,6 @@
 	// Epoxy.View.Binding
 	// ------------------
 	EpoxyView.Binding = function( $element, bindings, accessors, operators, model ) {
-		console.log( $element );
-		
 		this.$el = $element;
 		this.accessors = accessors;
 		this.parser = new Function("$context", "with($context){return{" + bindings + "}}");
