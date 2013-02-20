@@ -1,4 +1,11 @@
-(function( Backbone, _ ) {
+// Backbone.Epoxy 0.x
+
+// (c) 2013 Greg MacWilliam
+// Epoxy may be freely distributed under the MIT license.
+// For all details and documentation:
+// http://epoxyjs.org
+
+;(function( Backbone, _ ) {
 	
 	Backbone.Epoxy = {};
 	
@@ -14,7 +21,7 @@
 		// Constructor function override:
 		// configures computed model around default Backbone model.
 		constructor: function() {
-			this._cmp = {};
+			this._xm = {};
 			this._super( "constructor", arguments );
 			
 			// Adds all computed properties to the model:
@@ -37,7 +44,7 @@
 			if ( this.hasComputed(property) ) {
 				// Requested property is computed:
 				// return virtualized value, otherwise defer to standard get process.
-				var computed = this._cmp[ property ];
+				var computed = this._xm[ property ];
 				if ( computed.virtual ) return computed.value;
 			}
 			
@@ -69,7 +76,7 @@
 					if ( this.hasComputed(property) ) {
 						if ( this.hasWritable(property) ) {
 							delete params[property];
-							_.extend(params, this._cmp[property].set.call( this, val ));
+							_.extend(params, this._xm[property].set.call( this, val ));
 						} else {
 							throw( "Cannot set readonly property: "+property );
 						}
@@ -87,72 +94,186 @@
 			return this._super( "destroy", arguments );
 		},
 		
-		addComputed: function( property, param ) {
+		addObservable: function() {
+			
+		},
+		
+		addComputed: function( property, getter, setter ) {
 			// Clear any existing property, then define new computed:
 			this.removeComputed( property );
-			var dependencies = Array.prototype.slice.call( arguments, 2 );
-			this._cmp[ property ] = new EpoxyModel.Computed( this, property, param, dependencies );
+			var params = getter;
+			
+			// Test if getter and/or setter are provided:
+			if ( typeof getter == "function" ) {
+				var depsIndex = 2;
+				
+				// Add getter param:
+				params = {};
+				params.get = getter;
+				
+				// Test for setter param:
+				if ( typeof setter == "function" ) {
+					params.set = setter;
+					depsIndex++;
+				}
+				
+				// Collect all additional arguments as dependency definitions:
+				params.deps = Array.prototype.slice.call( arguments, depsIndex );
+			}
+			
+			// Create new computed observable:
+			this._xm[ property ] = new EpoxyModel.ComputedObservable( property, params, this );
 		},
 		
 		removeComputed: function( property ) {
 			if ( this.hasComputed(property) ) {
-				this._cmp[ property ].dispose();
-				delete this._cmp[ property ];
+				this._xm[ property ].dispose();
+				delete this._xm[ property ];
 			}
 		},
 		
 		hasComputed: function( property ) {
-			return this._cmp.hasOwnProperty( property );
+			return this._xm.hasOwnProperty( property );
 		},
 		
 		hasWritable: function( property ) {
-			var computed = this._cmp[ property ];
+			var computed = this._xm[ property ];
 			return computed && typeof computed.set == "function";
 		},
 		
 		// Unbinds computed properties:
 		clearComputed: function() {
-			for ( var property in this._cmp ) {
+			for ( var property in this._xm ) {
 				this.removeComputed( property );
 			}
 		}
 	});
 	
-	
-	// Epoxy.Model.Computed
-	// --------------------
-	EpoxyModel.Computed = function( model, name, param, dependencies ) {
-
-		// Set function param as getter, or extend with params object:
-		if ( typeof param  == "function" ) this.get = param;
-		else _.extend( this, param );
-
-		// Set model and bindings table:
+	// Epoxy.Model.Observable
+	// ----------------------
+	var Observable = EpoxyModel.Observable = function( name, value ) {
 		this.name = name;
-		this.model = model;
-		this.deps = this.deps || [];
-		
-		if ( dependencies ) {
-			this.deps = this.deps.concat( dependencies );
-		}
-		
-		// Publish events table for capture, then update property:
-		EpoxyModel._map = this.deps;
-		this.update();
-		this.bindings();
-		EpoxyModel._map = null;
+		this.set( value, true );
 	};
-
-	EpoxyModel.Computed.prototype = _.extend({
-		name: "",
-		value: null,
-		previous: null,
-		virtual: false,
+	
+	_.extend(Observable.prototype, Backbone.Events, {
+		value: undefined,
+		previous: undefined,
 		
-		// Getter and setter stubs:
-		// to be filled in with functions.
-		get: null,
-		set: null,
+		get: function() {
+			return this.value;
+		},
+		
+		set: function( val, changed ) {
+			if ( val !== this.value || changed ) {
+				this.previous = this.value;
+				this.value = val;
+				this.change();
+			}
+		},
+		
+		change: function() {
+			this.trigger( "change change:"+this.name );
+		},
+		
+		dispose: function() {
+			this.off();
+			this.stopListening();
+			this.value = this.previous = null;
+		}
+	});
+	
+	Observable.extend = Backbone.Model.extend;
+	
+	// Epoxy.Model.ArrayObservable
+	// ---------------------------
+	EpoxyModel.ArrayObservable = Observable.extend({
+		
+		set: function( val, changed ) {
+			// Test if lengths have changed:
+			changed = changed || (this.value.length !== val.length);
+			
+			// If not, manually seach for value changes:
+			if ( !changed ) {
+				for (var i=0, len=val.length; i < len; i++) {
+					if ( this.value[i] !== val[i] ) {
+						changed = true;
+						break;
+					}
+				}
+			}
+			
+			// If changed, update:
+			if ( changed ) {
+				this.previous = this.value;
+				this.value = val;
+				this.change();
+			}
+		},
+		
+		_op: function( operator, args ) {
+			var result = Array.prototype[ operator ].apply( this.value, args );
+			this.change();
+			return 
+		},
+		pop: function() {
+			return this._op( "pop", arguments );
+		},
+		push: function() {
+			return this._op( "push", arguments );
+		},
+		reverse: function() {
+			return this._op( "reverse", arguments );
+		},
+		shift: function() {
+			return this._op( "shift", arguments );
+		},
+		slice: function() {
+			return this._op( "slice", arguments );
+		},
+		sort: function() {
+			return this._op( "sort", arguments );
+		},
+		unshift: function() {
+			return this._op( "unshift", arguments );
+		}
+	});
+	
+	// Epoxy.Model.ComputedObservable
+	// ------------------------------
+	EpoxyModel.ComputedObservable = Observable.extend({
+		deps: null,
+		virtual: true,
+		
+		constructor: function( name, params, model ) {
+			_.extend(this, params || {});
+		
+			this.model = model;
+			this.name = name;
+			this.deps = this.deps || [];
+		
+			// Publish events table for capture, then update property:
+			EpoxyModel._map = this.deps;
+			this.update();
+			this.bindings();
+			EpoxyModel._map = null;
+		},
+	
+		update: function() {
+			this.previous = this.value;
+			this.value = this.get.call( this.model );
+			var changed = (this.value !== this.previous);
+			
+			if ( this.virtual ) {
+				// Virtual value (does not write to model):
+				// manually trigger change event when appropriate.
+				changed && this.model.trigger( "change change:"+this.name );
+			} else {
+				// Standard value:
+				// perform model set and let model sort out change.
+				this.model._super( "set", [this.name, this.value] );
+			}
+		},
 		
 		bindings: function() {
 			var bindings = {};
@@ -176,6 +297,7 @@
 				// Populate event target arrays:
 				if ( !bindings.hasOwnProperty(property) ) {
 					bindings[property] = [ target ];
+					
 				} else if ( !_.contains(bindings[property], target) ) {
 					bindings[property].push( target );
 				}
@@ -190,29 +312,12 @@
 			}, this);
 		},
 		
-		update: function() {
-			this.previous = this.value;
-			this.value = this.get.call( this.model );
-			var changed = (this.value !== this.previous);
-			
-			if ( this.virtual ) {
-				// Virtual value (does not write to model):
-				// manually trigger change event when appropriate.
-				changed && this.model.trigger( "change change:"+this.name );
-			} else {
-				// Standard value:
-				// perform model set and let model sort out change.
-				this.model._super( "set", [this.name, this.value] );
-			}
-		},
-	
 		dispose: function() {
 			this.stopListening();
 			if ( !this.virtual ) this.model.unset( this.name );
 			this.model = null;
 		}
-		
-	}, Backbone.Events);
+	});
 	
 	
 	// Epoxy.defaultBindings
@@ -307,7 +412,7 @@
 		// sets up binding controls, then runs super.
 		constructor: function( options ) {
 			// Create bindings list:
-			this._bound = [];
+			this._xv = [];
 
 			// Set passed options template:
 			if ( options && options.template ) {
@@ -338,7 +443,7 @@
 			
 			// Compile model accessors:
 			// accessor functions will get, set, and map binding properties.
-			_.each(_.extend({},model.attributes,model._cmp||{}), function( value, property ) {
+			_.each(_.extend({},model.attributes,model._xm||{}), function( value, property ) {
 				accessors[ property ] = function( value ) {
 					// Record property to binding map, when enabled:
 					if ( EpoxyView._map ) {
@@ -358,7 +463,7 @@
 			function bind( $element, bindings, selector ) {
 				// Try to compile bindings, throw errors if encountered:
 				try {
-					self._bound.push( new EpoxyView.Binding($element, bindings, accessors, operators, model) );
+					self._xv.push( new EpoxyView.Binding($element, bindings, accessors, operators, model) );
 				} catch( error ) {
 					throw( 'Error parsing bindings for "'+ selector +'": '+error );
 				}
@@ -367,7 +472,7 @@
 			// Create bindings:
 			if ( typeof this.bindings == "object" ) {
 				
-				// Declarative bindings:
+				// Mapped bindings:
 				_.each(this.bindings, function( bindings, selector ) {
 					// Get DOM jQuery reference:
 					var $el = this.$( selector );
@@ -379,7 +484,7 @@
 				}, this);
 				
 			} else {
-				// DOM attribute bindings:
+				// Attribute bindings:
 				var binding = this.bindings;
 				
 				this.$("["+ binding +"]").each(function() {
@@ -391,8 +496,8 @@
 		
 		// Disposes of all view bindings:
 		unbindView: function() {
-			while( this._bound.length ) {
-				this._bound.pop().dispose();
+			while( this._xv.length ) {
+				this._xv.pop().dispose();
 			}
 		},
 	
@@ -543,4 +648,3 @@
 	}, Backbone.Events);
 	
 }( Backbone, _ ));
-
