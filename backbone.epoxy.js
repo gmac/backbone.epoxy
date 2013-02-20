@@ -29,15 +29,16 @@
 		// provides virtual properties & registers bindings while mapping computed dependencies.
 		get: function( property ) {
 			
+			if ( EpoxyModel._map ) {
+				// Automatically register bindings into computed dependency graph:
+				EpoxyModel._map.push( [property, this] );
+			}
+			
 			if ( this.hasComputed(property) ) {
 				// Requested property is computed:
 				// return virtualized value, otherwise defer to standard get process.
 				var computed = this._com[ property ];
 				if ( computed.virtual ) return computed.value;
-
-			} else if ( EpoxyModel._map ) {
-				// Automatically register bindings into computed dependency graph:
-				EpoxyModel._map[ "change:"+property ] = this;
 			}
 			
 			return this._super( "get", arguments );
@@ -46,42 +47,39 @@
 		// Backbone.Model.set() override:
 		// defers to computed setters for defining writable values.
 		set: function( key, value, options ) {
-			var args;
+			var params = key;
 			
-			if ( typeof key === "object" ) {
+			// Convert params into object key/value format:
+			if ( typeof params != "object" ) {
+				params = {};
+				params[ key ] = value;
+			} else {
 				options = value;
-				value = key;
-				
-				// Form 2: {field0:"value0", field1:"value1"}
+			}
+			
+			// Set valid options definition:
+			options = options || {};
+
+			// If there are no options, or at least no unset option:
+			if ( !options.unset ) {
+				// {field0:"value0", field1:"value1"}
 				// Test all setting properties against the computed table:
 				// replace all computed fields with their mutated value(s).
-				_.each(value, function( val, property ) {	
-					
-					if ( this.isSetter(property) && !options.unset ) {
-						delete value[property];
-						_.extend(value, this._com[property].set.call( this, val ));
+				_.each(params, function( val, property ) {	
+					if ( this.hasComputed(property) ) {
+						if ( this.hasWritable(property) ) {
+							delete params[property];
+							_.extend(params, this._com[property].set.call( this, val ));
+						} else {
+							throw( "Cannot set readonly property: "+property );
+						}
 					}
-				
 				}, this);
-				
-				args = [value, options];
-				
-			} else if ( this.isSetter(key) && !options.unset ) {
-				// Form 1: "field", "value"
-				// replace name and value args with definition of mutated value(s).
-				args = [this._com[key].set.call(this, value), options];
 			}
 			
-			return this._super( "set", args || arguments );
+			return this._super( "set", [params, options] );
 		},
-		
-		previous: function( property ) {
-			if ( this.hasComputed(property) ) {
-				return this._com[ property ].previous;
-			}
-			return this._super( "previous", arguments );
-		},
-		
+
 		// Backbone.Model.destroy() override:
 		// clears all computed properties before destroying.
 		destroy: function() {
@@ -92,7 +90,8 @@
 		addComputed: function( property, param ) {
 			// Clear any existing property, then define new computed:
 			this.removeComputed( property );
-			this._com[ property ] = new EpoxyModel.Computed( this, property, param );
+			var dependencies = Array.prototype.slice.call( arguments, 2 );
+			this._com[ property ] = new EpoxyModel.Computed( this, property, param, dependencies );
 		},
 		
 		removeComputed: function( property ) {
@@ -106,13 +105,7 @@
 			return this._com.hasOwnProperty( property );
 		},
 		
-		isGetter: function( property ) {
-			if ( this.hasComputed(property) ) {
-				return typeof this._com[ property ].get == "function";
-			}
-		},
-		
-		isSetter: function( property ) {
+		hasWritable: function( property ) {
 			if ( this.hasComputed(property) ) {
 				return typeof this._com[ property ].set == "function";
 			}
@@ -129,7 +122,7 @@
 	
 	// Epoxy.Model.Computed
 	// --------------------
-	EpoxyModel.Computed = function( model, name, param ) {
+	EpoxyModel.Computed = function( model, name, param, dependencies ) {
 
 		// Set function param as getter, or extend with params object:
 		if ( typeof param  == "function" ) this.get = param;
@@ -138,23 +131,21 @@
 		// Set model and bindings table:
 		this.name = name;
 		this.model = model;
-		this.events = this.events || {};
+		this.deps = this.deps || [];
+		
+		if ( dependencies ) {
+			this.deps = this.deps.concat( dependencies );
+		}
 		
 		// Publish events table for capture, then update property:
-		EpoxyModel._map = this.events;
+		EpoxyModel._map = this.deps;
 		this.update();
+		this.bindings();
 		EpoxyModel._map = null;
-
-		// Bind all event declarations to their respective targets:
-		_.each(this.events, function( target, eventType ) {
-			this.listenTo( target, eventType, this.update );
-			delete this.events[ eventType ];
-		}, this);
 	};
 
 	EpoxyModel.Computed.prototype = _.extend({
 		name: "",
-		events: null,
 		value: null,
 		previous: null,
 		virtual: false,
@@ -163,6 +154,42 @@
 		// to be filled in with functions.
 		get: null,
 		set: null,
+		
+		bindings: function() {
+			var bindings = {};
+			
+			// Compile normalized bindings array:
+			// defines event types by name with their associated targets.
+			_.each(this.deps, function( property ) {
+				var target = this.model;
+				
+				// Unpack any provided array property as: [propName, target].
+				if ( property instanceof Array ) {
+					target = property[1];
+					property = property[0];
+				}
+				
+				// Normalize property names to include a "change:" prefix:
+				if ( !!property.indexOf("change:") ) {
+					property = "change:"+property;
+				}
+
+				// Populate event target arrays:
+				if ( !bindings.hasOwnProperty(property) ) {
+					bindings[property] = [ target ];
+				} else if ( !_.contains(bindings[property], target) ) {
+					bindings[property].push( target );
+				}
+				
+			}, this);
+			
+			// Bind all event declarations to their respective targets:
+			_.each(bindings, function( targets, binding ) {
+				for (var i=0, len=targets.length; i < len; i++) {
+					this.listenTo( targets[i], binding, this.update );
+				}
+			}, this);
+		},
 		
 		update: function() {
 			this.previous = this.value;
