@@ -221,11 +221,13 @@ describe("Backbone.Epoxy.Model", function() {
 // ----------
 describe("Backbone.Epoxy.View", function() {
 	
+	// Model:
 	var bindingModel = new (Backbone.Epoxy.Model.extend({
 		defaults: {
 			firstName: "Luke",
 			lastName: "Skywalker",
-			active: true
+			active: true,
+			preference: "b"
 		},
 		
 		computed: {
@@ -236,35 +238,30 @@ describe("Backbone.Epoxy.View", function() {
 	}));
 	
 	// Views:
-	var DeclareView = Backbone.Epoxy.View.extend({
-		template: $("#bind-dec-tmpl").html(),
-		model: bindingModel,
-		bindings: {
-			".user-first": "text:firstName",
-			".user-last": "text:lastName",
-			".user-name": "value:firstName,events:['keyup']",
-			".user-active": "checked:active"
-		},
-
-		initialize: function() {
-			$("body").append( this.$el );
-			this.bindView();
-		}
-	});
-
-	var DomView = Backbone.Epoxy.View.extend({
-		template: $("#bind-dom-tmpl").html(),
+	var domView = new (Backbone.Epoxy.View.extend({
+		el: "#dom-view",
 		model: bindingModel,
 		bindings: "data-bind",
 
 		initialize: function() {
-			$("body").append( this.$el );
 			this.bindView();
 		}
-	});
+	}));
 	
-	var decView = new DeclareView();
-	var domView = new DomView();
+	var tmplView = new (Backbone.Epoxy.View.extend({
+		template: $("#tmpl-view-tmpl").html(),
+		model: bindingModel,
+		
+		bindings: {
+			".user-first": "text:firstName",
+			".user-last": "text:lastName"
+		},
+
+		initialize: function() {
+			domView.$el.after( this.$el );
+			this.bindView();
+		}
+	}));
 	
 	// Setup
 	beforeEach(function() {
@@ -277,14 +274,13 @@ describe("Backbone.Epoxy.View", function() {
 	});
 	
 	
-	it("should automatically create view elements from provided template text.", function() {
-		expect( $("#dec-view").length ).toBe( 1 );
-		expect( $("#dom-view").length ).toBe( 1 );
+	it("should automatically create view elements from provided text template.", function() {
+		expect( $("#tmpl-view").length ).toBe( 1 );
 	});
 	
 	
 	it("should bind view elements to model via binding selector map.", function() {
-		var $el = $("#dec-view .user-first");
+		var $el = $("#tmpl-view .user-first");
 		expect( $el.text() ).toBe( "Luke" );
 	});
 	
@@ -296,7 +292,7 @@ describe("Backbone.Epoxy.View", function() {
 	
 	
 	it("binding 'text:' should establish a one-way binding with an element's text contents.", function() {
-		var $el = $("#dec-view .user-first");
+		var $el = $("#dom-view .user-first");
 		expect( $el.text() ).toBe( "Luke" );
 		
 		bindingModel.set("firstName", "Charlie");
@@ -305,26 +301,37 @@ describe("Backbone.Epoxy.View", function() {
 	
 	
 	it("binding 'value:' should establish a two-way binding with an input field.", function() {
-		var $el = $("#dec-view .user-name");
+		var $el = $("#dom-view .user-name");
 		expect( $el.val() ).toBe( "Luke" );
 		$el.val( "Charlie" ).trigger("change");
 		expect( bindingModel.get("firstName") ).toBe( "Charlie" );
 	});
 	
 	
-	it("binding 'events:' should configure additional DOM event bindings.", function() {
-		var $el = $("#dec-view .user-name");
+	it("binding 'events:' should configure additional DOM event triggers.", function() {
+		var $el = $("#dom-view .user-name");
 		expect( $el.val() ).toBe( "Luke" );
 		$el.val( "Charlie" ).trigger("keyup");
 		expect( bindingModel.get("firstName") ).toBe( "Charlie" );
 	});
 	
 	
-	it("binding 'checked:' should establish a two-way binding with an input field.", function() {
-		var $el = $("#dec-view .user-active");
+	it("binding 'checked:' should establish a two-way binding with a checkbox.", function() {
+		var $el = $("#dom-view .active");
 		expect( $el.prop("checked") ).toBe( true );
 		
 		$el.prop("checked", false).trigger("change");
 		expect( bindingModel.get("active") ).toBe( false );
+	});
+	
+	
+	it("binding 'checked:' should establish a two-way binding with a radio group.", function() {
+		var $a = $(".preference[value='a']");
+		var $b = $(".preference[value='b']");
+		expect( $a.prop("checked") ).toBe( false );
+		expect( $b.prop("checked") ).toBe( true );
+		
+		$a.prop("checked", true).trigger("change");
+		expect( bindingModel.get("preference") ).toBe( "a" );
 	});
 });

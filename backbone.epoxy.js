@@ -227,19 +227,20 @@
 		
 		// Checked: read-write. Toggles the checked status of a form element.
 		checked: {
-			get: function( $element ) {
-				return !!$element.prop( "checked" );
+			get: function($element) {
+				return $element.is(":radio") ? $element.val() : !!$element.prop("checked");
 			},
-			set: function( $element, value ) {
-				$element.prop( "checked", !!value );
+			set: function($element, value) {
+				var checked = $element.is(":radio") ? (value == $element.val()) : !!value;
+				$element.prop("checked", checked);
 			}
 		},
 		
 		// Class Name: write-only. Toggles a collection of class name definitions.
 		className: {
-			set: function( $element, value ) {
-				_.each(value, function( enabled, className ) {
-					$element.toggleClass( className, !!enabled );
+			set: function($element, value) {
+				_.each(value, function(enabled, className) {
+					$element.toggleClass(className, !!enabled);
 				});
 			}
 		},
