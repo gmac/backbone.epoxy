@@ -251,11 +251,18 @@
 				$element.css( value );
 			}
 		},
-		
-		// Enabled: write-only. Sets the "disabled" status of a form element.
-		enabled: {
+
+		// Disabled: write-only. Sets the "disabled" status of a form element (true :: disabled).
+		disabled: {
 			set: function( $element, value ) {
 				$element.prop( "disabled", !!value );
+			}
+		},
+		
+		// Enabled: write-only. Sets the "disabled" status of a form element (true :: !disabled).
+		enabled: {
+			set: function( $element, value ) {
+				$element.prop( "disabled", !value );
 			}
 		},
 		
@@ -480,9 +487,7 @@
 				if ( events instanceof Array ) {
 					
 					// Enforce presence of a change trigger:
-					if ( !_.contains(events, "change") ) {
-						events.push("change");
-					}
+					if ( _.indexOf(events, "change") < 0 ) events.push("change");
 					
 					// Rewrite trigger string as "change.epoxy keydown.epoxy":
 					this.events = _.map(events, function(name) {

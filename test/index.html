@@ -27,6 +27,9 @@
 		margin-top: 15px;
 		padding-top: 10px;
 	}
+	.error {
+		color: #f00;
+	}
 	</style>
 </head>
 <body>
@@ -37,7 +40,13 @@
 			<span class="user-first" data-bind="text:firstName"></span> 
 			<span  class="user-last" data-bind="text:lastName"></span>
 		</p>
-		<input type="text" class="user-name" data-bind="value:firstName,events:['keyup']">
+		<div class="section">
+			<label class="user-name-label" data-bind="className:{error:nameError}">Enter name:</label>
+			<input type="text" class="user-name" data-bind="value:firstName,events:['keyup']">
+		</div>
+		<div class="section">
+			<p class="user-html" data-bind="html:nameDisplay"></p>
+		</div>
 		<div class="section">
 			<p>
 				<strong>model.active:</strong> 
@@ -46,6 +55,8 @@
 			<p>
 				<label>active:</label> 
 				<input type="checkbox" class="active" data-bind="checked:active">
+				<button data-bind="enabled:active">yes</button>
+				<button data-bind="disabled:active">no</button>
 			</p>
 		</div>
 		<div class="section">

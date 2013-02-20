@@ -222,7 +222,7 @@ describe("Backbone.Epoxy.Model", function() {
 describe("Backbone.Epoxy.View", function() {
 	
 	// Model:
-	var bindingModel = new (Backbone.Epoxy.Model.extend({
+	window.bindingModel = new (Backbone.Epoxy.Model.extend({
 		defaults: {
 			firstName: "Luke",
 			lastName: "Skywalker",
@@ -231,8 +231,11 @@ describe("Backbone.Epoxy.View", function() {
 		},
 		
 		computed: {
-			paymentDsp: function() {
-				return "$"+this.get("payment");
+			nameDisplay: function() {
+				return "<strong>"+this.get("lastName")+"</strong>, "+this.get("firstName");
+			},
+			nameError: function () {
+				return !this.get( "firstName" );
 			}
 		}
 	}));
@@ -274,7 +277,7 @@ describe("Backbone.Epoxy.View", function() {
 	});
 	
 	
-	it("should automatically create view elements from provided text template.", function() {
+	it("should automatically create view elements from a provided text template.", function() {
 		expect( $("#tmpl-view").length ).toBe( 1 );
 	});
 	
@@ -291,28 +294,8 @@ describe("Backbone.Epoxy.View", function() {
 	});
 	
 	
-	it("binding 'text:' should establish a one-way binding with an element's text contents.", function() {
-		var $el = $("#dom-view .user-first");
-		expect( $el.text() ).toBe( "Luke" );
-		
-		bindingModel.set("firstName", "Charlie");
-		expect( $el.text() ).toBe( "Charlie" );
-	});
-	
-	
-	it("binding 'value:' should establish a two-way binding with an input field.", function() {
-		var $el = $("#dom-view .user-name");
-		expect( $el.val() ).toBe( "Luke" );
-		$el.val( "Charlie" ).trigger("change");
-		expect( bindingModel.get("firstName") ).toBe( "Charlie" );
-	});
-	
-	
-	it("binding 'events:' should configure additional DOM event triggers.", function() {
-		var $el = $("#dom-view .user-name");
-		expect( $el.val() ).toBe( "Luke" );
-		$el.val( "Charlie" ).trigger("keyup");
-		expect( bindingModel.get("firstName") ).toBe( "Charlie" );
+	it("binding 'attr:' should establish a one-way binding with an element's attribute definitions.", function() {
+		//expect().toBe( true );
 	});
 	
 	
@@ -333,5 +316,68 @@ describe("Backbone.Epoxy.View", function() {
 		
 		$a.prop("checked", true).trigger("change");
 		expect( bindingModel.get("preference") ).toBe( "a" );
+	});
+	
+	
+	it("binding 'className:' should establish a one-way binding with an element's class definitions.", function() {
+		var $el = $("#dom-view .user-name-label");
+		expect( $el.hasClass("error") ).toBe( false );
+		
+		bindingModel.set("firstName", "");
+		expect( $el.hasClass("error") ).toBe( true );
+	});
+	
+	
+	it("binding 'css:' should establish a one-way binding with an element's css styles.", function() {
+		//expect().toBe( true );
+	});
+	
+	
+	it("binding 'disabled:' should establish a one-way binding with an element's disabled state.", function() {
+		//expect().toBe( true );
+	});
+	
+	
+	it("binding 'enabled:' should establish a one-way binding with an element's inverted disabled state.", function() {
+		//expect().toBe( true );
+	});
+	
+	
+	it("binding 'events:' should configure additional DOM event triggers.", function() {
+		var $el = $("#dom-view .user-name");
+		expect( $el.val() ).toBe( "Luke" );
+		$el.val( "Anakin" ).trigger("keyup");
+		expect( bindingModel.get("firstName") ).toBe( "Anakin" );
+	});
+	
+	
+	it("binding 'html:' should establish a one-way binding with an element's html contents.", function() {
+		var $el = $("#dom-view .user-html");
+		expect( $el.html() ).toBe( "<strong>Skywalker</strong>, Luke" );
+		
+		bindingModel.set("firstName", "Anakin");
+		expect( $el.html() ).toBe( "<strong>Skywalker</strong>, Anakin" );
+	});
+	
+	
+	it("binding 'text:' should establish a one-way binding with an element's text contents.", function() {
+		var $el = $("#dom-view .user-first");
+		expect( $el.text() ).toBe( "Luke" );
+		
+		bindingModel.set("firstName", "Anakin");
+		expect( $el.text() ).toBe( "Anakin" );
+	});
+	
+	
+	it("binding 'toggle:' should establish a one-way binding with an element's visibility.", function() {
+		//expect().toBe( true );
+	});
+	
+	
+	it("binding 'value:' should establish a two-way binding with an input field.", function() {
+		var $el = $("#dom-view .user-name");
+		expect( $el.val() ).toBe( "Luke" );
+		$el.val( "Anakin" ).trigger("change");
+		expect( bindingModel.get("firstName") ).toBe( "Anakin" );
 	});
 });
