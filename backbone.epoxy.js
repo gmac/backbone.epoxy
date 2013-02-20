@@ -435,7 +435,7 @@
 				// => Binding operator has getter method.
 				// => Value accessor is a function (dirty/composite bindings don't work here).
 				if ( changable && operator.get && typeof(accessor) == "function" ) {
-					self.$el.on("change.epoxy", function() {
+					self.$el.on(self.events, function() {
 						accessor( operator.get.call( self, self.$el ) );
 					});
 				}
@@ -458,6 +458,7 @@
 
 	EpoxyView.Binding.prototype = _.extend({
 		dirty: false,
+		events: "change.epoxy",
 		accessors: {},
 		bindings: {},
 		
@@ -466,8 +467,33 @@
 		// then re-invoked each time a dirty binding is accessed.
 		// An optional operator name may be specified for direct access to the parsed accessor.
 		parse: function( operator ) {
-			this.bindings = this.parser( this.accessors );
-			if ( operator ) return this.bindings[ operator ];
+			var bindings = this.bindings = this.parser( this.accessors );
+			
+			// Filter out triggers param:
+			// Specifies dom triggers on which the DOM binding should update.
+			// Binding triggers have a unique implementation, so should be parsed out...
+			if ( bindings.events ) {
+				var events = bindings.events;
+				
+				// Collect trigger definitions from an array:
+				if ( events instanceof Array ) {
+					
+					// Enforce presence of a change trigger:
+					if ( !_.contains(events, "change") ) {
+						events.push("change");
+					}
+					
+					// Rewrite trigger string as "change.epoxy keydown.epoxy":
+					this.events = _.map(events, function(name) {
+						return name + ".epoxy";
+					}).join(" ");
+				}
+				
+				// delete from regular bindings collection.
+				delete bindings.events;
+			}
+			
+			if ( operator ) return bindings[ operator ];
 		},
 		
 		// Reads value from an accessor:
@@ -504,7 +530,7 @@
 		// all events and 
 		dispose: function() {
 			this.stopListening();
-			this.$el.off( "change.epoxy" );
+			this.$el.off( this.events );
 			this.$el = null;
 		}
 		

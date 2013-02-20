@@ -221,25 +221,20 @@ describe("Backbone.Epoxy.Model", function() {
 // ----------
 describe("Backbone.Epoxy.View", function() {
 	
-	var decView;
-	var domView;
-	
-	var BindModel = Backbone.Epoxy.Model.extend({
+	var bindingModel = new (Backbone.Epoxy.Model.extend({
 		defaults: {
-			firstName: "Scooby",
-			lastName: "Doo",
-			payment: 100
+			firstName: "Luke",
+			lastName: "Skywalker",
+			active: true
 		},
 		
 		computed: {
-			paymentCurrency: function() {
+			paymentDsp: function() {
 				return "$"+this.get("payment");
 			}
 		}
-	});
+	}));
 	
-	var bindingModel = new BindModel();
-
 	// Views:
 	var DeclareView = Backbone.Epoxy.View.extend({
 		template: $("#bind-dec-tmpl").html(),
@@ -247,12 +242,12 @@ describe("Backbone.Epoxy.View", function() {
 		bindings: {
 			".user-first": "text:firstName",
 			".user-last": "text:lastName",
-			".user-name": "value:firstName",
-			".payment": "text:paymentCurrency"
+			".user-name": "value:firstName,events:['keyup']",
+			".user-active": "checked:active"
 		},
 
 		initialize: function() {
-			$("body").prepend( this.$el );
+			$("body").append( this.$el );
 			this.bindView();
 		}
 	});
@@ -263,37 +258,73 @@ describe("Backbone.Epoxy.View", function() {
 		bindings: "data-bind",
 
 		initialize: function() {
-			$("body").prepend( this.$el );
+			$("body").append( this.$el );
 			this.bindView();
 		}
 	});
 	
+	var decView = new DeclareView();
+	var domView = new DomView();
+	
 	// Setup
 	beforeEach(function() {
-		decView = new DeclareView();
-		domView = new DomView();
+		
 	});
 	
 	// Teardown
 	afterEach(function() {
-		// do nothing.
+		bindingModel.set( bindingModel.defaults );
 	});
 	
 	
-	it("should bind DOM elements to model by declarative bindings.", function() {
-		var $el = $("#binding-declare .user-first");
-		expect( $el.text() ).toBe( "Charlie" );
-		
-		bindingModel.set("firstName", "Luke");
+	it("should automatically create view elements from provided template text.", function() {
+		expect( $("#dec-view").length ).toBe( 1 );
+		expect( $("#dom-view").length ).toBe( 1 );
+	});
+	
+	
+	it("should bind view elements to model via binding selector map.", function() {
+		var $el = $("#dec-view .user-first");
 		expect( $el.text() ).toBe( "Luke" );
 	});
 	
 	
-	it("should bind DOM elements to model by element attributes.", function() {
-		var $el = $("#binding-dom .user-first");
-		expect( $el.text() ).toBe( "Charlie" );
-		
-		bindingModel.set("firstName", "Luke");
+	it("should bind view elements to model via element attribute query.", function() {
+		var $el = $("#dom-view .user-first");
 		expect( $el.text() ).toBe( "Luke" );
+	});
+	
+	
+	it("binding 'text:' should establish a one-way binding with an element's text contents.", function() {
+		var $el = $("#dec-view .user-first");
+		expect( $el.text() ).toBe( "Luke" );
+		
+		bindingModel.set("firstName", "Charlie");
+		expect( $el.text() ).toBe( "Charlie" );
+	});
+	
+	
+	it("binding 'value:' should establish a two-way binding with an input field.", function() {
+		var $el = $("#dec-view .user-name");
+		expect( $el.val() ).toBe( "Luke" );
+		$el.val( "Charlie" ).trigger("change");
+		expect( bindingModel.get("firstName") ).toBe( "Charlie" );
+	});
+	
+	
+	it("binding 'events:' should configure additional DOM event bindings.", function() {
+		var $el = $("#dec-view .user-name");
+		expect( $el.val() ).toBe( "Luke" );
+		$el.val( "Charlie" ).trigger("keyup");
+		expect( bindingModel.get("firstName") ).toBe( "Charlie" );
+	});
+	
+	
+	it("binding 'checked:' should establish a two-way binding with an input field.", function() {
+		var $el = $("#dec-view .user-active");
+		expect( $el.prop("checked") ).toBe( true );
+		
+		$el.prop("checked", false).trigger("change");
+		expect( bindingModel.get("active") ).toBe( false );
 	});
 });

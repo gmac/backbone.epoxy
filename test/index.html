@@ -8,62 +8,59 @@
 	<link rel="stylesheet" type="text/css" href="jasmine-1.2.0/jasmine.css">
 	<script src="jasmine-1.2.0/jasmine.js"></script>
 	<script src="jasmine-1.2.0/jasmine-html.js"></script>
+	<style>
+	.test-view {
+		border: 1px solid #ccc;
+		display: inline-block;
+		margin: 15px;
+		padding: 15px;
+		width: 200px;
+	}
+	</style>
+</head>
+<body>
+	
+	
+	<script type="text/template-epoxy" id="bind-dec-tmpl">
+		<div id="dec-view" class="test-view">
+			<strong>Selector Mapping</strong>
+			<p><span class="user-first"></span> <span class="user-last"></span></p>
+			<input type="text" class="user-name">
+			<input type="checkbox" class="user-active">
+		</div>
+	</script>
+	<script type="text/template-epoxy" id="bind-dom-tmpl">
+		<div id="dom-view" class="test-view">
+			<strong>Attribute Mapping</strong>
+			<p>
+				<span class="user-first" data-bind="text:firstName"></span> 
+				<span  class="user-last" data-bind="text:lastName"></span>
+			</p>
+			<input type="text" class="user-name" data-bind="value:firstName">
+			<input type="checkbox" class="user-active" data-bind="checked:active">
+		</div>
+	</script>
+	
 	<script src="../lib/jquery.js"></script>
 	<script src="../lib/underscore.js"></script>
 	<script src="../lib/backbone.js"></script>
 	<script src="../backbone.epoxy.js"></script>
 	<script src="epoxy-test.js"></script>
-	
-	<script type="text/template" id="bind-dec-tmpl">
-		<div id="bind-dec">
-			<p><span class="user-first"></span> <span class="user-last"></span></p>
-			<p class="payment"></p>
-			<input type="text" class="user-name">
-		</div>
+	<script type="text/javascript">
+	$(function() {
+		var jasmineEnv = jasmine.getEnv();
+		jasmineEnv.updateInterval = 1000;
+		
+		var htmlReporter = new jasmine.HtmlReporter();
+
+		jasmineEnv.addReporter(htmlReporter);
+
+		jasmineEnv.specFilter = function(spec) {
+			return htmlReporter.specFilter(spec);
+		};
+		
+		jasmineEnv.execute();
+	});
 	</script>
-	
-	<script type="text/template" id="bind-dom-tmpl">
-		<div id="bind-dom">
-			<p>
-				<span class="user-first" data-bind="text:firstName"></span> 
-				<span  class="user-last" data-bind="text:lastName"></span>
-			</p>
-			<p class="payment" data-bind="text:payment"></p>
-			<input type="text" class="user-name" data-bind="value:firstName">
-		</div>
-	</script>
-	
-  <script type="text/javascript">
-    $(function() {
-      var jasmineEnv = jasmine.getEnv();
-      jasmineEnv.updateInterval = 1000;
-
-      var htmlReporter = new jasmine.HtmlReporter();
-
-      jasmineEnv.addReporter(htmlReporter);
-
-      jasmineEnv.specFilter = function(spec) {
-        return htmlReporter.specFilter(spec);
-      };
-
-      var currentWindowOnload = window.onload;
-
-      window.onload = function() {
-        if (currentWindowOnload) {
-          currentWindowOnload();
-        }
-        execJasmine();
-      };
-
-      function execJasmine() {
-        jasmineEnv.execute();
-      }
-
-    });
-  </script>
-
-</head>
-<body>
-	
 </body>
 </html>
