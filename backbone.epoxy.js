@@ -14,7 +14,7 @@
 		// Constructor function override:
 		// configures computed model around default Backbone model.
 		constructor: function() {
-			this._com = {};
+			this._cmp = {};
 			this._super( "constructor", arguments );
 			
 			// Adds all computed properties to the model:
@@ -37,7 +37,7 @@
 			if ( this.hasComputed(property) ) {
 				// Requested property is computed:
 				// return virtualized value, otherwise defer to standard get process.
-				var computed = this._com[ property ];
+				var computed = this._cmp[ property ];
 				if ( computed.virtual ) return computed.value;
 			}
 			
@@ -69,7 +69,7 @@
 					if ( this.hasComputed(property) ) {
 						if ( this.hasWritable(property) ) {
 							delete params[property];
-							_.extend(params, this._com[property].set.call( this, val ));
+							_.extend(params, this._cmp[property].set.call( this, val ));
 						} else {
 							throw( "Cannot set readonly property: "+property );
 						}
@@ -91,29 +91,28 @@
 			// Clear any existing property, then define new computed:
 			this.removeComputed( property );
 			var dependencies = Array.prototype.slice.call( arguments, 2 );
-			this._com[ property ] = new EpoxyModel.Computed( this, property, param, dependencies );
+			this._cmp[ property ] = new EpoxyModel.Computed( this, property, param, dependencies );
 		},
 		
 		removeComputed: function( property ) {
 			if ( this.hasComputed(property) ) {
-				this._com[ property ].dispose();
-				delete this._com[ property ];
+				this._cmp[ property ].dispose();
+				delete this._cmp[ property ];
 			}
 		},
 		
 		hasComputed: function( property ) {
-			return this._com.hasOwnProperty( property );
+			return this._cmp.hasOwnProperty( property );
 		},
 		
 		hasWritable: function( property ) {
-			if ( this.hasComputed(property) ) {
-				return typeof this._com[ property ].set == "function";
-			}
+			var computed = this._cmp[ property ];
+			return computed && typeof computed.set == "function";
 		},
 		
 		// Unbinds computed properties:
 		clearComputed: function() {
-			for ( var property in this._com ) {
+			for ( var property in this._cmp ) {
 				this.removeComputed( property );
 			}
 		}
@@ -300,24 +299,25 @@
 		// sets up binding controls, then runs super.
 		constructor: function() {
 			// Create bindings list:
-			this._bindings = [];
+			this._bound = [];
 			Backbone.View.prototype.constructor.call( this, arguments );
 		},
 		
 		// Compiles model accessors, then applies bindings to the view:
 		// Note: Model->View relationships are baked at the time of binding.
-		// If model adds new properties or view adds new bindings, view must be completely re-bound.
+		// If model adds new properties or view adds new bindings, view must be re-bound.
 		bindView: function() {
 			this.unbindView();
 			if ( !this.model || !this.bindings ) return;
-		
+			
 			var operators = _.extend(this.operators || {}, Backbone.Epoxy.defaultBindings);
 			var accessors = {};
 			var model = this.model;
-		
+			var self = this;
+			
 			// Compile model accessors:
 			// accessor functions will get, set, and map binding properties.
-			_.each(model.attributes, function( value, property ) {
+			_.each(_.extend({},model.attributes,model._cmp||{}), function( value, property ) {
 				accessors[ property ] = function( value ) {
 					// Record property to binding map, when enabled:
 					if ( EpoxyView._map ) {
@@ -333,28 +333,45 @@
 				};
 			});
 			
-			// Create bindings:
-			_.each(this.bindings, function( bindings, selector ) {
-				// Get DOM jQuery reference:
-				var $element = this.$( selector );
-				
-				// Ignore missing DOM queries without throwing errors:
-				if ( $element.length ) {
-					// Try to compile bindings, throw errors if encountered:
-					try {
-						this._bindings.push( new EpoxyView.Binding($element, bindings, accessors, operators, model) );
-					} catch( error ) {
-						throw( 'Error parsing bindings for "'+ selector +'": '+error );
-					}
+			// Binds an element into the model:
+			function bind( $element, bindings, selector ) {
+				// Try to compile bindings, throw errors if encountered:
+				try {
+					self._bound.push( new EpoxyView.Binding($element, bindings, accessors, operators, model) );
+				} catch( error ) {
+					throw( 'Error parsing bindings for "'+ selector +'": '+error );
 				}
+			}
 			
-			}, this);
+			// Create bindings:
+			if ( typeof this.bindings == "object" ) {
+				
+				// Declarative bindings:
+				_.each(this.bindings, function( bindings, selector ) {
+					// Get DOM jQuery reference:
+					var $el = this.$( selector );
+
+					// Ignore missing DOM queries without throwing errors:
+					if ( $el.length ) {
+						bind( $el, bindings, selector );
+					}
+				}, this);
+				
+			} else {
+				// DOM attribute bindings:
+				var binding = this.bindings;
+				
+				this.$("["+ binding +"]").each(function() {
+					var $el = $(this);
+					bind( $el, $el.attr(binding), $el.attr("class") );
+				});
+			}
 		},
 		
 		// Disposes of all view bindings:
 		unbindView: function() {
-			while( this._bindings.length ) {
-				this._bindings.pop().dispose();
+			while( this._bound.length ) {
+				this._bound.pop().dispose();
 			}
 		},
 	
@@ -370,6 +387,8 @@
 	// Epoxy.View.Binding
 	// ------------------
 	EpoxyView.Binding = function( $element, bindings, accessors, operators, model ) {
+		console.log( $element );
+		
 		this.$el = $element;
 		this.accessors = accessors;
 		this.parser = new Function("$context", "with($context){return{" + bindings + "}}");

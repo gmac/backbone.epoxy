@@ -12,7 +12,7 @@
 	<script src="lib/underscore.js"></script>
 	<script src="lib/backbone.js"></script>
 	<script src="backbone.epoxy.js"></script>
-	<script src="lib/test-spec.js"></script>
+	<script src="lib/epoxy-test.js"></script>
 	
   <script type="text/javascript">
     $(function() {
@@ -45,7 +45,20 @@
 
 </head>
 <body>
-
+	
+	<div id="binding-declare">
+		<p><span class="user-first"></span> <span class="user-last"></span></p>
+		<p class="payment"></p>
+	</div>
+	
+	<hr>
+	
+	<div id="binding-dom">
+		<p><span data-bind="text:firstName"></span> <span data-bind="text:lastName"></span></p>
+		<p data-bind="text:payment"></p>
+	</div>
+	
+	<hr>
 	
 </body>
 </html>
