@@ -15,6 +15,7 @@ describe("Backbone.Epoxy.Model", function() {
 			fullName: function() {
 				return this.get( "firstName" ) +" "+ this.get( "lastName" );
 			},
+			
 			paymentCurrency: {
 				get: function() {
 					return "$"+ this.get( "payment" );
@@ -23,14 +24,16 @@ describe("Backbone.Epoxy.Model", function() {
 					return value ? {payment: parseInt(value.replace("$", ""), 10)} : value;
 				}
 			},
+			
+			paymentLabel: function() {
+				return this.get( "fullName" ) +" paid "+ this.get( "paymentCurrency" );
+			},
+			
 			unreachable: {
 				deps: ["firstName", "lastName", "payment"],
 				get: function() {
 					return this.get("payment") > 50 ? this.get("firstName") : this.get("lastName");
 				}
-			},
-			paymentLabel: function() {
-				return this.get( "fullName" ) +" paid "+ this.get( "paymentCurrency" );
 			}
 		},
 
@@ -58,9 +61,9 @@ describe("Backbone.Epoxy.Model", function() {
 	
 	
 	it("should assume computed properties defined as functions to be getters.", function() {
-		var fullName = model._cmp[ "fullName" ];
+		var obsGetter = model.obs.fullName._get;
 		var protoGetter = TestModel.prototype.computed.fullName;
-		expect( fullName.get === protoGetter ).toBe( true );
+		expect( obsGetter === protoGetter ).toBe( true );
 	});
 	
 	
@@ -197,6 +200,9 @@ describe("Backbone.Epoxy.Model", function() {
 		expect( model.get("paymentLabel") ).toBe( "Charlie Brown paid $150" );
 	});
 	
+	it("should successfully build dependency graph, regardless of declaration order.", function() {
+		// IE: dependents created before their dependencies should still work...
+	});
 	
 	it("should use .set() to modify both model attributes and computed properties.", function() {
 		model.set("payment", 150);
