@@ -338,7 +338,7 @@ describe("Backbone.Epoxy.View", function() {
 	}));
 	
 	var tmplView = new (Backbone.Epoxy.View.extend({
-		template: $("#tmpl-view-tmpl").html(),
+		el: $("#tmpl-view-tmpl").html(),
 		model: bindingModel,
 		
 		bindings: {
@@ -363,11 +363,6 @@ describe("Backbone.Epoxy.View", function() {
 	});
 	
 	
-	it("should automatically create view elements from a provided text template.", function() {
-		expect( $("#tmpl-view").length ).toBe( 1 );
-	});
-	
-	
 	it("should bind view elements to model via binding selector map.", function() {
 		var $el = $("#tmpl-view .user-first");
 		expect( $el.text() ).toBe( "Luke" );
@@ -380,8 +375,42 @@ describe("Backbone.Epoxy.View", function() {
 	});
 	
 	
+	it("should include top-level view container in bindings searches.", function() {
+		
+		var view1 = new (Backbone.Epoxy.View.extend({
+			el: "<span data-bind='text:firstName'></span>",
+			model: bindingModel,
+			bindings: "data-bind"
+		}));
+		
+		var view2 = new (Backbone.Epoxy.View.extend({
+			el: "<span class='first-name'></span>",
+			model: bindingModel,
+			bindings: {
+				".first-name": "text:firstName"
+			}
+		}));
+		
+		view1.bindView();
+		view2.bindView();
+		
+		expect( view1.$el.text() ).toBe( "Luke" );
+		expect( view2.$el.text() ).toBe( "Luke" );
+	});
+	
 	it("should throw error in response to undefined property bindings.", function() {
-		//expect().toThrow();
+		
+		var view = new (Backbone.Epoxy.View.extend({
+			el: "<div><span data-bind='text:undefinedProp'></span></div>",
+			model: bindingModel,
+			bindings: "data-bind"
+		}));
+		
+		function applyBindings(){
+			view.bindView();
+		}
+		
+		expect( applyBindings ).toThrow();
 	});
 	
 	it("binding 'attr:' should establish a one-way binding with an element's attribute definitions.", function() {

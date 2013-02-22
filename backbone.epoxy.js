@@ -510,14 +510,6 @@
 		constructor: function( options ) {
 			// Create bindings list:
 			this._xv = [];
-
-			// Generate element dom from template:
-			if ( this.template ) {
-				var tmpl = this.template;
-				tmpl = (typeof tmpl == "function") ? tmpl() : tmpl;
-				this.el = this.$el = $( tmpl );
-			}
-			
 			Backbone.View.prototype.constructor.call( this, arguments );
 		},
 		
@@ -557,7 +549,7 @@
 				try {
 					self._xv.push( new EpoxyView.Binding($element, bindings, accessors, operators, model) );
 				} catch( error ) {
-					throw( 'Error parsing bindings for "'+ selector +'": '+error );
+					throw( 'Error parsing bindings for "'+ selector +'" >> '+error );
 				}
 			}
 			
@@ -567,21 +559,33 @@
 				// Mapped bindings:
 				_.each(this.bindings, function( bindings, selector ) {
 					// Get DOM jQuery reference:
-					var $el = this.$( selector );
+					var $nodes = this.$( selector );
 
+					// Include top-level view in bindings search:
+					if ( this.$el.is(selector) ) {
+						$nodes = $nodes.add( this.$el );
+					}
+					
 					// Ignore missing DOM queries without throwing errors:
-					if ( $el.length ) {
-						bind( $el, bindings, selector );
+					if ( $nodes.length ) {
+						bind( $nodes, bindings, selector );
 					}
 				}, this);
 				
 			} else {
 				// Attribute bindings:
-				var binding = this.bindings;
-				
-				this.$("["+ binding +"]").each(function() {
-					var $el = $(this);
-					bind( $el, $el.attr(binding), $el.attr("class") );
+				var bindings = this.bindings;
+				var selector = "["+ bindings +"]";
+				var $nodes = this.$( selector );
+
+				// Include top-level view in bindings search:
+				if ( this.$el.is(selector) ) {
+					$nodes = $nodes.add( this.$el );
+				}
+
+				$nodes.each(function( $el ) {
+					$el = $(this);
+					bind( $el, $el.attr(bindings), selector );
 				});
 			}
 		},
@@ -625,15 +629,8 @@
 				// Set default binding:
 				// Configure accessor table to collect events.
 				EpoxyView._map = events;
-				self.dirty = false;
 				operator.set.call( self, self.$el, self.read(accessor) );
 				EpoxyView._map = null;
-				
-				// Set dirty bindings flag:
-				// a dirty binding performs value modifications within the binding declaration.
-				// dirty bindings will require that bindings get reparsed after every change.
-				// (dirty bindings are detected while evaluating accessor contents during initial setting op).
-				var dirtyBinding = self.dirty;
 
 				// Getting, requires:
 				// => Form element.
@@ -649,7 +646,6 @@
 				// => One or more events triggers.
 				if ( events.length ) {
 					self.listenTo( model, events.join(" "), function() {
-						if ( dirtyBinding ) accessor = self.parse( operatorName );
 						operator.set.call( self, self.$el, self.read( accessor ) );
 					});
 				}
@@ -724,8 +720,7 @@
 			} 
 			
 			// Something else...
-			// Not sure what this is, so flag as a dirty value and then return directly.
-			this.dirty = true;
+			// Not sure what this is, so return the value directly.
 			return accessor;
 		},
 		
