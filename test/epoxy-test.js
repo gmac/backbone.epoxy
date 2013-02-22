@@ -4,18 +4,33 @@ describe("Backbone.Epoxy.Model", function() {
 	
 	var model;
 	
+	
+	// Primay model for test suite:
 	var TestModel = Backbone.Epoxy.Model.extend({
 		defaults: {
 			firstName: "Charlie",
 			lastName: "Brown",
 			payment: 100
 		},
-
-		computed: {
+		
+		virtuals: {
+			isSelected: false
+		},
+		
+		computeds: {
+			// Tests setting a computed property with the direct single-function getter shorthand:
 			fullName: function() {
 				return this.get( "firstName" ) +" "+ this.get( "lastName" );
 			},
 			
+			// Tests two facets:
+			// 1) computed dependencies definition order (defined before/after a dependency).
+			// 2) computed dependencies building ontop of one another.
+			paymentLabel: function() {
+				return this.get( "fullName" ) +" paid "+ this.get( "paymentCurrency" );
+			},
+			
+			// Tests defining a read/write computed property with getters and setters:
 			paymentCurrency: {
 				get: function() {
 					return "$"+ this.get( "payment" );
@@ -25,14 +40,15 @@ describe("Backbone.Epoxy.Model", function() {
 				}
 			},
 			
-			paymentLabel: function() {
-				return this.get( "fullName" ) +" paid "+ this.get( "paymentCurrency" );
-			},
-			
+			// Tests defining a computed property with unreachable values...
+			// first/last names are accessed conditionally, therefore cannot be automatically detected.
+			// field dependencies may be declared manually to address this (ugly though);
+			// a better solution would be to collect both "first" and "last" as local vars,
+			// then release the locally established values conditionally.
 			unreachable: {
-				deps: ["firstName", "lastName", "payment"],
+				deps: ["firstName", "lastName", "isSelected"],
 				get: function() {
-					return this.get("payment") > 50 ? this.get("firstName") : this.get("lastName");
+					return this.get("isSelected") ? this.get("lastName") : this.get("firstName");
 				}
 			}
 		},
@@ -41,12 +57,15 @@ describe("Backbone.Epoxy.Model", function() {
 
 		}
 	});
-
+	
+	
+	// Secondary model, established for some relationship testing:
 	var ForeignModel = Backbone.Epoxy.Model.extend({
 		defaults: {
 			avgPayment: 200
 		}
 	});
+	
 	
 	// Setup
 	beforeEach(function() {
@@ -55,31 +74,47 @@ describe("Backbone.Epoxy.Model", function() {
 	
 	// Teardown
 	afterEach(function() {
-		model.clearComputed();
+		model.clearVirtuals();
 		model = null;
+	});
+	
+	
+	it("should use .virtuals to define basic virtual properties.", function() {
+		expect( model.get("isSelected") ).toBe( false );
+	});
+	
+	
+	it("should use .get() and .set() to modify virtual properties.", function() {
+		model.set( "isSelected", true );
+		expect( model.get("isSelected") ).toBe( true );
 	});
 	
 	
 	it("should assume computed properties defined as functions to be getters.", function() {
 		var obsGetter = model.obs.fullName._get;
-		var protoGetter = TestModel.prototype.computed.fullName;
+		var protoGetter = TestModel.prototype.computeds.fullName;
 		expect( obsGetter === protoGetter ).toBe( true );
 	});
 	
 	
-	it("should use .computed to automatically define computed properties.", function() {
-		var hasFullName = model.hasComputed("fullName");
-		var hasDonation = model.hasComputed("paymentCurrency");
+	it("should use .computeds to automatically construct computed properties.", function() {
+		var hasFullName = model.hasVirtual("fullName");
+		var hasDonation = model.hasVirtual("paymentCurrency");
 		expect( hasFullName && hasDonation ).toBe( true );
 	});
 	
 	
-	it("should use .computed to automatically define computed properties with dependencies.", function() {
+	it("should allow computed properties to be constructed out of dependency order (dependents may preceed their dependencies).", function() {
+		expect( model.get("paymentLabel") ).toBe( "Charlie Brown paid $100" );
+	});
+	
+	
+	it("should allow computed properties to be defined with manual dependency declarations.", function() {
 		// Test initial reachable value:
 		expect( model.get("unreachable") ).toBe( "Charlie" );
 		
 		// Change conditional value to point at the originally unreachable value:
-		model.set("payment", 0);
+		model.set("isSelected", true);
 		expect( model.get("unreachable") ).toBe( "Brown" );
 		
 		// Change unreachable value
@@ -115,9 +150,9 @@ describe("Backbone.Epoxy.Model", function() {
 	});
 	
 	
-	it("should use .addComputed() to define properties from a params object.", function() {
+	it("should use .addComputed() to define new properties from a params object.", function() {
 		
-		model.addComputed("unreachable", {
+		model.addComputed("addedProp", {
 			deps: ["payment", "firstName", "lastName"],
 			get: function() {
 				return this.get("payment") > 50 ? this.get("firstName") : this.get("lastName");
@@ -128,18 +163,18 @@ describe("Backbone.Epoxy.Model", function() {
 		});
 		
 		// Test initial reachable value:
-		expect( model.get("unreachable") ).toBe( "Charlie" );
+		expect( model.get("addedProp") ).toBe( "Charlie" );
 		
 		// Change conditional value to point at the originally unreachable value:
 		model.set("payment", 0);
-		expect( model.get("unreachable") ).toBe( "Brown" );
+		expect( model.get("addedProp") ).toBe( "Brown" );
 		
 		// Change unreachable value
 		model.set("lastName", "Black");
-		expect( model.get("unreachable") ).toBe( "Black" );
+		expect( model.get("addedProp") ).toBe( "Black" );
 		
 		// Set computed value
-		model.set("unreachable", 123);
+		model.set("addedProp", 123);
 		expect( model.get("payment") ).toBe( 123 );
 	});
 	
@@ -169,7 +204,7 @@ describe("Backbone.Epoxy.Model", function() {
 		expect( model.get("percentAvgPayment") ).toBe( 0.5 );
 		averages.set("avgPayment", 400);
 		expect( model.get("percentAvgPayment") ).toBe( 0.25 );
-		averages.clearComputed();
+		averages.clearVirtuals();
 	});
 	
 	
@@ -190,7 +225,7 @@ describe("Backbone.Epoxy.Model", function() {
 		// Change unreachable value
 		foreign.set("avgPayment", 400);
 		expect( model.get("unreachable") ).toBe( 400 );
-		foreign.clearComputed();
+		foreign.clearVirtuals();
 	});
 
 	
@@ -200,15 +235,16 @@ describe("Backbone.Epoxy.Model", function() {
 		expect( model.get("paymentLabel") ).toBe( "Charlie Brown paid $150" );
 	});
 	
-	it("should successfully build dependency graph, regardless of declaration order.", function() {
-		// IE: dependents created before their dependencies should still work...
-	});
 	
-	it("should use .set() to modify both model attributes and computed properties.", function() {
+	it("should use .set() to modify normal model attributes.", function() {
 		model.set("payment", 150);
 		expect( model.get("payment") ).toBe( 150 );
 		expect( model.get("paymentCurrency") ).toBe( "$150" );
-		
+	});
+	
+	
+	it("should use .set() for virtual computed properties to pass values along to the model.", function() {
+		expect( model.get("payment") ).toBe( 100 );
 		model.set("paymentCurrency", "$200");
 		expect( model.get("payment") ).toBe( 200 );
 		expect( model.get("paymentCurrency") ).toBe( "$200" );
@@ -220,6 +256,50 @@ describe("Backbone.Epoxy.Model", function() {
 			model.set("fullName", "Charlie Black");
 		}
 		expect( testForError ).toThrow();
+	});
+	
+	
+	it("should use .set() to allow computed properties to cross-set one another.", function() {
+		model.addComputed("crossSetter", {
+			get: function() {
+				return this.get("isSelected");
+			},
+			set: function( value ) {
+				return {isSelected: true};
+			}
+		});
+		
+		expect( model.get("crossSetter") ).toBe( false );
+		model.set("crossSetter", true );
+		expect( model.get("isSelected") ).toBe( true );
+	});
+	
+	
+	it("should throw .set() error in response to circular setter references.", function() {
+		
+		model.addComputed("loopSetter1", {
+			get: function() {
+				return "Nothing";
+			},
+			set: function( value ) {
+				return {loopSetter2: false};
+			}
+		});
+		
+		model.addComputed("loopSetter2", {
+			get: function() {
+				return "Nothing";
+			},
+			set: function( value ) {
+				return {loopSetter1: false};
+			}
+		});
+		
+		function circularRef() {
+			model.set("loopSetter1", true );
+		}
+
+		expect( circularRef ).toThrow();
 	});
 });
 
@@ -236,7 +316,7 @@ describe("Backbone.Epoxy.View", function() {
 			preference: "b"
 		},
 		
-		computed: {
+		computeds: {
 			nameDisplay: function() {
 				return "<strong>"+this.get("lastName")+"</strong>, "+this.get("firstName");
 			},
@@ -299,6 +379,10 @@ describe("Backbone.Epoxy.View", function() {
 		expect( $el.text() ).toBe( "Luke" );
 	});
 	
+	
+	it("should throw error in response to undefined property bindings.", function() {
+		//expect().toThrow();
+	});
 	
 	it("binding 'attr:' should establish a one-way binding with an element's attribute definitions.", function() {
 		//expect().toBe( true );

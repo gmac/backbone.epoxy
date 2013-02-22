@@ -5,7 +5,7 @@
 // For all details and documentation:
 // http://epoxyjs.org
 
-;(function( Backbone, _ ) {
+(function( Backbone, _ ) {
 	
 	Backbone.Epoxy = {};
 	
@@ -24,28 +24,34 @@
 			this.obs = {};
 			this._super( "constructor", arguments );
 			
-			// Adds all computed properties to the model:
-			if ( this.computed ) {
-				// Flag as initializing:
-				this._init = true;
-				
-				// Add all computed properties:
-				_.each(this.computed, function( param, property ) {
+			// Flag "init" to delay virtuals from self-initializing:
+			this._init = true;
+			
+			// Add all virtual properties:
+			if ( this.virtuals ) {
+				_.each(this.virtuals, function( value, property ) {
+					this.addVirtual( property, value );
+				}, this);
+			}
+			
+			// Add all virtual computed properties:
+			if ( this.computeds ) {
+				_.each(this.computeds, function( param, property ) {
 					this.addComputed( property, param );
 				}, this);
-				
-				// Initialize all computed properties:
-				_.each(this.obs, function( observable, property ) {
-					observable.init();
-				});
-				
-				// Unflag initialization:
-				delete this._init;
 			}
+			
+			// Initialize all virtual properties:
+			_.each(this.obs, function( virtual, property ) {
+				virtual.init();
+			});
+			
+			// Unflag "init": virtuals will now self-initialize.
+			delete this._init;
 		},
 		
 		// Backbone.Model.get() override:
-		// provides virtual properties & registers bindings while mapping computed dependencies.
+		// accesses virtual properties & maps computed dependency bindings.
 		get: function( property ) {
 			
 			// Automatically register bindings while building a computed dependency graph:
@@ -54,7 +60,7 @@
 			}
 			
 			// Return observable property value, if available:
-			if ( this.hasComputed(property) ) {
+			if ( this.hasVirtual(property) ) {
 				return this.obs[ property ].get();
 			}
 			
@@ -63,12 +69,12 @@
 		},
 		
 		// Backbone.Model.set() override:
-		// defers to computed setters for defining writable values.
+		// processes virtualized properties, then passes result through to underlying model.
 		set: function( key, value, options ) {
 			var params = key;
 			
 			// Convert params into object key/value format:
-			if ( typeof params != "object" ) {
+			if ( params && typeof params != "object" ) {
 				params = {};
 				params[ key ] = value;
 			} else {
@@ -81,33 +87,85 @@
 			// While not unsetting:
 			if ( !options.unset ) {
 				// {field0:"value0", field1:"value1"}
-				// Test all setting properties against the observable table:
-				// replace all observable fields with their mutated value(s).
-				_.each(params, function( val, property ) {	
-					if ( this.hasComputed(property) ) {
-						delete params[property];
-						_.extend(params, this.obs[property].set(val) || {});
-					}
-				}, this);
+				// Test all setting properties against virtualized properties:
+				// replace all virtualized fields with their mutated value(s).
+				params = this._vset(params, {}, []);
 			}
 			
 			return this._super( "set", [params, options] );
 		},
-
+		
+		// Recursive virtual value setter/collector:
+		// Used to collect non-virtual properties that will be passed along to the model,
+		// and allows virtual properties to set one another in the process.
+		// @param toTest: an object of key/value pairs to scan through.
+		// @param toKeep: non-virtual properties to keep and eventually pass along to the model.
+		// @param trace: property stack trace; prevents circular setter loops.
+		_vset: function( toTest, toKeep, stack ) {
+			
+			// Loop through all test properties:
+			for ( var property in toTest ) {
+				if ( toTest.hasOwnProperty(property) ) {
+					
+					// Pull each test value:
+					var value = toTest[ property ];
+					
+					if ( this.hasVirtual(property) ) {
+						
+						// Has a virtual property:
+						// comfirm property does not already exist within the stack trace.
+						if ( !stack.length || _.indexOf(stack, property) < 0 ) {
+							
+							// Non-recursive:
+							// set and collect value from virtual property. 
+							value = this.obs[property].set(value);
+							
+							// Recursively set new values for a returned params object:
+							// creates a new copy of the stack trace for each new search branch.
+							if ( value && typeof value == "object" ) {
+								toKeep = this._vset( value, toKeep, stack.slice().concat([property]) );
+							}
+							
+						} else {
+							// Recursive:
+							// Throw circular reference error.
+							throw( "Recursive setter: "+stack.join(" > ") );
+						}
+						
+					} else {
+						// No virtual property:
+						// set the value to the keeper values.
+						toKeep[ property ] = value;
+					}
+				}
+			}
+			
+			return toKeep;
+		},
+		
 		// Backbone.Model.destroy() override:
 		// clears all computed properties before destroying.
 		destroy: function() {
-			this.clearComputed();
+			this.clearVirtuals();
 			return this._super( "destroy", arguments );
 		},
 		
-		addObservable: function() {
-			
+		// Adds a virtual property to the model:
+		// virtual property values may contain any object type.
+		addVirtual: function( property, value ) {
+			this.removeVirtual( property );
+			this.obs[ property ] = new EpoxyModel.VirtualProperty( this, property, {value: value} );
 		},
 		
+		// Adds a virtual computed property to the model:
+		// computed properties will construct customized values.
+		// @param property (string)
+		// @param getter (function) OR params (object)
+		// @param [setter (function)]
+		// @param [dependencies ...]
 		addComputed: function( property, getter, setter ) {
-			// Clear any existing property, then define new computed:
-			this.removeComputed( property );
+			this.removeVirtual( property );
+			
 			var params = getter;
 			
 			// Test if getter and/or setter are provided:
@@ -128,33 +186,34 @@
 				params.deps = Array.prototype.slice.call( arguments, depsIndex );
 			}
 			
-			// Create new computed observable:
-			this.obs[ property ] = new EpoxyModel.Observable( this, property, params );
+			// Create new computed property:
+			this.obs[ property ] = new EpoxyModel.VirtualProperty( this, property, params );
 		},
 		
-		removeComputed: function( property ) {
-			if ( this.hasComputed(property) ) {
+		// Removes a virtual property from the model:
+		removeVirtual: function( property ) {
+			if ( this.hasVirtual(property) ) {
 				this.obs[ property ].dispose();
 				delete this.obs[ property ];
 			}
 		},
 		
-		hasComputed: function( property ) {
+		// Tests the model for a virtual property definition:
+		hasVirtual: function( property ) {
 			return this.obs.hasOwnProperty( property );
 		},
 
-		// Unbinds computed properties:
-		clearComputed: function() {
+		// Unbinds all virtual properties:
+		clearVirtuals: function() {
 			for ( var property in this.obs ) {
-				this.removeComputed( property );
+				this.removeVirtual( property );
 			}
 		}
 	});
 	
-	// Epoxy.Model.Observable
-	// ----------------------
-	var Observable = EpoxyModel.Observable = function( model, name, params ) {
-		
+	// Epoxy.Model.VirtualProperty
+	// ---------------------------
+	var EpoxyVirtual = EpoxyModel.VirtualProperty = function( model, name, params ) {
 		params = params || {};
 		
 		// Rewrite getter param:
@@ -176,10 +235,16 @@
 		this.model = model;
 		this.name = name;
 		this.deps = this.deps || [];
+		
+		// Skip init while parent model is initializing:
+		// Model will initialize in two passes...
+		// the first pass sets up all binding definitions,
+		// the second pass will initialize all bindings.
 		if ( !model._init ) this.init();
 	};
 	
-	_.extend(Observable.prototype, Backbone.Events, {
+	_.extend(EpoxyVirtual.prototype, Backbone.Events, {
+		dirty: true,
 		deps: undefined,
 		value: undefined,
 		previous: undefined,
@@ -188,82 +253,145 @@
 			// Configure event capturing, then update and bind observable:
 			EpoxyModel._map = this.deps;
 			this.update();
-			this.bindings();
 			EpoxyModel._map = null;
+			
+			if ( this.deps.length ) {
+				// Has dependencies:
+				// proceed to binding...
+				var bindings = {};
+			
+				// Compile normalized bindings array:
+				// defines event types by name with their associated targets.
+				_.each(this.deps, function( property ) {
+					var target = this.model;
+				
+					// Unpack any provided array property as: [propName, target].
+					if ( property instanceof Array ) {
+						target = property[1];
+						property = property[0];
+					}
+					
+					// Normalize property names to include a "change:" prefix:
+					if ( !!property.indexOf("change:") ) {
+						property = "change:"+property;
+					}
+
+					// Populate event target arrays:
+					if ( !bindings.hasOwnProperty(property) ) {
+						bindings[property] = [ target ];
+					
+					} else if ( !_.contains(bindings[property], target) ) {
+						bindings[property].push( target );
+					}
+				
+				}, this);
+			
+				// Bind all event declarations to their respective targets:
+				_.each(bindings, function( targets, binding ) {
+					for (var i=0, len=targets.length; i < len; i++) {
+						this.listenTo( targets[i], binding, this.update );
+					}
+				}, this);
+			}
 		},
 		
+		// Gets the observable's current value:
+		// Computed values flagged as dirty will need to regenerate themselves.
 		get: function() {
+			if ( this.dirty && this._get ) {
+				var val = this._get.call( this.model );
+				this.change( val );
+			}
+			this.dirty = false;
 			return this.value;
 		},
 		
+		// Sets the observable's current value:
+		// computed values (have a custom getter method) require a custom setter.
+		// Custom setters should return an object of key/values pairs;
+		// key/value pairs returned to the parent model will be merged into its main .set() operation.
 		set: function( val ) {
 			if ( this._get ) {
 				if ( this._set ) return this._set.apply( this.model, arguments );
 				else throw( "Cannot set read-only computed observable." );
 			}
 			this.change( val );
+			return null;
 		},
 		
+		// Triggered in response to binding updates:
+		// flags the value as dirty and re-gets it to update/propagate.
 		update: function() {
-			var val = this._get ? this._get.call( this.model ) : this.get();
-			this.change( val );
+			this.dirty = true;
+			this.get();
 		},
 		
+		// Fires a change event for the observable property on the parent model:
+		fire: function() {
+			this.model.trigger( "change change:"+this.name );
+		},
+		
+		// Changes the observable's value:
+		// new values are cached, then fire an update event.
 		change: function( val ) {
 			if ( val !== this.value ) {
 				this.previous = this.value;
 				this.value = val;
-				this.model.trigger( "change change:"+this.name );
+				this.fire();
 			}
 		},
 		
-		bindings: function() {
-			var bindings = {};
-			
-			// Compile normalized bindings array:
-			// defines event types by name with their associated targets.
-			_.each(this.deps, function( property ) {
-				var target = this.model;
-				
-				// Unpack any provided array property as: [propName, target].
-				if ( property instanceof Array ) {
-					target = property[1];
-					property = property[0];
-				}
-				
-				// Normalize property names to include a "change:" prefix:
-				if ( !!property.indexOf("change:") ) {
-					property = "change:"+property;
-				}
-
-				// Populate event target arrays:
-				if ( !bindings.hasOwnProperty(property) ) {
-					bindings[property] = [ target ];
-					
-				} else if ( !_.contains(bindings[property], target) ) {
-					bindings[property].push( target );
-				}
-				
-			}, this);
-			
-			// Bind all event declarations to their respective targets:
-			_.each(bindings, function( targets, binding ) {
-				for (var i=0, len=targets.length; i < len; i++) {
-					this.listenTo( targets[i], binding, this.update );
-				}
-			}, this);
+		// Array operator method:
+		// performs array ops on the observable value, then fires change.
+		// The observable value must be an array for these actions to apply.
+		_ary: function( operator, args ) {
+			if ( this.value instanceof Array ) {
+				var result = Array.prototype[ operator ].apply( this.value, args );
+				this.fire();
+			}
 		},
 		
+		// Array operator methods:
+		pop: function() {
+			return this._ary( "pop", arguments );
+		},
+		
+		push: function() {
+			return this._ary( "push", arguments );
+		},
+		
+		reverse: function() {
+			return this._ary( "reverse", arguments );
+		},
+		
+		shift: function() {
+			return this._ary( "shift", arguments );
+		},
+		
+		slice: function() {
+			return this._ary( "slice", arguments );
+		},
+		
+		sort: function() {
+			return this._ary( "sort", arguments );
+		},
+		
+		unshift: function() {
+			return this._ary( "unshift", arguments );
+		},
+		
+		// Disposal:
+		// cleans up events and releases references.
 		dispose: function() {
-			this.off();
 			this.stopListening();
+			this.off();
 			this.model = this.value = this.previous = null;
 		}
 	});
 	
-	// Epoxy.Model.ArrayObservable
+	// Epoxy.Model.ArrayVirtual
 	/*/ ---------------------------
-	EpoxyModel.ArrayObservable = Observable.extend({
+	EpoxyModel.ArrayVirtual = Virtual.extend({
 		
 		set: function( val, changed ) {
 			// Test if lengths have changed:
@@ -285,33 +413,6 @@
 				this.value = val;
 				this.change();
 			}
-		},
-		
-		_op: function( operator, args ) {
-			var result = Array.prototype[ operator ].apply( this.value, args );
-			this.change();
-			return 
-		},
-		pop: function() {
-			return this._op( "pop", arguments );
-		},
-		push: function() {
-			return this._op( "push", arguments );
-		},
-		reverse: function() {
-			return this._op( "reverse", arguments );
-		},
-		shift: function() {
-			return this._op( "shift", arguments );
-		},
-		slice: function() {
-			return this._op( "slice", arguments );
-		},
-		sort: function() {
-			return this._op( "sort", arguments );
-		},
-		unshift: function() {
-			return this._op( "unshift", arguments );
 		}
 	});*/
 	
@@ -410,11 +511,6 @@
 			// Create bindings list:
 			this._xv = [];
 
-			// Set passed options template:
-			if ( options && options.template ) {
-				this.template = options.template;
-			}
-			
 			// Generate element dom from template:
 			if ( this.template ) {
 				var tmpl = this.template;
@@ -448,7 +544,7 @@
 					
 					// Get / Set value:
 					if ( value !== void 0 ) {
-						if ( typeof(value) == "object" ) return model.set( value );
+						if ( value && typeof(value) == "object" ) return model.set( value );
 						return model.set( property, value );
 					}
 					return model.get( property );
@@ -466,7 +562,7 @@
 			}
 			
 			// Create bindings:
-			if ( typeof this.bindings == "object" ) {
+			if ( this.bindings && typeof this.bindings == "object" ) {
 				
 				// Mapped bindings:
 				_.each(this.bindings, function( bindings, selector ) {
@@ -508,7 +604,7 @@
 	
 	// Epoxy.View.Binding
 	// ------------------
-	EpoxyView.Binding = function( $element, bindings, accessors, operators, model ) {
+	var Binding = EpoxyView.Binding = function( $element, bindings, accessors, operators, model ) {
 		this.$el = $element;
 		this.accessors = accessors;
 		this.parser = new Function("$context", "with($context){return{" + bindings + "}}");
@@ -565,7 +661,7 @@
 		});
 	};
 
-	EpoxyView.Binding.prototype = _.extend({
+	_.extend(Binding.prototype, Backbone.Events, {
 		dirty: false,
 		events: "change.epoxy",
 		accessors: {},
@@ -616,7 +712,7 @@
 				// Accessor is function: return invoked value.
 				return accessor();
 			}
-			else if ( type == "object" ) {
+			else if ( type && type == "object" ) {
 				// Accessor is object: return copy with all attributes read.
 				accessor = _.clone( accessor );
 				
@@ -638,9 +734,8 @@
 		dispose: function() {
 			this.stopListening();
 			this.$el.off( this.events );
-			this.$el = null;
+			this.$el = this.accessors = this.parser = null;
 		}
-		
-	}, Backbone.Events);
+	});
 	
 }( Backbone, _ ));
