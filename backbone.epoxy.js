@@ -89,7 +89,7 @@
 				// {field0:"value0", field1:"value1"}
 				// Test all setting properties against virtualized properties:
 				// replace all virtualized fields with their mutated value(s).
-				params = this._vset(params, {}, []);
+				params = this._deepset(params, {}, []);
 			}
 			
 			return this._super( "set", [params, options] );
@@ -101,7 +101,7 @@
 		// @param toTest: an object of key/value pairs to scan through.
 		// @param toKeep: non-virtual properties to keep and eventually pass along to the model.
 		// @param trace: property stack trace; prevents circular setter loops.
-		_vset: function( toTest, toKeep, stack ) {
+		_deepset: function( toTest, toKeep, stack ) {
 			
 			// Loop through all test properties:
 			for ( var property in toTest ) {
@@ -123,7 +123,7 @@
 							// Recursively set new values for a returned params object:
 							// creates a new copy of the stack trace for each new search branch.
 							if ( value && typeof value == "object" ) {
-								toKeep = this._vset( value, toKeep, stack.slice().concat([property]) );
+								toKeep = this._deepset( value, toKeep, stack.slice().concat([property]) );
 							}
 							
 						} else {
@@ -169,7 +169,7 @@
 			var params = getter;
 			
 			// Test if getter and/or setter are provided:
-			if ( typeof getter == "function" ) {
+			if ( _.isFunction(getter) ) {
 				var depsIndex = 2;
 				
 				// Add getter param:
@@ -177,7 +177,7 @@
 				params._get = getter;
 				
 				// Test for setter param:
-				if ( typeof setter == "function" ) {
+				if ( _.isFunction(setter) ) {
 					params._set = setter;
 					depsIndex++;
 				}
@@ -217,12 +217,12 @@
 		params = params || {};
 		
 		// Rewrite getter param:
-		if ( params.get && typeof params.get == "function" ) {
+		if ( params.get && _.isFunction(params.get) ) {
 			params._get = params.get;
 		}
 		
 		// Rewrite setter param:
-		if ( params.set && typeof params.set == "function" ) {
+		if ( params.set && _.isFunction(params.set) ) {
 			params._set = params.set;
 		}
 		
@@ -266,7 +266,7 @@
 					var target = this.model;
 				
 					// Unpack any provided array property as: [propName, target].
-					if ( property instanceof Array ) {
+					if ( _.isArray(property) ) {
 						target = property[1];
 						property = property[0];
 					}
@@ -303,7 +303,7 @@
 				this.change( val );
 			}
 			this.dirty = false;
-			return this.value;
+			return this.copy();
 		},
 		
 		// Sets the observable's current value:
@@ -331,12 +331,24 @@
 			this.model.trigger( "change change:"+this.name );
 		},
 		
+		// Returns a copy of the value object:
+		copy: function() {
+			var value = this.value;
+			
+			if ( _.isArray(value) ) {
+				return value.slice();
+			} else if ( _.isObject(value) ) {
+				return _.clone(value);
+			}
+			return value;
+		},
+		
 		// Changes the observable's value:
 		// new values are cached, then fire an update event.
-		change: function( val ) {
-			if ( val !== this.value ) {
+		change: function( value ) {
+			if ( !_.isEqual(value, this.value) ) {
 				this.previous = this.value;
-				this.value = val;
+				this.value = value;
 				this.fire();
 			}
 		},
@@ -345,9 +357,10 @@
 		// performs array ops on the observable value, then fires change.
 		// The observable value must be an array for these actions to apply.
 		_ary: function( operator, args ) {
-			if ( this.value instanceof Array ) {
+			if ( _.isArray(this.value) ) {
 				var result = Array.prototype[ operator ].apply( this.value, args );
 				this.fire();
+				return result;
 			}
 		},
 		
@@ -389,34 +402,6 @@
 		}
 	});
 	
-	// Epoxy.Model.ArrayVirtual
-	/*/ ---------------------------
-	EpoxyModel.ArrayVirtual = Virtual.extend({
-		
-		set: function( val, changed ) {
-			// Test if lengths have changed:
-			changed = changed || (this.value.length !== val.length);
-			
-			// If not, manually seach for value changes:
-			if ( !changed ) {
-				for (var i=0, len=val.length; i < len; i++) {
-					if ( this.value[i] !== val[i] ) {
-						changed = true;
-						break;
-					}
-				}
-			}
-			
-			// If changed, update:
-			if ( changed ) {
-				this.previous = this.value;
-				this.value = val;
-				this.change();
-			}
-		}
-	});*/
-	
-	
 	// Epoxy.defaultBindings
 	// ---------------------
 	Backbone.Epoxy.defaultBindings = {
@@ -429,18 +414,49 @@
 		
 		// Checked: read-write. Toggles the checked status of a form element.
 		checked: {
-			get: function($element) {
-				return $element.is(":radio") ? $element.val() : !!$element.prop("checked");
+			get: function( $element, currentValue ) {
+				var checked = !!$element.prop( "checked" );
+				var value = $element.val();
+				
+				if ( $element.is(":radio") ) {
+					// Radio button: return value directly.
+					return value;
+					
+				} else if ( _.isArray(currentValue) ) {
+					// Checkbox array: add/remove value from list.
+					var index = _.indexOf(currentValue, value);
+
+					if ( checked && index < 0 ) {
+						currentValue.push( value );
+					} else if ( !checked && index > -1 ) {
+						currentValue.splice(index, 1);
+					}
+					return currentValue;
+				}
+				// Checkbox: return boolean toggle.
+				return checked;
 			},
-			set: function($element, value) {
-				var checked = $element.is(":radio") ? (value == $element.val()) : !!value;
+			set: function( $element, value ) {
+				// Default as loosely-typed boolean:
+				var checked = !!value;
+				
+				if ( $element.is(":radio") ) {
+					// Radio button: match checked state to radio value.
+					checked = (value == $element.val());
+					
+				} else if ( _.isArray(value) ) {
+					// Checkbox array: match checked state to checkbox value in array contents.
+					checked = _.contains(value, $element.val());
+				}
+				
+				// Set checked property to element:
 				$element.prop("checked", checked);
 			}
 		},
 		
 		// Class Name: write-only. Toggles a collection of class name definitions.
 		className: {
-			set: function($element, value) {
+			set: function( $element, value ) {
 				_.each(value, function(enabled, className) {
 					$element.toggleClass(className, !!enabled);
 				});
@@ -520,7 +536,7 @@
 			this.unbindView();
 			if ( !this.model || !this.bindings ) return;
 			
-			var operators = _.extend(this.operators || {}, Backbone.Epoxy.defaultBindings);
+			var operators = _.extend({},Backbone.Epoxy.defaultBindings,this.operators||{});
 			var accessors = {};
 			var model = this.model;
 			var self = this;
@@ -535,19 +551,23 @@
 					}
 					
 					// Get / Set value:
-					if ( value !== void 0 ) {
-						if ( value && typeof(value) == "object" ) return model.set( value );
+					if ( !_.isUndefined(value) ) {
+						if ( value && _.isObject(value) && !_.isArray(value) ) {
+							// Set Object (non-null, non-array) hashtable value:
+							return model.set( value );
+						}
+						// Set single property/value pair:
 						return model.set( property, value );
 					}
 					return model.get( property );
 				};
 			});
 			
-			// Binds an element into the model:
+			// Binds an element onto the model:
 			function bind( $element, bindings, selector ) {
 				// Try to compile bindings, throw errors if encountered:
 				try {
-					self._xv.push( new EpoxyView.Binding($element, bindings, accessors, operators, model) );
+					self._xv.push( new EpoxyViewBinding($element, bindings, accessors, operators, model) );
 				} catch( error ) {
 					throw( 'Error parsing bindings for "'+ selector +'" >> '+error );
 				}
@@ -606,9 +626,9 @@
 	});
 	
 	
-	// Epoxy.View.Binding
-	// ------------------
-	var Binding = EpoxyView.Binding = function( $element, bindings, accessors, operators, model ) {
+	// EpoxyViewBinding
+	// ----------------
+	var EpoxyViewBinding = function( $element, bindings, accessors, operators, model ) {
 		this.$el = $element;
 		this.accessors = accessors;
 		this.parser = new Function("$context", "with($context){return{" + bindings + "}}");
@@ -638,7 +658,7 @@
 				// => Value accessor is a function (dirty/composite bindings don't work here).
 				if ( changable && operator.get && typeof(accessor) == "function" ) {
 					self.$el.on(self.events, function() {
-						accessor( operator.get.call( self, self.$el ) );
+						accessor( operator.get.call(self, self.$el, self.read(accessor)) );
 					});
 				}
 				
@@ -646,7 +666,7 @@
 				// => One or more events triggers.
 				if ( events.length ) {
 					self.listenTo( model, events.join(" "), function() {
-						operator.set.call( self, self.$el, self.read( accessor ) );
+						operator.set.call(self, self.$el, self.read(accessor));
 					});
 				}
 				
@@ -657,7 +677,7 @@
 		});
 	};
 
-	_.extend(Binding.prototype, Backbone.Events, {
+	_.extend(EpoxyViewBinding.prototype, Backbone.Events, {
 		dirty: false,
 		events: "change.epoxy",
 		accessors: {},
@@ -677,7 +697,7 @@
 				var events = bindings.events;
 				
 				// Collect trigger definitions from an array:
-				if ( events instanceof Array ) {
+				if ( _.isArray(events) ) {
 					
 					// Enforce presence of a change trigger:
 					if ( _.indexOf(events, "change") < 0 ) events.push("change");
@@ -702,13 +722,12 @@
 		// => A returned primitive; byproduct of a dirty binding.
 		// This method unpacks an accessor and returns its underlying value(s).
 		read: function( accessor ) {
-			var type = typeof(accessor);
 			
-			if ( type == "function" ) {
+			if ( _.isFunction(accessor) ) {
 				// Accessor is function: return invoked value.
 				return accessor();
 			}
-			else if ( type && type == "object" ) {
+			else if ( _.isObject(accessor) && !_.isArray(accessor) ) {
 				// Accessor is object: return copy with all attributes read.
 				accessor = _.clone( accessor );
 				

@@ -316,6 +316,10 @@ describe("Backbone.Epoxy.View", function() {
 			preference: "b"
 		},
 		
+		virtuals: {
+			checkList: ["b"]
+		},
+		
 		computeds: {
 			nameDisplay: function() {
 				return "<strong>"+this.get("lastName")+"</strong>, "+this.get("firstName");
@@ -331,7 +335,15 @@ describe("Backbone.Epoxy.View", function() {
 		el: "#dom-view",
 		model: bindingModel,
 		bindings: "data-bind",
-
+		
+		operators: {
+			printArray: {
+				set: function( $element, value ) {
+					$element.text( value.sort().join(", ") );
+				}
+			}
+		},
+		
 		initialize: function() {
 			this.bindView();
 		}
