@@ -425,8 +425,20 @@ describe("Backbone.Epoxy.View", function() {
 		expect( applyBindings ).toThrow();
 	});
 	
+	
 	it("binding 'attr:' should establish a one-way binding with an element's attribute definitions.", function() {
 		//expect().toBe( true );
+	});
+	
+	
+	it("binding 'checked:' should establish a two-way binding with a radio group.", function() {
+		var $a = $(".preference[value='a']");
+		var $b = $(".preference[value='b']");
+		expect( $a.prop("checked") ).toBe( false );
+		expect( $b.prop("checked") ).toBe( true );
+		
+		$a.prop("checked", true).trigger("change");
+		expect( bindingModel.get("preference") ).toBe( "a" );
 	});
 	
 	
@@ -439,14 +451,30 @@ describe("Backbone.Epoxy.View", function() {
 	});
 	
 	
-	it("binding 'checked:' should establish a two-way binding with a radio group.", function() {
-		var $a = $(".preference[value='a']");
-		var $b = $(".preference[value='b']");
-		expect( $a.prop("checked") ).toBe( false );
-		expect( $b.prop("checked") ).toBe( true );
+	it("binding 'checked:' should set a checkbox series from a model array to the view.", function() {
+		var $els = $("#dom-view .check-list");
 		
-		$a.prop("checked", true).trigger("change");
-		expect( bindingModel.get("preference") ).toBe( "a" );
+		// Default: populate based on intial setting:
+		expect( !!$els.filter("[value='b']" ).prop("checked") ).toBe( true );
+		expect( !!$els.filter("[value='c']" ).prop("checked") ).toBe( false );
+		
+		// Add new selection to the checkbox group:
+		bindingModel.set("checkList", ["b", "c"]);
+		expect( !!$els.filter("[value='b']" ).prop("checked") ).toBe( true );
+		expect( !!$els.filter("[value='c']" ).prop("checked") ).toBe( true );
+	});
+	
+	
+	it("binding 'checked:' should get a checkbox selection from the view and push it into a model array.", function() {
+		var $els = $("#dom-view .check-list");
+		bindingModel.set("checkList", ["b"]);
+		
+		// Default: populate based on intial setting:
+		expect( !!$els.filter("[value='b']" ).prop("checked") ).toBe( true );
+		
+		// Add new selection to the checkbox group:
+		$els.filter("[value='a']").prop("checked", true).trigger("change");
+		expect( bindingModel.get("checkList").join(",") ).toBe( "b,a" );
 	});
 	
 	
@@ -501,7 +529,10 @@ describe("Backbone.Epoxy.View", function() {
 	
 	
 	it("binding 'toggle:' should establish a one-way binding with an element's visibility.", function() {
-		//expect().toBe( true );
+		var $el = $("#dom-view .active-toggle");
+		expect( $el.is(":visible") ).toBe( true );
+		bindingModel.set("active", false);
+		expect( $el.is(":visible") ).toBe( false );
 	});
 	
 	
@@ -510,5 +541,14 @@ describe("Backbone.Epoxy.View", function() {
 		expect( $el.val() ).toBe( "Luke" );
 		$el.val( "Anakin" ).trigger("change");
 		expect( bindingModel.get("firstName") ).toBe( "Anakin" );
+	});
+	
+	
+	it("binding custom setters should push values into the view.", function() {
+		var $els = $("#dom-view .check-list");
+		bindingModel.set("checkList", ["c"]);
+		expect( !!$els.filter("[value='a']" ).prop("checked") ).toBe( false );
+		expect( !!$els.filter("[value='b']" ).prop("checked") ).toBe( false );
+		expect( !!$els.filter("[value='c']" ).prop("checked") ).toBe( true );
 	});
 });

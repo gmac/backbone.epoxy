@@ -57,14 +57,16 @@
 				<input type="checkbox" class="active" data-bind="checked:active">
 				<button data-bind="enabled:active">yes</button>
 				<button data-bind="disabled:active">no</button>
+				<span class="active-toggle" data-bind="toggle:active">ON</span>
+				<!--span class="active-hidden" data-bind="hidden:active">ON</span-->
 			</p>
 		</div>
 		<div class="section">
 			<p>Selected Options: <span data-bind="printArray:checkList"></span></p>
 			<p>
-				<label>a</label>: <input type="checkbox" class="checkList" value="a" data-bind="checked:checkList"> &nbsp; 
-				<label>b</label>: <input type="checkbox" class="checkList" value="b" data-bind="checked:checkList"> &nbsp; 
-				<label>c</label>: <input type="checkbox" class="checkList" value="c" data-bind="checked:checkList"> &nbsp; 
+				<label>a</label>: <input type="checkbox" class="check-list" value="a" data-bind="checked:checkList"> &nbsp; 
+				<label>b</label>: <input type="checkbox" class="check-list" value="b" data-bind="checked:checkList"> &nbsp; 
+				<label>c</label>: <input type="checkbox" class="check-list" value="c" data-bind="checked:checkList"> &nbsp; 
 			</p>
 		</div>
 		<div class="section">
