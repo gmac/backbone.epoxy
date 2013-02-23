@@ -516,7 +516,6 @@
 		}
 	};
 	
-	
 	// Epoxy.View
 	// ----------
 	var EpoxyView = Backbone.Epoxy.View = Backbone.View.extend({
@@ -626,129 +625,180 @@
 	});
 	
 	
+	// readAccessor()
+	// --------------
+	// Reads value from an accessor:
+	// Accessors come in three potential forms:
+	// => A function to call for the requested value.
+	// => An object with a collection of attribute accessors.
+	// => A primitive (string, number, boolean, etc).
+	// This method unpacks an accessor and returns its underlying value(s).
+	function readAccessor( accessor ) {
+		
+		if ( _.isFunction(accessor) ) {
+			// Accessor is function: return invoked value.
+			return accessor();
+		}
+		else if ( _.isObject(accessor) ) {
+			// Accessor is object: return copy with all attributes read.
+			accessor = _.isArray(accessor) ? accessor.slice() : _.clone(accessor);
+			
+			_.each(accessor, function( value, key ) {
+				accessor[ key ] = readAccessor( value );
+			});
+		}
+		// return formatted value, or pass through primitives:
+		return accessor;
+	}
+	
+	
+	// mapAccessors()
+	// --------------
+	// Immediately calls all accessor arguments:
+	// must be performed by each formatter function to map events while binding.
+	function mapAccessors( args ) {
+		var args = Array.prototype.slice.call( args );
+		for ( var i=0, len=args.length; i < len; i++) {
+			readAccessor(args[i]);
+		}
+		return args;
+	}
+	
+	
+	// bindingFormatters
+	// -----------------
+	// Formatters are invoked while binding, and return a proxy function used to modify how accessors are read.
+	// Note that binding formatters MUST access all of their params while running their outer factory function,
+	// which assures that all dependent accessors are invoked and mapped while creating the binding.
+	var bindingFormatters = {
+		
+		// Tests if all of the provided accessors are truthy (and):
+		all: function() {
+			var args = mapAccessors(arguments);
+			return function() {
+				for ( var i=0, len=args.length; i < len; i++) {
+					if ( !readAccessor(args[i]) ) return false;
+				}
+				return true;
+			}
+		},
+		
+		// Tests if any of the provided accessors are truthy (or):
+		any: function() {
+			var args = mapAccessors(arguments);
+			return function() {
+				for ( var i=0, len=args.length; i < len; i++) {
+					if ( !!readAccessor(args[i]) ) return true;
+				}
+				return false;
+			}
+		},
+		
+		// Tests if none of the provided accessors are truthy (and not):
+		none: function() {
+			var args = mapAccessors(arguments);
+			return function() {
+				for ( var i=0, len=args.length; i < len; i++) {
+					if ( !readAccessor(args[i]) ) return true;
+				}
+				return false;
+			}
+		},
+		
+		// Negates an accessor's value:
+		not: function( accessor ) {
+			readAccessor( accessor );
+			return function() {
+				return !readAccessor( accessor );
+			}
+		},
+		
+		// Parses one or more accessors into a text string:
+		// "$1 $2 did $3", firstName, lastName, action
+		parse: function() {
+			var args = mapAccessors(arguments);
+			return function() {
+				var str = args[0];
+				for ( var i=1, len=args.length; i < len; i++) {
+					str = str.replace( "$"+i, readAccessor(args[i]) );
+				}
+				return str;
+			}
+		}
+	};
+	
+
 	// EpoxyViewBinding
 	// ----------------
 	var EpoxyViewBinding = function( $element, bindings, accessors, operators, model ) {
 		this.$el = $element;
-		this.accessors = accessors;
-		this.parser = new Function("$context", "with($context){return{" + bindings + "}}");
-		this.parse();
-		
+
 		var self = this;
 		var tag = ($element[0].tagName).toLowerCase();
 		var changable = (tag == "input" || tag == "select" || tag == "textarea");
+		var parser = new Function("$f", "$a", "with($f){with($a){return{" + bindings + "}}}");
+		var bindings = parser( bindingFormatters, accessors );
+		var events = ["change"];
 		
-		_.each( self.bindings, function( accessor, operatorName ) {
+		// Collect additional event bindings param from parsed bindings:
+		// specifies dom triggers on which the DOM binding should update.
+		if ( bindings.events ) {
+			events = _.isArray(bindings.events) ? _.union(events, bindings.events) : events;
+			delete bindings.events;
+		}
+		
+		// Define event triggers list:
+		this.events = _.map(events, function(name){ return name+".epoxy"; }).join(" ");
+		
+		// Apply event bindings:
+		_.each(bindings, function( accessor, operatorName ) {
 			
 			// Test if operator is defined:
 			if ( operators.hasOwnProperty(operatorName) ) {
 				// Create reference to binding operator:
 				var operator = operators[ operatorName ];
-				var events = [];
+				var triggers = [];
 				
 				// Set default binding:
 				// Configure accessor table to collect events.
-				EpoxyView._map = events;
-				operator.set.call( self, self.$el, self.read(accessor) );
+				EpoxyView._map = triggers;
+				operator.set.call( self, self.$el, readAccessor(accessor) );
 				EpoxyView._map = null;
 
 				// Getting, requires:
 				// => Form element.
 				// => Binding operator has getter method.
 				// => Value accessor is a function (dirty/composite bindings don't work here).
-				if ( changable && operator.get && typeof(accessor) == "function" ) {
+				if ( changable && operator.get && _.isFunction(accessor) ) {
 					self.$el.on(self.events, function() {
-						accessor( operator.get.call(self, self.$el, self.read(accessor)) );
+						accessor( operator.get.call(self, self.$el, readAccessor(accessor)) );
 					});
 				}
 				
 				// Setting, requires:
 				// => One or more events triggers.
-				if ( events.length ) {
-					self.listenTo( model, events.join(" "), function() {
-						operator.set.call(self, self.$el, self.read(accessor));
+				if ( triggers.length ) {
+					self.listenTo( model, triggers.join(" "), function() {
+						operator.set.call(self, self.$el, readAccessor(accessor));
 					});
 				}
 				
 			} else {
+				// Operator was undefined:
 				throw( "invalid binding => "+operator );
 			}
-			
 		});
 	};
 
 	_.extend(EpoxyViewBinding.prototype, Backbone.Events, {
-		dirty: false,
-		events: "change.epoxy",
-		accessors: {},
-		bindings: {},
-		
-		// Re-parses bindings table from the original parser function:
-		// This method is only called once during construction,
-		// then re-invoked each time a dirty binding is accessed.
-		// An optional operator name may be specified for direct access to the parsed accessor.
-		parse: function( operator ) {
-			var bindings = this.bindings = this.parser( this.accessors );
-			
-			// Filter out triggers param:
-			// Specifies dom triggers on which the DOM binding should update.
-			// Binding triggers have a unique implementation, so should be parsed out...
-			if ( bindings.events ) {
-				var events = bindings.events;
-				
-				// Collect trigger definitions from an array:
-				if ( _.isArray(events) ) {
-					
-					// Enforce presence of a change trigger:
-					if ( _.indexOf(events, "change") < 0 ) events.push("change");
-					
-					// Rewrite trigger string as "change.epoxy keydown.epoxy":
-					this.events = _.map(events, function(name) {
-						return name + ".epoxy";
-					}).join(" ");
-				}
-				
-				// delete from regular bindings collection.
-				delete bindings.events;
-			}
-			
-			if ( operator ) return bindings[ operator ];
-		},
-		
-		// Reads value from an accessor:
-		// Accessors come in three potential forms:
-		// => A function to call for the requested value.
-		// => An object with a collection of attribute accessors.
-		// => A returned primitive; byproduct of a dirty binding.
-		// This method unpacks an accessor and returns its underlying value(s).
-		read: function( accessor ) {
-			
-			if ( _.isFunction(accessor) ) {
-				// Accessor is function: return invoked value.
-				return accessor();
-			}
-			else if ( _.isObject(accessor) && !_.isArray(accessor) ) {
-				// Accessor is object: return copy with all attributes read.
-				accessor = _.clone( accessor );
-				
-				_.each(accessor, function( valueAccessor, attr ) {
-					accessor[ attr ] = this.read( valueAccessor );
-				}, this);
-				
-				return accessor;
-			} 
-			
-			// Something else...
-			// Not sure what this is, so return the value directly.
-			return accessor;
-		},
+		events: "",
 		
 		// Destroys the binding:
 		// all events and 
 		dispose: function() {
 			this.stopListening();
 			this.$el.off( this.events );
-			this.$el = this.accessors = this.parser = null;
+			this.$el = null;
 		}
 	});
 	

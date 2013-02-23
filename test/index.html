@@ -27,6 +27,15 @@
 		margin-top: 15px;
 		padding-top: 10px;
 	}
+	.test-classname {
+		color: #999;
+	}
+	.active {
+		color: #000;
+	}
+	.hilite {
+		color: #1ec900;
+	}
 	.error {
 		color: #f00;
 	}
@@ -36,33 +45,35 @@
 	
 	<div id="dom-view" class="test-view">
 		<strong>DOM / Attribute Mapping</strong>
-		<p>
-			<span class="user-first" data-bind="text:firstName"></span> 
-			<span  class="user-last" data-bind="text:lastName"></span>
-		</p>
 		<div class="section">
-			<label class="user-name-label" data-bind="className:{error:nameError}">Enter name:</label>
-			<input type="text" class="user-name" data-bind="value:firstName,events:['keyup']">
+			<p><label class="test-classname" data-bind="className:{error:firstNameError,active:active}">First name:</label></p>
+			<input class="test-input-first" type="text" data-bind="value:firstName,events:['keyup']">
+			<p><label class="test-classname" data-bind="className:{error:lastNameError,active:active}">Last name:</label></p>
+			<input class="test-input-last" type="text" data-bind="value:lastName,events:['keyup']">
+			<p class="test-css" data-bind="css:{display:errorDisplay}">Error: incomplete form.</p>
 		</div>
 		<div class="section">
-			<p class="user-html" data-bind="html:nameDisplay"></p>
+			<span class="test-text-first" data-bind="text:firstName"></span> 
+			<span class="test-text-last" data-bind="text:lastName"></span>
+			<p class="test-html" data-bind="html:nameDisplay"></p>
 		</div>
 		<div class="section">
 			<p>
-				<strong>model.active:</strong> 
-				<span data-bind="text:active"></span>
+				<strong>
+					<a class="test-attr-multi" data-bind="attr:{href:preference,title:preference}">model.active:</a>
+				</strong> 
+				<span class="test-attr" data-bind="text:active,attr:{'data-active':active}"></span>
 			</p>
 			<p>
 				<label>active:</label> 
-				<input type="checkbox" class="active" data-bind="checked:active">
-				<button data-bind="enabled:active">yes</button>
-				<button data-bind="disabled:active">no</button>
-				<span class="active-toggle" data-bind="toggle:active">ON</span>
+				<input type="checkbox" class="test-checked-boolean" data-bind="checked:active">
+				<button class="test-enabled" data-bind="enabled:active">yes</button>
+				<button class="test-disabled" data-bind="disabled:active">no</button>
 				<!--span class="active-hidden" data-bind="hidden:active">ON</span-->
 			</p>
 		</div>
 		<div class="section">
-			<p>Selected Options: <span data-bind="printArray:checkList"></span></p>
+			<p>Selected Options: <span class="test-custom-binding" data-bind="printArray:checkList"></span></p>
 			<p>
 				<label>a</label>: <input type="checkbox" class="check-list" value="a" data-bind="checked:checkList"> &nbsp; 
 				<label>b</label>: <input type="checkbox" class="check-list" value="b" data-bind="checked:checkList"> &nbsp; 
@@ -81,6 +92,15 @@
 				<input type="radio" class="preference" name="preference" value="b" data-bind="checked:preference">
 			</p>
 		</div>
+	</div>
+	
+	<div id="mod-view" class="test-view">
+		<p class="test-toggle" data-bind="toggle:active">Toggled ON</p>
+		<p class="test-mod-not" data-bind="toggle:not(active)">Toggled OFF</p>
+		<p class="test-mod-all" data-bind="className:{hilite:all(firstName,lastName)}">first AND last name.</p>
+		<p class="test-mod-none" data-bind="className:{hilite:none(firstName,lastName)}">NOT first AND last name.</p>
+		<p class="test-mod-any" data-bind="className:{hilite:any(firstName,lastName)}">first OR last name.</p>
+		<p class="test-mod-parse" data-bind="text:parse('Name: $1 $2',firstName,lastName)"></p>
 	</div>
 	
 	<script type="text/template-epoxy" id="tmpl-view-tmpl">

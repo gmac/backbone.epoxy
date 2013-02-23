@@ -312,8 +312,8 @@ describe("Backbone.Epoxy.View", function() {
 		defaults: {
 			firstName: "Luke",
 			lastName: "Skywalker",
-			active: true,
-			preference: "b"
+			preference: "b",
+			active: true
 		},
 		
 		virtuals: {
@@ -324,8 +324,16 @@ describe("Backbone.Epoxy.View", function() {
 			nameDisplay: function() {
 				return "<strong>"+this.get("lastName")+"</strong>, "+this.get("firstName");
 			},
-			nameError: function () {
+			firstNameError: function() {
 				return !this.get( "firstName" );
+			},
+			lastNameError: function() {
+				return !this.get( "lastName" );
+			},
+			errorDisplay: function() {
+				var first = this.get( "firstName" );
+				var last = this.get( "lastName" );
+				return (!first || !last) ? "block" : "none";
 			}
 		}
 	}));
@@ -349,6 +357,16 @@ describe("Backbone.Epoxy.View", function() {
 		}
 	}));
 	
+	var modView = new (Backbone.Epoxy.View.extend({
+		el: "#mod-view",
+		model: bindingModel,
+		bindings: "data-bind",
+
+		initialize: function() {
+			this.bindView();
+		}
+	}));
+	
 	var tmplView = new (Backbone.Epoxy.View.extend({
 		el: $("#tmpl-view-tmpl").html(),
 		model: bindingModel,
@@ -359,7 +377,7 @@ describe("Backbone.Epoxy.View", function() {
 		},
 
 		initialize: function() {
-			domView.$el.after( this.$el );
+			$("#tmpl-view-tmpl").after( this.$el );
 			this.bindView();
 		}
 	}));
@@ -372,6 +390,7 @@ describe("Backbone.Epoxy.View", function() {
 	// Teardown
 	afterEach(function() {
 		bindingModel.set( bindingModel.defaults );
+		bindingModel.set( bindingModel.virtuals );
 	});
 	
 	
@@ -382,7 +401,7 @@ describe("Backbone.Epoxy.View", function() {
 	
 	
 	it("should bind view elements to model via element attribute query.", function() {
-		var $el = $("#dom-view .user-first");
+		var $el = $("#dom-view .test-text-first");
 		expect( $el.text() ).toBe( "Luke" );
 	});
 	
@@ -427,7 +446,20 @@ describe("Backbone.Epoxy.View", function() {
 	
 	
 	it("binding 'attr:' should establish a one-way binding with an element's attribute definitions.", function() {
-		//expect().toBe( true );
+		var $el = $(".test-attr-multi");
+		expect( $el.attr("href") ).toBe( "b" );
+		expect( $el.attr("title") ).toBe( "b" );
+		bindingModel.set("preference", "c");
+		expect( $el.attr("href") ).toBe( "c" );
+		expect( $el.attr("title") ).toBe( "c" );
+	});
+	
+	
+	it("binding 'attr:' should allow string property definitions.", function() {
+		var $el = $(".test-attr");
+		expect( $el.attr("data-active") ).toBe( "true" );
+		bindingModel.set("active", false);
+		expect( $el.attr("data-active") ).toBe( "false" );
 	});
 	
 	
@@ -436,23 +468,21 @@ describe("Backbone.Epoxy.View", function() {
 		var $b = $(".preference[value='b']");
 		expect( $a.prop("checked") ).toBe( false );
 		expect( $b.prop("checked") ).toBe( true );
-		
 		$a.prop("checked", true).trigger("change");
 		expect( bindingModel.get("preference") ).toBe( "a" );
 	});
 	
 	
-	it("binding 'checked:' should establish a two-way binding with a checkbox.", function() {
-		var $el = $("#dom-view .active");
+	it("binding 'checked:' should establish a two-way binding between a checkbox and boolean value.", function() {
+		var $el = $(".test-checked-boolean");
 		expect( $el.prop("checked") ).toBe( true );
-		
 		$el.prop("checked", false).trigger("change");
 		expect( bindingModel.get("active") ).toBe( false );
 	});
 	
 	
-	it("binding 'checked:' should set a checkbox series from a model array to the view.", function() {
-		var $els = $("#dom-view .check-list");
+	it("binding 'checked:' should set a checkbox series based on a model array.", function() {
+		var $els = $(".check-list");
 		
 		// Default: populate based on intial setting:
 		expect( !!$els.filter("[value='b']" ).prop("checked") ).toBe( true );
@@ -465,45 +495,56 @@ describe("Backbone.Epoxy.View", function() {
 	});
 	
 	
-	it("binding 'checked:' should get a checkbox selection from the view and push it into a model array.", function() {
-		var $els = $("#dom-view .check-list");
+	it("binding 'checked:' should get a checkbox series formatted as a model array.", function() {
+		var $els = $(".check-list");
 		bindingModel.set("checkList", ["b"]);
 		
 		// Default: populate based on intial setting:
 		expect( !!$els.filter("[value='b']" ).prop("checked") ).toBe( true );
-		
-		// Add new selection to the checkbox group:
 		$els.filter("[value='a']").prop("checked", true).trigger("change");
 		expect( bindingModel.get("checkList").join(",") ).toBe( "b,a" );
 	});
 	
 	
 	it("binding 'className:' should establish a one-way binding with an element's class definitions.", function() {
-		var $el = $("#dom-view .user-name-label");
+		var $el = $(".test-classname").eq(0);
 		expect( $el.hasClass("error") ).toBe( false );
-		
-		bindingModel.set("firstName", "");
+		expect( $el.hasClass("active") ).toBe( true );
+		bindingModel.set({
+			firstName: "",
+			active: false
+		});
 		expect( $el.hasClass("error") ).toBe( true );
+		expect( $el.hasClass("active") ).toBe( false );
 	});
 	
 	
 	it("binding 'css:' should establish a one-way binding with an element's css styles.", function() {
-		//expect().toBe( true );
+		var $el = $(".test-css");
+		expect( $el.css("display") ).toBe( "none" );
+		bindingModel.set( "lastName", "" );
+		expect( $el.css("display") ).toBe( "block" );
 	});
 	
 	
 	it("binding 'disabled:' should establish a one-way binding with an element's disabled state.", function() {
-		//expect().toBe( true );
+		var $el = $(".test-disabled");
+		expect( $el.prop("disabled") ).toBeTruthy();
+		bindingModel.set( "active", false );
+		expect( $el.prop("disabled") ).toBeFalsy();
 	});
 	
 	
 	it("binding 'enabled:' should establish a one-way binding with an element's inverted disabled state.", function() {
-		//expect().toBe( true );
+		var $el = $(".test-enabled");
+		expect( $el.prop("disabled") ).toBeFalsy();
+		bindingModel.set( "active", false );
+		expect( $el.prop("disabled") ).toBeTruthy();
 	});
 	
 	
 	it("binding 'events:' should configure additional DOM event triggers.", function() {
-		var $el = $("#dom-view .user-name");
+		var $el = $(".test-input-first");
 		expect( $el.val() ).toBe( "Luke" );
 		$el.val( "Anakin" ).trigger("keyup");
 		expect( bindingModel.get("firstName") ).toBe( "Anakin" );
@@ -511,25 +552,23 @@ describe("Backbone.Epoxy.View", function() {
 	
 	
 	it("binding 'html:' should establish a one-way binding with an element's html contents.", function() {
-		var $el = $("#dom-view .user-html");
+		var $el = $(".test-html");
 		expect( $el.html() ).toBe( "<strong>Skywalker</strong>, Luke" );
-		
 		bindingModel.set("firstName", "Anakin");
 		expect( $el.html() ).toBe( "<strong>Skywalker</strong>, Anakin" );
 	});
 	
 	
 	it("binding 'text:' should establish a one-way binding with an element's text contents.", function() {
-		var $el = $("#dom-view .user-first");
+		var $el = $(".test-text-first");
 		expect( $el.text() ).toBe( "Luke" );
-		
 		bindingModel.set("firstName", "Anakin");
 		expect( $el.text() ).toBe( "Anakin" );
 	});
 	
 	
 	it("binding 'toggle:' should establish a one-way binding with an element's visibility.", function() {
-		var $el = $("#dom-view .active-toggle");
+		var $el = $(".test-toggle");
 		expect( $el.is(":visible") ).toBe( true );
 		bindingModel.set("active", false);
 		expect( $el.is(":visible") ).toBe( false );
@@ -537,18 +576,75 @@ describe("Backbone.Epoxy.View", function() {
 	
 	
 	it("binding 'value:' should establish a two-way binding with an input field.", function() {
-		var $el = $("#dom-view .user-name");
+		var $el = $(".test-input-first");
 		expect( $el.val() ).toBe( "Luke" );
 		$el.val( "Anakin" ).trigger("change");
 		expect( bindingModel.get("firstName") ).toBe( "Anakin" );
 	});
 	
 	
-	it("binding custom setters should push values into the view.", function() {
-		var $els = $("#dom-view .check-list");
-		bindingModel.set("checkList", ["c"]);
-		expect( !!$els.filter("[value='a']" ).prop("checked") ).toBe( false );
-		expect( !!$els.filter("[value='b']" ).prop("checked") ).toBe( false );
-		expect( !!$els.filter("[value='c']" ).prop("checked") ).toBe( true );
+	it("should allow custom bindings to set data into the view.", function() {
+		var $els = $(".test-custom-binding");
+		expect( $els.text() ).toBe( "b" );
+		bindingModel.set("checkList", ["c","a"]);
+		expect( $els.text() ).toBe( "a, c" );
+	});
+	
+	
+	it("should allow custom bindings to get data from the view.", function() {
+		
+	});
+	
+	
+	it("modifying with not() should negate a binding value.", function() {
+		var $el = $(".test-mod-not");
+		expect( $el.is(":visible") ).toBe( false );
+		bindingModel.set("active", false);
+		expect( $el.is(":visible") ).toBe( true );
+	});
+	
+	
+	it("modifying with all() should bind true when all bound values are truthy.", function() {
+		var $el = $(".test-mod-all");
+		expect( $el.hasClass("hilite") ).toBe( true );
+		bindingModel.set("firstName", "");
+		expect( $el.hasClass("hilite") ).toBe( false );
+	});
+	
+	
+	it("modifying with none() should bind true when all bound values are falsy.", function() {
+		var $el = $(".test-mod-none");
+		expect( $el.hasClass("hilite") ).toBe( false );
+		bindingModel.set({
+			firstName: "",
+			lastName: ""
+		});
+		expect( $el.hasClass("hilite") ).toBe( true );
+	});
+	
+	
+	it("modifying with any() should bind true when any bound value is truthy.", function() {
+		var $el = $(".test-mod-any");
+		
+		/*
+		expect( $el.hasClass("hilite") ).toBe( true );
+		bindingModel.set("firstName", "");
+		expect( $el.hasClass("hilite") ).toBe( true );
+		bindingModel.set("lastName", "");
+		expect( $el.hasClass("hilite") ).toBe( false );
+		*/
+		// FAILING! Why?
+	});
+	
+	
+	it("modifying with parse() should bind true when any bound value is truthy.", function() {
+		var $el = $(".test-mod-parse");
+		expect( $el.text() ).toBe( "Name: Luke Skywalker" );
+		bindingModel.set("firstName", "Charlie");
+		expect( $el.text() ).toBe( "Name: Charlie Skywalker" );
+		bindingModel.set("lastName", "Brown");
+		expect( $el.text() ).toBe( "Name: Charlie Brown" );
+		
+		// FAILING! Why?
 	});
 });
