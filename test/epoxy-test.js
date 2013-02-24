@@ -625,15 +625,11 @@ describe("Backbone.Epoxy.View", function() {
 	
 	it("modifying with any() should bind true when any bound value is truthy.", function() {
 		var $el = $(".test-mod-any");
-		
-		/*
 		expect( $el.hasClass("hilite") ).toBe( true );
 		bindingModel.set("firstName", "");
 		expect( $el.hasClass("hilite") ).toBe( true );
 		bindingModel.set("lastName", "");
 		expect( $el.hasClass("hilite") ).toBe( false );
-		*/
-		// FAILING! Why?
 	});
 	
 	
@@ -644,7 +640,5 @@ describe("Backbone.Epoxy.View", function() {
 		expect( $el.text() ).toBe( "Name: Charlie Skywalker" );
 		bindingModel.set("lastName", "Brown");
 		expect( $el.text() ).toBe( "Name: Charlie Brown" );
-		
-		// FAILING! Why?
 	});
 });

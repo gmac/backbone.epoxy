@@ -652,75 +652,66 @@
 	}
 	
 	
-	// mapAccessors()
-	// --------------
-	// Immediately calls all accessor arguments:
-	// must be performed by each formatter function to map events while binding.
-	function mapAccessors( args ) {
-		var args = Array.prototype.slice.call( args );
-		for ( var i=0, len=args.length; i < len; i++) {
-			readAccessor(args[i]);
-		}
-		return args;
-	}
-	
-	
 	// bindingFormatters
 	// -----------------
-	// Formatters are invoked while binding, and return a proxy function used to modify how accessors are read.
-	// Note that binding formatters MUST access all of their params while running their outer factory function,
-	// which assures that all dependent accessors are invoked and mapped while creating the binding.
+	// Formatters are invoked while binding, and return a wrapper function used to modify how accessors are read.
+	// **IMPORTANT:
+	// Note that binding formatters must access ALL of their dependent params while running,
+	// otherwise accessor params become unreachable and will not provide binding hooks.
+	// Therefore, it's very important that assessment loops do NOT exit early... so avoid temptation to optimize!
 	var bindingFormatters = {
 		
 		// Tests if all of the provided accessors are truthy (and):
 		all: function() {
-			var args = mapAccessors(arguments);
+			var params = arguments;
 			return function() {
-				for ( var i=0, len=args.length; i < len; i++) {
-					if ( !readAccessor(args[i]) ) return false;
+				var result = true;
+				for ( var i=0, len=params.length; i < len; i++) {
+					if ( !readAccessor(params[i]) ) result = false;
 				}
-				return true;
+				return result;
 			}
 		},
 		
 		// Tests if any of the provided accessors are truthy (or):
 		any: function() {
-			var args = mapAccessors(arguments);
+			var params = arguments;
 			return function() {
-				for ( var i=0, len=args.length; i < len; i++) {
-					if ( !!readAccessor(args[i]) ) return true;
+				var result = false;
+				for ( var i=0, len=params.length; i < len; i++) {
+					if ( readAccessor(params[i]) ) result = true;
 				}
-				return false;
+				return result;
 			}
 		},
 		
 		// Tests if none of the provided accessors are truthy (and not):
 		none: function() {
-			var args = mapAccessors(arguments);
+			var params = arguments;
 			return function() {
-				for ( var i=0, len=args.length; i < len; i++) {
-					if ( !readAccessor(args[i]) ) return true;
+				var result = true;
+				for ( var i=0, len=params.length; i < len; i++) {
+					if ( readAccessor(params[i]) ) result = false;
 				}
-				return false;
+				return result;
 			}
 		},
 		
 		// Negates an accessor's value:
 		not: function( accessor ) {
-			readAccessor( accessor );
 			return function() {
 				return !readAccessor( accessor );
 			}
 		},
 		
 		// Parses one or more accessors into a text string:
-		// "$1 $2 did $3", firstName, lastName, action
+		// ("$1 $2 did $3", firstName, lastName, action)
 		parse: function() {
-			var args = mapAccessors(arguments);
+			var params = arguments;
 			return function() {
-				var str = args[0];
-				for ( var i=1, len=args.length; i < len; i++) {
-					str = str.replace( "$"+i, readAccessor(args[i]) );
+				var str = params[0];
+				for ( var i=1, len=params.length; i < len; i++) {
+					str = str.replace( "$"+i, readAccessor(params[i]) );
 				}
 				return str;
 			}
@@ -732,13 +723,15 @@
 	// ----------------
 	var EpoxyViewBinding = function( $element, bindings, accessors, operators, model ) {
 		this.$el = $element;
-
+		
 		var self = this;
 		var tag = ($element[0].tagName).toLowerCase();
 		var changable = (tag == "input" || tag == "select" || tag == "textarea");
 		var parser = new Function("$f", "$a", "with($f){with($a){return{" + bindings + "}}}");
-		var bindings = parser( bindingFormatters, accessors );
 		var events = ["change"];
+		
+		// Parse all bindings to a hash table of accessor functions:
+		bindings = parser( bindingFormatters, accessors );
 		
 		// Collect additional event bindings param from parsed bindings:
 		// specifies dom triggers on which the DOM binding should update.
@@ -764,7 +757,7 @@
 				EpoxyView._map = triggers;
 				operator.set.call( self, self.$el, readAccessor(accessor) );
 				EpoxyView._map = null;
-
+				
 				// Getting, requires:
 				// => Form element.
 				// => Binding operator has getter method.
