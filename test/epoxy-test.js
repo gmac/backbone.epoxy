@@ -307,6 +307,25 @@ describe("Backbone.Epoxy.Model", function() {
 // ----------
 describe("Backbone.Epoxy.View", function() {
 	
+	var CollectionModel = Backbone.Model.extend({
+		defaults: {
+			name: ""
+		}
+	});
+	
+	var CollectionView = Backbone.View.extend({
+		el: "<li><span class='name-dsp'></span><button class='name-remove'>[x]</button></li>",
+		initialize: function() {
+			this.$( ".name-dsp" ).text( this.model.get("name") );
+		}
+	});
+	
+	var TestCollection = Backbone.Collection.extend({
+		model: CollectionModel,
+		view: CollectionView
+	});
+	
+	
 	// Model:
 	window.bindingModel = new (Backbone.Epoxy.Model.extend({
 		defaults: {
@@ -317,6 +336,7 @@ describe("Backbone.Epoxy.View", function() {
 		},
 		
 		virtuals: {
+			testCollection: new TestCollection(),
 			checkList: ["b"]
 		},
 		
@@ -338,7 +358,7 @@ describe("Backbone.Epoxy.View", function() {
 		}
 	}));
 	
-	// Views:
+	// Basic bindings test view:
 	var domView = new (Backbone.Epoxy.View.extend({
 		el: "#dom-view",
 		model: bindingModel,
@@ -357,6 +377,7 @@ describe("Backbone.Epoxy.View", function() {
 		}
 	}));
 	
+	// Modifiers / Collections testing view:
 	var modView = new (Backbone.Epoxy.View.extend({
 		el: "#mod-view",
 		model: bindingModel,
@@ -364,6 +385,28 @@ describe("Backbone.Epoxy.View", function() {
 
 		initialize: function() {
 			this.bindView();
+		},
+		
+		events: {
+			"click .name-add": "onAddName",
+			"click .name-remove": "onRemoveName"
+		},
+		
+		onAddName: function() {
+			var input = this.$( ".name-input" );
+			
+			if ( input.val() ) {
+				this.model.get( "testCollection" ).add({
+					name: input.val()
+				});
+				input.val("");
+			}
+		},
+		
+		onRemoveName: function( evt ) {
+			var i = $( evt.target ).closest( "li" ).index();
+			var col = this.model.get( "testCollection" );
+			col.remove( col.at(i) );
 		}
 	}));
 	
@@ -516,6 +559,17 @@ describe("Backbone.Epoxy.View", function() {
 		});
 		expect( $el.hasClass("error") ).toBe( true );
 		expect( $el.hasClass("active") ).toBe( false );
+	});
+	
+	
+	it("binding 'collection:' should establish a one-way binding that displays a Backbone.Collection.", function() {
+		//var $el = $(".test-css");
+		var collection = bindingModel.get( "testCollection" );
+		collection.reset([
+			{name: "Luke Skywalker"},
+			{name: "Hans Solo"},
+			{name: "Chewy"}
+		]);
 	});
 	
 	

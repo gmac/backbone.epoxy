@@ -1,4 +1,4 @@
-// Backbone.Epoxy 0.x
+// Backbone.Epoxy 0.1
 
 // (c) 2013 Greg MacWilliam
 // Epoxy may be freely distributed under the MIT license.
@@ -235,6 +235,7 @@
 		this.model = model;
 		this.name = name;
 		this.deps = this.deps || [];
+		this.bindCustom();
 		
 		// Skip init while parent model is initializing:
 		// Model will initialize in two passes...
@@ -244,10 +245,9 @@
 	};
 	
 	_.extend(EpoxyVirtual.prototype, Backbone.Events, {
-		dirty: true,
 		deps: undefined,
 		value: undefined,
-		previous: undefined,
+		custom: undefined,
 		
 		init: function() {
 			// Configure event capturing, then update and bind observable:
@@ -297,12 +297,11 @@
 		
 		// Gets the observable's current value:
 		// Computed values flagged as dirty will need to regenerate themselves.
-		get: function() {
-			if ( this.dirty && this._get ) {
+		get: function( dirty ) {
+			if ( dirty && this._get ) {
 				var val = this._get.call( this.model );
 				this.change( val );
 			}
-			this.dirty = false;
 			return this.copy();
 		},
 		
@@ -319,11 +318,10 @@
 			return null;
 		},
 		
-		// Triggered in response to binding updates:
-		// flags the value as dirty and re-gets it to update/propagate.
+		// Updates the value with a dirty .get() operation:
+		// triggered in response to binding updates.
 		update: function() {
-			this.dirty = true;
-			this.get();
+			this.get( true );
 		},
 		
 		// Fires a change event for the observable property on the parent model:
@@ -335,7 +333,9 @@
 		copy: function() {
 			var value = this.value;
 			
-			if ( _.isArray(value) ) {
+			if ( this.custom ) {
+				return this.custom;
+			} else if ( _.isArray(value) ) {
 				return value.slice();
 			} else if ( _.isObject(value) ) {
 				return _.clone(value);
@@ -347,50 +347,51 @@
 		// new values are cached, then fire an update event.
 		change: function( value ) {
 			if ( !_.isEqual(value, this.value) ) {
-				this.previous = this.value;
 				this.value = value;
+				this.bindCustom();
+				
+				// Fire update event:
 				this.fire();
 			}
 		},
 		
-		// Array operator method:
-		// performs array ops on the observable value, then fires change.
-		// The observable value must be an array for these actions to apply.
-		_ary: function( operator, args ) {
-			if ( _.isArray(this.value) ) {
-				var result = Array.prototype[ operator ].apply( this.value, args );
+		// Update customized bindings:
+		bindCustom: function() {
+			var custom = this.custom;
+			var value = this.value;
+
+			// Unbind events on any deprecated custom reference:
+			if ( custom && custom !== value ) {
+				this.stopListening( custom );
+				this.custom = null;
+			}
+			
+			// If current value is a collection, bind to collection update events:
+			if ( value instanceof Backbone.Collection ) {
+				custom = this.custom = value;
+				this.listenTo( custom, "add remove reset sort", this.fire );
+				this.listenTo( custom, "destroy", _.bind(this.model.removeVirtual, this.model, this.name) )
+			}
+		},
+		
+		// Specifies if the virtual property is an Array instance:
+		isArray: function() {
+			return _.isArray(this.value);
+		},
+		
+		// Array modifier method:
+		// performs array ops on the observable (array) value, then fires change.
+		// No action is taken if the observable value isn't an array.
+		modifyArray: function( method ) {
+			var array = Array.prototype;
+			
+			if ( this.isArray() && _.isFunction( array[method] ) ) {
+				var args = array.slice.call( arguments, 1 );
+				var result = array[ method ].apply( this.value, args );
 				this.fire();
 				return result;
 			}
-		},
-		
-		// Array operator methods:
-		pop: function() {
-			return this._ary( "pop", arguments );
-		},
-		
-		push: function() {
-			return this._ary( "push", arguments );
-		},
-		
-		reverse: function() {
-			return this._ary( "reverse", arguments );
-		},
-		
-		shift: function() {
-			return this._ary( "shift", arguments );
-		},
-		
-		slice: function() {
-			return this._ary( "slice", arguments );
-		},
-		
-		sort: function() {
-			return this._ary( "sort", arguments );
-		},
-		
-		unshift: function() {
-			return this._ary( "unshift", arguments );
+			return null;
 		},
 		
 		// Disposal:
@@ -398,123 +399,10 @@
 		dispose: function() {
 			this.stopListening();
 			this.off();
-			this.model = this.value = this.previous = null;
+			this.model = this.value = this.collection = null;
 		}
 	});
 	
-	// Epoxy.defaultBindings
-	// ---------------------
-	Backbone.Epoxy.defaultBindings = {
-		// Attribute: write-only. Sets element attributes.
-		attr: {
-			set: function( $element, value ) {
-				$element.attr( value );
-			}
-		},
-		
-		// Checked: read-write. Toggles the checked status of a form element.
-		checked: {
-			get: function( $element, currentValue ) {
-				var checked = !!$element.prop( "checked" );
-				var value = $element.val();
-				
-				if ( $element.is(":radio") ) {
-					// Radio button: return value directly.
-					return value;
-					
-				} else if ( _.isArray(currentValue) ) {
-					// Checkbox array: add/remove value from list.
-					var index = _.indexOf(currentValue, value);
-
-					if ( checked && index < 0 ) {
-						currentValue.push( value );
-					} else if ( !checked && index > -1 ) {
-						currentValue.splice(index, 1);
-					}
-					return currentValue;
-				}
-				// Checkbox: return boolean toggle.
-				return checked;
-			},
-			set: function( $element, value ) {
-				// Default as loosely-typed boolean:
-				var checked = !!value;
-				
-				if ( $element.is(":radio") ) {
-					// Radio button: match checked state to radio value.
-					checked = (value == $element.val());
-					
-				} else if ( _.isArray(value) ) {
-					// Checkbox array: match checked state to checkbox value in array contents.
-					checked = _.contains(value, $element.val());
-				}
-				
-				// Set checked property to element:
-				$element.prop("checked", checked);
-			}
-		},
-		
-		// Class Name: write-only. Toggles a collection of class name definitions.
-		className: {
-			set: function( $element, value ) {
-				_.each(value, function(enabled, className) {
-					$element.toggleClass(className, !!enabled);
-				});
-			}
-		},
-		
-		// CSS: write-only. Sets a collection of CSS styles to an element.
-		css: {
-			set: function( $element, value ) {
-				$element.css( value );
-			}
-		},
-
-		// Disabled: write-only. Sets the "disabled" status of a form element (true :: disabled).
-		disabled: {
-			set: function( $element, value ) {
-				$element.prop( "disabled", !!value );
-			}
-		},
-		
-		// Enabled: write-only. Sets the "disabled" status of a form element (true :: !disabled).
-		enabled: {
-			set: function( $element, value ) {
-				$element.prop( "disabled", !value );
-			}
-		},
-		
-		// HTML: write-only. Sets the inner HTML value of an element.
-		html: {
-			set: function( $element, value ) {
-				$element.html( value );
-			}
-		},
-		
-		// Text: write-only. Sets the text value of an element.
-		text: {
-			set: function( $element, value ) {
-				$element.text( value );
-			}
-		},
-		
-		// Toggle: write-only. Toggles the visibility of an element.
-		toggle: {
-			set: function( $element, value ) {
-				$element.toggle( !!value );
-			}
-		},
-		
-		// Value: read-write. Gets and sets the value of a form element.
-		value: {
-			get: function( $element ) {
-				return $element.val();
-			},
-			set: function( $element, value ) {
-				$element.val( value );
-			}
-		}
-	};
 	
 	// Epoxy.View
 	// ----------
@@ -601,7 +489,7 @@
 				if ( this.$el.is(selector) ) {
 					$nodes = $nodes.add( this.$el );
 				}
-
+				
 				$nodes.each(function( $el ) {
 					$el = $(this);
 					bind( $el, $el.attr(bindings), selector );
@@ -623,6 +511,150 @@
 			Backbone.View.prototype.remove.call( this );
 		}
 	});
+	
+	
+	// Epoxy.defaultBindings
+	// ---------------------
+	Backbone.Epoxy.defaultBindings = {
+		// Attribute: write-only. Sets element attributes.
+		attr: {
+			set: function( $element, value ) {
+				$element.attr( value );
+			}
+		},
+		
+		// Checked: read-write. Toggles the checked status of a form element.
+		checked: {
+			get: function( $element, currentValue ) {
+				var checked = !!$element.prop( "checked" );
+				var value = $element.val();
+				
+				if ( $element.is(":radio") ) {
+					// Radio button: return value directly.
+					return value;
+					
+				} else if ( _.isArray(currentValue) ) {
+					// Checkbox array: add/remove value from list.
+					var index = _.indexOf(currentValue, value);
+
+					if ( checked && index < 0 ) {
+						currentValue.push( value );
+					} else if ( !checked && index > -1 ) {
+						currentValue.splice(index, 1);
+					}
+					return currentValue;
+				}
+				// Checkbox: return boolean toggle.
+				return checked;
+			},
+			set: function( $element, value ) {
+				// Default as loosely-typed boolean:
+				var checked = !!value;
+				
+				if ( $element.is(":radio") ) {
+					// Radio button: match checked state to radio value.
+					checked = (value == $element.val());
+					
+				} else if ( _.isArray(value) ) {
+					// Checkbox array: match checked state to checkbox value in array contents.
+					checked = _.contains(value, $element.val());
+				}
+				
+				// Set checked property to element:
+				$element.prop("checked", checked);
+			}
+		},
+		
+		// Class Name: write-only. Toggles a collection of class name definitions.
+		className: {
+			set: function( $element, value ) {
+				_.each(value, function(enabled, className) {
+					$element.toggleClass(className, !!enabled);
+				});
+			}
+		},
+		
+		// Collection: write-only. Manages a list of views bound to a Backbone.Collection.
+		collection: {
+			set: function( $element, collection ) {
+				// Requires a valid collection argument with an associated view:
+				if ( collection instanceof Backbone.Collection && _.isFunction(collection.view) ) {
+					
+					//console.log( collection.lastEvent );
+					
+					// Create staging container, and empty the element:
+					var $staging = $( "<div/>" );
+					$element.empty();
+				
+					// Loop through all models, creating missing views and staging new order:
+					collection.each(function(model, index) {
+						if ( !model.view ) {
+							model.view = new collection.view({model: model});
+						}
+						$staging.append( model.view.$el );
+					});
+				
+					// Push staging order out to the main element view:
+					$element.append( $staging.children() );
+				} else {
+					// Throw error for invalid binding params:
+					throw( "Binding 'collection:' requires a Backbone.Collection with a '.view' property." );
+				}
+			}
+		},
+		
+		// CSS: write-only. Sets a collection of CSS styles to an element.
+		css: {
+			set: function( $element, value ) {
+				$element.css( value );
+			}
+		},
+
+		// Disabled: write-only. Sets the "disabled" status of a form element (true :: disabled).
+		disabled: {
+			set: function( $element, value ) {
+				$element.prop( "disabled", !!value );
+			}
+		},
+		
+		// Enabled: write-only. Sets the "disabled" status of a form element (true :: !disabled).
+		enabled: {
+			set: function( $element, value ) {
+				$element.prop( "disabled", !value );
+			}
+		},
+		
+		// HTML: write-only. Sets the inner HTML value of an element.
+		html: {
+			set: function( $element, value ) {
+				$element.html( value );
+			}
+		},
+		
+		// Text: write-only. Sets the text value of an element.
+		text: {
+			set: function( $element, value ) {
+				$element.text( value );
+			}
+		},
+		
+		// Toggle: write-only. Toggles the visibility of an element.
+		toggle: {
+			set: function( $element, value ) {
+				$element.toggle( !!value );
+			}
+		},
+		
+		// Value: read-write. Gets and sets the value of a form element.
+		value: {
+			get: function( $element ) {
+				return $element.val();
+			},
+			set: function( $element, value ) {
+				$element.val( value );
+			}
+		}
+	};
 	
 	
 	// readAccessor()
@@ -761,7 +793,7 @@
 				// Getting, requires:
 				// => Form element.
 				// => Binding operator has getter method.
-				// => Value accessor is a function (dirty/composite bindings don't work here).
+				// => Value accessor is a function.
 				if ( changable && operator.get && _.isFunction(accessor) ) {
 					self.$el.on(self.events, function() {
 						accessor( operator.get.call(self, self.$el, readAccessor(accessor)) );
