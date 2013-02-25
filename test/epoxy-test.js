@@ -13,8 +13,9 @@ describe("Backbone.Epoxy.Model", function() {
 			payment: 100
 		},
 		
-		virtuals: {
-			isSelected: false
+		observables: {
+			isSelected: false,
+			testArray: []
 		},
 		
 		computeds: {
@@ -74,12 +75,12 @@ describe("Backbone.Epoxy.Model", function() {
 	
 	// Teardown
 	afterEach(function() {
-		model.clearVirtuals();
+		model.clearObservables();
 		model = null;
 	});
 	
 	
-	it("should use .virtuals to define basic virtual properties.", function() {
+	it("should use '.observables' to define basic virtual properties.", function() {
 		expect( model.get("isSelected") ).toBe( false );
 	});
 	
@@ -90,6 +91,34 @@ describe("Backbone.Epoxy.Model", function() {
 	});
 	
 	
+	it("should allow direct access to observable objects through the '.obs' namespace.", function() {
+		expect( !!model.obs.isSelected ).toBe( true );
+	});
+	
+	
+	it("should allow direct access to observable property values using their own getters and setters.", function() {
+		var sel = model.getObservable( "isSelected" );
+		expect( sel.get() ).toBe( false );
+		sel.set( true );
+		expect( sel.get() ).toBe( true );
+	});
+	
+	
+	it("should allow direct management of observable arrays using the '.modifyArray' method.", function() {
+		var obs = model.getObservable( "testArray" );
+		expect( obs.value.length ).toBe( 0 );
+		obs.modifyArray("push", "beachball");
+		expect( obs.value.length ).toBe( 1 );
+	});
+	
+	
+	it("should defer all action when using '.modifyArray' on a non-array object.", function() {
+		var obs = model.getObservable( "isSelected" );
+		obs.modifyArray("push", "beachball");
+		expect( obs.get() ).toBe( false );
+	});
+	
+	
 	it("should assume computed properties defined as functions to be getters.", function() {
 		var obsGetter = model.obs.fullName._get;
 		var protoGetter = TestModel.prototype.computeds.fullName;
@@ -97,9 +126,9 @@ describe("Backbone.Epoxy.Model", function() {
 	});
 	
 	
-	it("should use .computeds to automatically construct computed properties.", function() {
-		var hasFullName = model.hasVirtual("fullName");
-		var hasDonation = model.hasVirtual("paymentCurrency");
+	it("should use '.computeds' to automatically construct computed properties.", function() {
+		var hasFullName = model.hasObservable("fullName");
+		var hasDonation = model.hasObservable("paymentCurrency");
 		expect( hasFullName && hasDonation ).toBe( true );
 	});
 	
@@ -204,7 +233,7 @@ describe("Backbone.Epoxy.Model", function() {
 		expect( model.get("percentAvgPayment") ).toBe( 0.5 );
 		averages.set("avgPayment", 400);
 		expect( model.get("percentAvgPayment") ).toBe( 0.25 );
-		averages.clearVirtuals();
+		averages.clearObservables();
 	});
 	
 	
@@ -225,7 +254,7 @@ describe("Backbone.Epoxy.Model", function() {
 		// Change unreachable value
 		foreign.set("avgPayment", 400);
 		expect( model.get("unreachable") ).toBe( 400 );
-		foreign.clearVirtuals();
+		foreign.clearObservables();
 	});
 
 	
@@ -335,7 +364,7 @@ describe("Backbone.Epoxy.View", function() {
 			active: true
 		},
 		
-		virtuals: {
+		observables: {
 			testCollection: new TestCollection(),
 			checkList: ["b"]
 		},
@@ -370,10 +399,6 @@ describe("Backbone.Epoxy.View", function() {
 					$element.text( value.sort().join(", ") );
 				}
 			}
-		},
-		
-		initialize: function() {
-			this.bindView();
 		}
 	}));
 	
@@ -383,10 +408,6 @@ describe("Backbone.Epoxy.View", function() {
 		model: bindingModel,
 		bindings: "data-bind",
 
-		initialize: function() {
-			this.bindView();
-		},
-		
 		events: {
 			"click .name-add": "onAddName",
 			"click .name-remove": "onRemoveName"
@@ -421,7 +442,6 @@ describe("Backbone.Epoxy.View", function() {
 
 		initialize: function() {
 			$("#tmpl-view-tmpl").after( this.$el );
-			this.bindView();
 		}
 	}));
 	
@@ -432,8 +452,9 @@ describe("Backbone.Epoxy.View", function() {
 	
 	// Teardown
 	afterEach(function() {
+		bindingModel.observables.checkList = [ "b" ];
 		bindingModel.set( bindingModel.defaults );
-		bindingModel.set( bindingModel.virtuals );
+		bindingModel.set( bindingModel.observables );
 	});
 	
 	
@@ -465,26 +486,23 @@ describe("Backbone.Epoxy.View", function() {
 			}
 		}));
 		
-		view1.bindView();
-		view2.bindView();
-		
 		expect( view1.$el.text() ).toBe( "Luke" );
 		expect( view2.$el.text() ).toBe( "Luke" );
 	});
 	
 	it("should throw error in response to undefined property bindings.", function() {
 		
-		var view = new (Backbone.Epoxy.View.extend({
+		var ErrorView = Backbone.Epoxy.View.extend({
 			el: "<div><span data-bind='text:undefinedProp'></span></div>",
 			model: bindingModel,
 			bindings: "data-bind"
-		}));
+		});
 		
-		function applyBindings(){
-			view.bindView();
+		function testForError(){
+			var error = new ErrorView();
 		}
 		
-		expect( applyBindings ).toThrow();
+		expect( testForError ).toThrow();
 	});
 	
 	
@@ -533,6 +551,19 @@ describe("Backbone.Epoxy.View", function() {
 		
 		// Add new selection to the checkbox group:
 		bindingModel.set("checkList", ["b", "c"]);
+		expect( !!$els.filter("[value='b']" ).prop("checked") ).toBe( true );
+		expect( !!$els.filter("[value='c']" ).prop("checked") ).toBe( true );
+	});
+	
+	
+	it("binding 'checked:' should respond to model changes performed by '.modifyArray'.", function() {
+		var $els = $(".check-list");
+		
+		// Add new selection to the checkbox group:
+		var obs = bindingModel.getObservable("checkList");
+		expect( !!$els.filter("[value='b']" ).prop("checked") ).toBe( true );
+		expect( !!$els.filter("[value='c']" ).prop("checked") ).toBe( false );
+		obs.modifyArray("push", "c");
 		expect( !!$els.filter("[value='b']" ).prop("checked") ).toBe( true );
 		expect( !!$els.filter("[value='c']" ).prop("checked") ).toBe( true );
 	});
