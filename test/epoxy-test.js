@@ -393,11 +393,9 @@ describe("Backbone.Epoxy.View", function() {
 		model: bindingModel,
 		bindings: "data-bind",
 		
-		operators: {
-			printArray: {
-				set: function( $element, value ) {
-					$element.text( value.sort().join(", ") );
-				}
+		handlers: {
+			printArray: function( $element, value ) {
+				$element.text( value.sort().join(", ") );
 			}
 		}
 	}));
@@ -718,8 +716,8 @@ describe("Backbone.Epoxy.View", function() {
 	});
 	
 	
-	it("modifying with parse() should bind true when any bound value is truthy.", function() {
-		var $el = $(".test-mod-parse");
+	it("modifying with format() should bind true when any bound value is truthy.", function() {
+		var $el = $(".test-mod-format");
 		expect( $el.text() ).toBe( "Name: Luke Skywalker" );
 		bindingModel.set("firstName", "Charlie");
 		expect( $el.text() ).toBe( "Name: Charlie Skywalker" );

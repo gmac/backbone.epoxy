@@ -29,10 +29,16 @@
 			this.removeBindings();
 			if ( !this.model || !this.bindings ) return;
 			
-			var operators = _.extend({},Backbone.Epoxy.defaultBindings,this.operators||{});
-			var accessors = {};
-			var model = this.model;
 			var self = this;
+			var model = this.model;
+			var accessors = {};
+			var handlers = _.clone( defaultHandlers );
+			
+			// Compile custom handler definitions:
+			// assigns raw functions as setter definitions by default.
+			_.each(this.handlers, function( handler, name ) {
+			    handlers[ name ] = _.isFunction(handler) ? {set: handler} : handler;
+			});
 			
 			// Compile model accessors:
 			// accessor functions will get, set, and map binding properties.
@@ -60,7 +66,7 @@
 			function bind( $element, bindings, selector ) {
 				// Try to compile bindings, throw errors if encountered:
 				try {
-					self._bind.push( new EpoxyBinding($element, bindings, accessors, operators, model) );
+					self._bind.push( new EpoxyBinding($element, bindings, accessors, handlers, model) );
 				} catch( error ) {
 					throw( 'Error parsing bindings for "'+ selector +'" >> '+error );
 				}
@@ -119,9 +125,9 @@
 	});
 	
 	
-	// Epoxy.defaultBindings
-	// ---------------------
-	Backbone.Epoxy.defaultBindings = {
+	// defaultHandlers
+	// ---------------
+	var defaultHandlers = {
 		// Attribute: write-only. Sets element attributes.
 		attr: {
 			set: function( $element, value ) {
@@ -342,9 +348,9 @@
 			}
 		},
 		
-		// Parses one or more accessors into a text string:
+		// Formats one or more accessors into a text string:
 		// ("$1 $2 did $3", firstName, lastName, action)
-		parse: function() {
+		format: function() {
 			var params = arguments;
 			return function() {
 				var str = params[0];
@@ -358,8 +364,8 @@
 	
 
 	// EpoxyBinding
-	// ----------------
-	var EpoxyBinding = function( $element, bindings, accessors, operators, model ) {
+	// ------------
+	var EpoxyBinding = function( $element, bindings, accessors, handlers, model ) {
 		this.$el = $element;
 		
 		var self = this;
@@ -382,27 +388,27 @@
 		this.events = _.map(events, function(name){ return name+".epoxy"; }).join(" ");
 		
 		// Apply event bindings:
-		_.each(bindings, function( accessor, operatorName ) {
+		_.each(bindings, function( accessor, handlerName ) {
 			
-			// Test if operator is defined:
-			if ( operators.hasOwnProperty(operatorName) ) {
-				// Create reference to binding operator:
-				var operator = operators[ operatorName ];
+			// Test if handler is defined:
+			if ( handlers.hasOwnProperty(handlerName) ) {
+				// Create reference to binding handler:
+				var handler = handlers[ handlerName ];
 				var triggers = [];
 				
 				// Set default binding:
 				// Configure accessor table to collect events.
 				EpoxyView._map = triggers;
-				operator.set.call( self, self.$el, readAccessor(accessor) );
+				handler.set.call( self, self.$el, readAccessor(accessor) );
 				EpoxyView._map = null;
 				
 				// Getting, requires:
 				// => Form element.
-				// => Binding operator has getter method.
+				// => Binding handler has getter method.
 				// => Value accessor is a function.
-				if ( changable && operator.get && _.isFunction(accessor) ) {
+				if ( changable && handler.get && _.isFunction(accessor) ) {
 					self.$el.on(self.events, function() {
-						accessor( operator.get.call(self, self.$el, readAccessor(accessor)) );
+						accessor( handler.get.call(self, self.$el, readAccessor(accessor)) );
 					});
 				}
 				
@@ -410,13 +416,13 @@
 				// => One or more events triggers.
 				if ( triggers.length ) {
 					self.listenTo( model, triggers.join(" "), function() {
-						operator.set.call(self, self.$el, readAccessor(accessor));
+						handler.set.call(self, self.$el, readAccessor(accessor));
 					});
 				}
 				
 			} else {
 				// Operator was undefined:
-				throw( "invalid binding => "+operator );
+				throw( "invalid binding => "+handlerName );
 			}
 		});
 	};

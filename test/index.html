@@ -100,7 +100,7 @@
 		<p class="test-mod-all" data-bind="className:{hilite:all(firstName,lastName)}">first AND last name.</p>
 		<p class="test-mod-none" data-bind="className:{hilite:none(firstName,lastName)}">NOT first AND last name.</p>
 		<p class="test-mod-any" data-bind="className:{hilite:any(firstName,lastName)}">first OR last name.</p>
-		<p class="test-mod-parse" data-bind="text:parse('Name: $1 $2',firstName,lastName)"></p>
+		<p class="test-mod-format" data-bind="text:format('Name: $1 $2',firstName,lastName)"></p>
 		
 		<div class="section test-collection">
 			<input class="name-input" type="text" value="">
