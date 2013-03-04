@@ -262,14 +262,11 @@
 			<div class="section">
 				<b class="header" id="view-remove-bindings">removeBindings</b>
 				<code>view.removeBindings()</code>
-				<p>Removes and cleans up all bindings applied to the view. All element binding hooks will be nullified, leaving the DOM element formatted in its final bound state. The `removeBindings` method is automatically called by the view's `remove` method. Be mindful that you should manually call `removeBindings` when deprecating an Epoxy view without specifically calling its `remove` method.</p>
+				<p>Removes and cleans up all bindings applied to the view. All binding hooks will be nullified, leaving DOM elements formatted in their final bound state. The <b>removeBindings</b> method is automatically called by the view's <b>remove</b> method. Be mindful that you should manually call <b>removeBindings</b> when deprecating an Epoxy view without specifically calling its <b>remove</b> method.</p>
 			</div>
 			<div class="section">
 				<h2 id="binding-handlers">View Binding Handlers</h2>
-
-				<p>Binding handlers are functions used to manipulate elements within the view. The Epoxy.View comes with a bundle of default binding handlers used for common tasks such as manipulating a bound element's content, class, and style. These bindings are available out of the box and ready for use.</p>
-
-				<p>However, don't feel limited to just using Epoxy's default binding handlers. Epoxy bindings are specifically designed to be easy and extensible for defining your own binding features.</p>
+				<p>Binding handlers are functions used to manipulate elements within the view. The <tt>Epoxy.View</tt> comes with a bundle of default binding handlers used for common tasks such as manipulating a bound element's content, class, and style. However, don't feel limited to just Epoxy's default binding handlers. Epoxy allows you to easily <a href="#view-binding-handlers">define your own bindings</a>.</p>
 			</div>
 			<div class="section">
 				<b class="header" id="handler-attr">attr</b>
@@ -284,34 +281,34 @@
 				<p>This two-way binding attaches checkbox and radio inputs into the model. The binding behavior differs slightly for different element / value combinations:</p>
 
 				<ul>
-					<li><b>Radio buttons:</b> a bound radio button will become checked when the radio element's <tt>value</tt> matches the bound model attribute. Checking a radio will set its <tt>value</tt> to the bound model attribute.</li>
+					<li><b>Radio buttons:</b> a bound <tt>radio</tt> element will become checked when the element's <tt>value</tt> matches the bound model attribute. Checking a radio will set its <tt>value</tt> to the bound model attribute.</li>
 
-					<li><b>Checkbox array:</b> when a checkbox element is bound to an Array model attribute, the checkbox element will be checked while its value exists within the value array, and unchecked while its value is absent from the array. Likewise, toggling a checkbox input will add and remove its value from the bound array. Keep in mind that arrays modified within a native Backbone.Model will NOT trigger change events unless the array instance is changed (resetting the same array instance with modified contents will not trigger a model change that updates the View). Using an Epoxy.Model observable value will help here by getting and setting object copies and performing compositional comparisons to search for object changes.</li>
+					<li><b>Checkbox array:</b> when a <tt>checkbox</tt> element is bound to an <tt>Array</tt> model attribute, the element will be checked while its <tt>value</tt> exists within the value array, and unchecked while its <tt>value</tt> is absent from the array. Likewise, toggling the element's <tt>checked</tt> property will add and remove its value from the bound array. Keep in mind that arrays modified within a native <tt>Backbone.Model</tt> will NOT trigger a <tt>"change"</tt> event unless the array <i>instance</i> is changed. Using an <tt>Epoxy.Model</tt> observable will help here by getting and setting object copies, and by performing content comparisons of value arrays.</li>
 
-				 	<li><b>Checkbox toggle:</b> when a check element is bound to a model primitive (string, boolean, number), the checkbox will be toggled based on a loosely-typed assessment of the value's truthiness. When the checkbox is toggled, it will submit a boolean value back to the model attribute.</li>
+				 	<li><b>Checkbox toggle:</b> when a <tt>checkbox</tt> element is bound to a model primitive (<tt>String</tt>, <tt>Boolean</tt>, <tt>Number</tt>), the element will be checked based on a loosely-typed assessment of the value's truthiness. When the element's <tt>"checked"</tt> status is toggled, it will submit a <tt>Boolean</tt> value back to the model attribute.</li>
 				</ul>
 			</div>
 			<div class="section">
 				<b class="header" id="handler-class-name">className</b>
 				<span class="alias">read-only</span>
 				<code>data-bind="className:{class1:fieldName,class2:fieldName}"</code>
-				<p>Toggles a list of element class names based on their bound model values. Class name bindings are defined as an object of key/value pairs, where each key defines an element class name and is value references a model attribute to loosely-type check for truthiness.</p>
+				<p>Toggles a list of element class names based on their bound model values. Class name bindings are defined with an object of key/value pairs, where each key defines a class name and is value references a model attribute that will be loosely-type checked for truthiness; when truthy the class will be enabled, when falsey the class will be disabled.</p>
 			</div>
 			<div class="section">
 				<b class="header" id="handler-collection">collection</b>
 				<span class="alias">read-only</span>
 				<code>data-bind="collection:observableName"</code>
-				<p>The collection handler manages the display of a Backbone Collection. The bound collection defines a View for its models, which allows the collection handler to take care of adding, removing, and resorting views to keep the display in sync with the collection. One key feature of the collection binding's view management is that it does NOT perform a full re-render of the collection contents for each change. Instead, the collection binding attempts to retain as much existing view as possible, only adding and removing as needed, and performing optimized element sorts when required. You may choose to use Epoxy.View elements for individual collection items, allowing each collection item to bind its view to its model.</p>
+				<p>The collection handler manages the display of a <tt>Backbone.Collection</tt>. The bound collection defines a <tt>View</tt> for its models, which allows the collection handler to take care of adding, removing, and resorting views to keep the display in sync with the collection. One key feature of the <b>collection</b> binding's view management is that it does NOT perform a full re-render of the collection contents for each change. Instead, the <b>collection</b> binding attempts to retain as much existing view as possible, only adding and removing as needed, and performing optimized element sorts when required. You may choose to use <tt>Epoxy.View</tt> elements for the display of individual collection items, allowing each collection item view to also bind to its model.</p>
 
-				<p>The collection binding is slightly more involved than other bindings, so requires the following setup:</p>
+				<p>The collection binding requires the following setup:</p>
 
 				<ul>
-					<li>The binding view's model must be an instance of Epoxy.Model, with the target collection stored as an observable property (this is the only case where Epoxy.Model is required by the view). The collection's observable wrapper will aggregate collection events and trigger appropriate changes for the view.</li>
+					<li>The binding view's model must be an instance of <tt>Epoxy.Model</tt>, with the target collection stored as an observable property. This observable wrapper is required for aggregating collection events that will trigger view updates.</li>
 
-					<li>The bound collection must have a property called "view" which defines a View constructor for displaying collection items (this mirrors the pattern of a collection's "model" property defining its Model constructor).</li>
+					<li>The bound collection must have a property called <b>view</b> which defines a Backbone View constructor for displaying collection items (this mirrors the pattern of a collection's <b>model</b> property defining its Model constructor).</li>
 				</ul>
 
-				<p>For a working demonstration of setting up a collection binding, see Epoxy's ToDos demo app.</p>
+				<p>For a working demonstration of setting up a <b>collection</b> binding, see the Epoxy <a href="#">ToDo demo</a>.</p>
 			</div>
 			<div class="section">
 				<b class="header" id="handler-css">css</b>
@@ -323,43 +320,43 @@
 				<b class="header" id="handler-disabled">disabled</b>
 				<span class="alias">read-only</span>
 				<code>data-bind="disabled:fieldName"</code>
-				<p>Toggles a form element's disabled status on and off based on a loosely-typed assessment of the bound model value's truthiness. A truthy value disables the element (inversion of the "enabled" handler).</p>
+				<p>Toggles a form element's <tt>"disabled"</tt> property based on a loosely-typed assessment of the bound model value's truthiness. A truthy value disables the element (inversion of the <b>enabled</b> handler).</p>
 			</div>
 			<div class="section">
 				<b class="header" id="handler-enabled">enabled</b>
 				<span class="alias">read-only</span>
 				<code>data-bind="enabled:fieldName"</code>
-				<p>Toggles a form element's disabled status on and off based on a loosely-typed assessment of the bound model value's truthiness. A truthy value enables the element (inversion of the "disabled" handler).</p>
+				<p>Toggles a form element's <tt>"disabled"</tt> status based on a loosely-typed assessment of the bound model value's truthiness. A truthy value enables the element (inversion of the <b>disabled</b> handler).</p>
 			</div>
 			<div class="section">
 				<b class="header" id="handler-events">events</b>
 				<span class="alias">read-only</span>
 				<code>data-bind="events:['event1','event2']"</code>
-				<p>The events handler is a special binding definition used to parameterize what DOM events will trigger changes for read-write element bindings. By default, all settable bindings will subscribe to their bound element's `change` event to trigger model updates. You may add additional DOM event triggers for the element by listing them in the events array.</p>
+				<p>The <b>events</b> handler is a special binding used to parameterize what DOM events will trigger changes for read-write element bindings. By default, all settable bindings will subscribe to their bound element's <tt>"change"</tt> event to trigger model updates. You may bind additional DOM event triggers for the element by listing them in the <b>events</b> array.</p>
 			</div>
 			<div class="section">
 				<b class="header" id="handler-html">html</b>
 				<span class="alias">read-only</span>
 				<code>data-bind="html:fieldName"</code>
-				<p>Sets the element's HTML content to the bound model value. Uses the jQuery `html` method.</p>
+				<p>Sets the element's HTML content to the bound model value. Uses the jQuery <b>html</b> method.</p>
 			</div>
 			<div class="section">
 				<b class="header" id="handler-text">text</b>
 				<span class="alias">read-only</span>
 				<code>data-bind="text:fieldName"</code>
-				<p>Sets the element's text content to the bound model value. Any HTML markup will be stripped out. Uses the jQuery `text` method.</p>
+				<p>Sets the element's text content to the bound model value. Uses the jQuery <b>text</b> method.</p>
 			</div>
 			<div class="section">
 				<b class="header" id="handler-toggle">toggle</b>
 				<span class="alias">read-only</span>
 				<code>data-bind="toggle:fieldName"</code>
-				<p>Toggles the element's display on and off based on a loosely-typed assessment of the bound model value's truthiness. Uses the jQuery `toggle( boolean )` method.</p>
+				<p>Toggles the element's display on and off based on a loosely-typed assessment of the bound model value's truthiness. Uses the jQuery <b>toggle( [boolean] )</b> method.</p>
 			</div>
 			<div class="section">
 				<b class="header" id="handler-value">value</b>
 				<span class="alias">read-write</span>
 				<code>data-bind="value:fieldName"</code>
-				<p>Binds an input element's (input, select, textarea) literal value to an underlying model property. The input will set data to the model, and update with model changes.</p>
+				<p>Binds an input element's (<tt>input</tt>, <tt>select</tt>, <tt>textarea</tt>) value to an underlying model attribute. The element will set its <tt>value</tt> to the bound model attribute upon change event triggers (see the <b><a href="#handler-events">events</a></b> handler), and update its <tt>value</tt> when the underlying model attribute changes.</p>
 			</div>
 			<div class="section">
 				<h2 id="binding-operators">View Binding Operators</h2>
@@ -367,27 +364,27 @@
 			<div class="section">
 				<b class="header" id="operator-all">all</b>
 				<code>data-bind="toggle:all(fieldName,fieldName)"</code>
-				<p>Assesses a series of model values as TRUE if all values are loosely-typed and being truthy.</p>
+				<p>Assesses one or more model attributes as <tt>true</tt> if <i>all</i> values are truthy.</p>
 			</div>
 			<div class="section">
 				<b class="header" id="operator-any">any</b>
 				<code>data-bind="toggle:any(fieldName,fieldName)"</code>
-				<p>Assesses a series of model values as TRUE if any of the values are loosely-typed as being truthy.</p>
+				<p>Assesses one or more model attributes as <tt>true</tt> if <i>any</i> of the values are truthy.</p>
 			</div>
 			<div class="section">
 				<b class="header" id="operator-none">none</b>
 				<code>data-bind="toggle:none(fieldName,fieldName)"</code>
-				<p>Assesses a series of model values as TRUE if none of the values are loosely-typed as being truthy.</p>
+				<p>Assesses one or more model attributes as <tt>true</tt> if <i>none</i> of the values are truthy.</p>
 			</div>
 			<div class="section">
 				<b class="header" id="operator-not">not</b>
 				<code>data-bind="toggle:not(fieldName)"</code>
-				<p>Inverts the loosely-typed boolean value of a model value. Useful for inversely affecting binding operations based on the presence of model data.</p>
+				<p>Inverts the loosely-typed boolean value of a model attribute.</p>
 			</div>
 			<div class="section">
 				<b class="header" id="operator-format">format</b>
 				<code>data-bind="text:format('$1 of $2',fieldName,fieldName)"</code>
-				<p>Formats a string with a series of model value replacements. Operates similar to string replacement from RegExp capture groups, where field insertions are denoted as "$1, $2, ... $n". Escape intentional "$n" patterns within the base string as "\$n". Note that the first value insertion index is 1, not 0.</p>
+				<p>Formats a string with a series of model value replacements. Operates similar to string replacement from <tt>RegExp</tt> capture groups, where field insertions are denoted as <tt>"$1,&nbsp;$2,&nbsp;...&nbsp;$n"</tt>. Escape intentional "$n" patterns within the base string as "\$n". Note that the first value insertion index is 1, not 0.</p>
 			</div>
 		</div>
 	</div>
