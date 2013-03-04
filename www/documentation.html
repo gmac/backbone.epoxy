@@ -64,25 +64,36 @@
 			<div class="section">
 				<h1 id="model">Epoxy.Model</h1>
 			
-				<p>The Epoxy model object extends the base Backbone.Model, providing additional features that can be extend into your application.</p>
+				<p>The Epoxy Model object extends <tt>Backbone.Model</tt>, providing a new model abstract to be extended into your application.</p>
 
-				<p>The Epoxy model introduces observable properties on top of the Backbone model's normal data attributes, specifically designed to store view-specific data (like selection state) that should not be saved as part of the model. Observable properties can be <b>get</b> and <b>set</b> just like normal model attributes, yet are stored independently from regular model attributes where they will not be synced.</p>
+				<p>The Epoxy model introduces observable attributes on top of Backbone's native model attributes. Observable attributes are virtualized properties of the model: they may be <b>get</b> and <b>set</b> just like normal model attributes, and will trigger <tt>"change"</tt> events on the model when modified, however they do not exist within the model's <b>attributes</b> table, nor will they be saved with model data. Observable model attributes exist only in memory for the lifespan of a model instance. The goal of observable attributes is to provide an intermediary layer between a model's data and its display; allowing stateful view data (such as view selection states) to be managed within the model, yet not be retained by data stores.</p>
 
-				<p>Additionally, Epoxy observable properties may be computed, meaning that their values are assembled based on other model values. Computed observables become dependent on one another as one field's value is made dependent on another, and changes to a dependency property will propagate changes out to its listeners.</p>
+				<p>Additionally, Epoxy's observable attributes may be <i>computed</i>. Computed attributes operate as assemblers and mutators, where a computed attribute will <b>get</b> an assembled value derived from other model attributes, and will <b>set</b> one more more mutated values derived from an input. Computed observables bind themselves to their dependency model attributes and will update themselves in response to any of their dependencies changing, then in turn trigger their own <tt>"change:attributeName"</tt> event on the model.</p>
 			</div>
 			<div class="section">
 				<b class="header" id="model-extend">extend</b>
-				<code>Backbone.Epoxy.Model.extend(properties, [classProperties]) </code>
+				<code>Backbone.Epoxy.Model.extend(properties, [classProperties])</code>
+				<p>Extends the <tt>Epoxy.Model</tt> constructor for use in your own implementation.</p>
 			</div>
 			<div class="section">
 				<b class="header" id="model-constructor">constructor</b>
 				<code>new Backbone.Epoxy.Model([attributes], [options])</code>
+				<p>Creates a new <tt>Epoxy.Model</tt> instance.</p>
+			</div>
+			<div class="section">
+				<b class="header" id="model-add-observable">addObservable</b>
+				<code>model.addObservable(name, value)</code>
+				<p>Adds an observable attribute to the model. Observable attributes are virtualized properties of the model: they may be <b>get</b> and <b>set</b> just like normal model attributes, and will trigger <tt>"change"</tt> events on the model when modified, however they do not exist within the model's <b>attributes</b> table, nor will they be saved with model data. Observable model attributes exist only in memory for the lifespan of a model instance. The goal of observable attributes is to provide an intermediary layer between a model's data and its display; allowing stateful view data (such as view selection states) to be managed within the model, yet not be retained by data stores.</p>
+
+				<p>Observable attributes may store any type of data, and will trigger normal <tt>"change:attributeName"</tt> events when set through the model's standard <b>set</b> method.</p>
+				
+				<p>Observable attributes storing object values (<tt>Object</tt> or <tt>Array</tt>) will trigger <tt>"change"</tt> events in response to changes in the object's composition, rather than just its identity (this differs from the base Backbone Model, which will only trigger <tt>"change"</tt> events when a unique object instance replaces another within the model). Object comparison checks are performed using Underscore's <b>isEqual</b> method, which will compare the composition of objects and the contents of arrays. Performance should be considered when storing large object structures.</p>
 			</div>
 			<div class="section">
 				<b class="header" id="model-add-computed">addComputed</b><br>
 				<code>model.addComputed(name, params) or...</code><br>
 				<code>model.addComputed(name, getter, [setter], [*deps])</code>
-				<p>Adds a computed observable property to the model. Computed observables are similar to normal observables in that they may be <b>get</b> and <b>set</b> through the standard model API while remaining independent from the model's underlying <b>attributes</b> table, however they introduce a layer of custom computation while generating their values.</p>
+				<p>Adds a computed observable attribute to the model. Computed observables may be <b>get</b> and <b>set</b> through the standard model API while remaining independent from the model's underlying <b>attributes</b> table, however they introduce a layer of custom computation while generating their values.</p>
 				
 				<p>When getting values, computed properties may read from other model properties (basic attributes, observables, or other computed properties) and assemble their returned value from these dependent properties. When setting computed properties, the computed property serves as a mutator for receiving a value, reformatting it, then returning its parsed data into the model with its proper attribute aliases. A classic case for computed properties are for getting and setting formatted number values (such as currency), where the computed getter may format a numeric model value for display, and its setter may parse a display value back into a number for storage within the model.</p>
 
@@ -103,15 +114,6 @@
 				</ul>
 			
 				<p>Also of note, Epoxy.Model instances may automatically map dependencies among one another. This is very handy for mapping dependencies among multiple model references within a closure. As long as all models involved are instances of <tt>Epoxy.Model</tt>, they'll pick up on calls to one another's <b>get</b> methods while initializing.</p>
-			</div>
-			<div class="section">
-				<b class="header" id="model-add-observable">addObservable</b>
-				<code>model.addObservable(name, value)</code>
-				<p>Adds an observable property to the model. Observable properties are virtualized model attributes that can be accessed using the model's normal <b>get</b> and <b>set</b> methods, but exist outside of the model's native <b>attributes</b> data table. While observables can be read and written like normal model attributes, they remain separate from synced model data. This is extremely useful for staging non-data properties such as view selection state, which may be stateful model data, yet does not need to be stored on the server.</p>
-
-				<p>Observable properties may be used to store any type of value, and will trigger normal <tt>"change:propertyName"</tt> events when set through the model's standard <b>set</b> method.</p>
-
-				<p>Additionally, observable properties that store object values (<tt>Object</tt> or <tt>Array</tt>) will trigger <tt>"change"</tt> events in response to changes in the object's composition, rather than just its identity. This differs from the base Backbone model, which will only trigger <tt>"change"</tt> events when a unique object instance replaces another within the model. Object comparison checks are performed using Underscore's <b>isEqual</b> method, which will compare the composition of objects and the contents of arrays. Note that due to the overhead of these equality checks, observable properties are best suited for storing small, single-dimensional objects rather than large data structures.</p>
 			</div>
 			<div class="section">
 				<b class="header" id="model-clear-observables">clearObservables</b>
