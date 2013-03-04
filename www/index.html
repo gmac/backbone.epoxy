@@ -1,0 +1,37 @@
+Epoxy is an easy and extensible data binding library for Backbone,
+providing model computations and declarative view binding for a modest
+total file size (7kb minified, 3.5k gzipped). Epoxy borrows heavily
+from some great parts of Knockout.js and Ember.js, and tries to
+provide some of their power through a simple API that still feels
+tastefully like Backbone. To that end, Epoxy provides extended
+versions of Backbone's Model and View classes for you to build from.
+Key features of each:
+
+Epoxy.Model
+ - observable and computed properties.
+ - automatic dependency mapping.
+
+Epoxy.View
+ - declarative data bindings.
+ - automatic view updates.
+ - easily extensible binding handlers.
+
+Customize it:
+
+Data binding is very powerful, and quite slick when you can make it
+work for your purposes. While Epoxy's default binding handlers only
+offer the basics, the system is designed to make it --truly-- easy and
+efficient to compose your own binding hooks. The API has been
+specifically designed to be simple, and its features slightly limited,
+both to make it easy for developers to innovate within the system, and
+to stave off the temptation for messy binding declarations that are
+too smart for their own good.
+
+Use only what you need:
+
+While Epoxy's model and view components are designed to enhance one
+another's capabilities, they do not depend on one another to function.
+Therefore, you're welcome to use just Epoxy models or views within
+your project, omitting the other component entirely (each component
+weighs in at about 3.5kb, 1.5kb gzipped). The two Epoxy components are
+available separately so you can include only what your project needs.
