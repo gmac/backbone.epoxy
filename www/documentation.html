@@ -242,19 +242,22 @@
 				<b>Two-way binding:</b>
 				<p>To declare a two-way binding, define a new property on the bindingHandlers object that provides a params object with get and set function properties:</p>
 
-				<p>The get function is used to READ data from the view that will be set into the model. The get function receives two params: a jQuery representation of the bound element, and the current model value. The get function should return a revised value that will be set to the bound model field.</p>
+				<p>The <b>get</b> function is used to READ data from the view that will be set into the model. The get function receives two params: a jQuery representation of the bound element, and the current model value. The get function should return a revised value that will be set to the bound model field.</p>
 
-				<p>The set function is used to WRITE data from the model into the view. The set function receives two params: a jQuery representation of the bound element, and the model value to be written into the view. The set function returns nothing.</p>
+				<p>The <b>set</b> function is used to WRITE data from the model into the view. The set function receives two params: a jQuery representation of the bound element, and the model value to be written into the view. The set function returns nothing.</p>
 
-				<p>Note that both the get and set functions will be called in the context of their parent views, so citing "this" within any binding handler function refers to the parent view instance.</p>
+				<p>Note that both the <b>get</b> and <b>set</b> functions will be called in the context of their parent views, so citing <tt>this</tt> within any binding handler function refers to the parent view instance.</p>
 
 				<b>One-way binding:</b>
-				<p>One-way bindings work just like two-way bindings, except that they only define a set (WRITE) function. Alternatively, you may choose to simplify the declaration of one-way bindings to just a function property on the bindingHandlers object; the solo function will be automatically configured as a setter:</p>
+				<p>One-way bindings work just like two-way bindings, except that they only define a <b>set</b> (WRITE) function. Alternatively, you may choose to simplify the declaration of one-way bindings to just a function property on the <b>bindingHandlers</b> object; the solo function will be automatically configured as a setter:</p>
+<pre>
+	
+</pre>
 			</div>
 			<div class="section">
 				<b class="header" id="view-remove">remove</b>
 				<code>view.remove()</code>
-				<p>Extends the native Backbone.View `remove` method, adding a call to `removeBindings` while performing the other standard Backbone removal tasks.</p>
+				<p>Override wrapper for the Backbone Views's native <b>remove</b> method. This override calls <b>removeBindings</b>, then defers to the Backbone View's native <b>remove</b> method.</p>
 			</div>
 			<div class="section">
 				<b class="header" id="view-remove-bindings">removeBindings</b>
