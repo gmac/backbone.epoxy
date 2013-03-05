@@ -101,6 +101,7 @@
 		},
 		
 		// Recursive observable value setter/collector:
+		// Not intended for general use.
 		// Used to collect non-observable properties that will be passed along to the model,
 		// and allows observable properties to set one another in the process.
 		// @param toTest: an object of key/value pairs to scan through.
@@ -196,31 +197,77 @@
 		},
 		
 		// Tests the model for a observable property definition:
-		hasObservable: function( property ) {
-			return this.obs.hasOwnProperty( property );
-		},
-		
-		// Gets an observable property definition:
-		getObservable: function( property ) {
-			if ( this.hasObservable(property) ) {
-				return this.obs[ property ];
-			}
-			return null;
+		hasObservable: function( attribute ) {
+			return this.obs.hasOwnProperty( attribute );
 		},
 		
 		// Removes a observable property from the model:
-		removeObservable: function( property ) {
-			if ( this.hasObservable(property) ) {
-				this.obs[ property ].dispose();
-				delete this.obs[ property ];
+		removeObservable: function( attribute ) {
+			if ( this.hasObservable(attribute) ) {
+				this.obs[ attribute ].dispose();
+				delete this.obs[ attribute ];
 			}
 		},
 
 		// Unbinds all observable properties:
 		clearObservables: function() {
-			for ( var property in this.obs ) {
-				this.removeObservable( property );
+			for ( var attribute in this.obs ) {
+				this.removeObservable( attribute );
 			}
+		},
+		
+		// Provides direct access to an underlying attribute value:
+		// Not intended for general use.
+		_attr: function( attribute ) {
+			return this.hasObservable( attribute ) ? this.obs[ attribute ].value : this.attributes[ attribute ];
+		},
+		
+		// Array attribute modifier method:
+		// performs array ops on an array attribute, then fires change.
+		// No action is taken if the attribute value isn't an array.
+		modifyArray: function( attribute, method ) {
+			var obj = this._attr( attribute );
+			var array = Array.prototype;
+			
+			if ( _.isArray(obj) && _.isFunction(array[method]) ) {
+				var args = array.slice.call( arguments, 2 );
+				var result = array[ method ].apply( obj, args );
+				this.trigger( "change change:"+attribute );
+				return result;
+			}
+			return null;
+		},
+		
+		// Object attribute modifier method:
+		// sets new object property values, then fires change.
+		// No action is taken if the observable value isn't an object.
+		modifyObject: function( attribute, property, value ) {
+			var obj = this._attr( attribute );
+			var change = false;
+			
+			// If property is an Object:
+			if ( _.isObject(obj) ) {
+				
+				// Delete existing property in response to undefined values:
+				if ( _.isUndefined(value) && obj.hasOwnProperty(property) ) {
+					delete obj[property];
+					change = true;
+				}
+				// Set new and/or changed property values:
+				else if ( obj[ property ] !== value ) {
+					obj[ property ] = value;
+					change = true;
+				}
+				
+				// Trigger model change:
+				if (change) {
+					this.trigger( "change change:"+attribute );
+				}
+				
+				// Return the modified object:
+				return obj;
+			}
+			return null;
 		}
 	});
 	
@@ -390,27 +437,7 @@
 				this.listenTo( custom, "destroy", _.bind(this.model.removeObservable, this.model, this.name) )
 			}
 		},
-		
-		// Specifies if the observable property is an Array instance:
-		isArray: function() {
-			return _.isArray(this.value);
-		},
-		
-		// Array modifier method:
-		// performs array ops on the observable (array) value, then fires change.
-		// No action is taken if the observable value isn't an array.
-		modifyArray: function( method ) {
-			var array = Array.prototype;
-			
-			if ( this.isArray() && _.isFunction( array[method] ) ) {
-				var args = array.slice.call( arguments, 1 );
-				var result = array[ method ].apply( this.value, args );
-				this.fire();
-				return result;
-			}
-			return null;
-		},
-		
+
 		// Disposal:
 		// cleans up events and releases references.
 		dispose: function() {

@@ -96,26 +96,25 @@ describe("Backbone.Epoxy.Model", function() {
 	});
 	
 	
+	// Deprecating this feature within the published API...
 	it("should allow direct access to observable property values using their own getters and setters.", function() {
-		var sel = model.getObservable( "isSelected" );
+		var sel = model.obs[ "isSelected" ];
 		expect( sel.get() ).toBe( false );
 		sel.set( true );
 		expect( sel.get() ).toBe( true );
 	});
 	
 	
-	it("should allow direct management of observable arrays using the '.modifyArray' method.", function() {
-		var obs = model.getObservable( "testArray" );
-		expect( obs.value.length ).toBe( 0 );
-		obs.modifyArray("push", "beachball");
-		expect( obs.value.length ).toBe( 1 );
+	it("should allow direct management of array attributes using the '.modifyArray' method.", function() {
+		expect( model.get( "testArray" ).length ).toBe( 0 );
+		model.modifyArray("testArray", "push", "beachball");
+		expect( model.get( "testArray" ).length ).toBe( 1 );
 	});
 	
 	
 	it("should defer all action when using '.modifyArray' on a non-array object.", function() {
-		var obs = model.getObservable( "isSelected" );
-		obs.modifyArray("push", "beachball");
-		expect( obs.get() ).toBe( false );
+		model.modifyArray("isSelected", "push", "beachball");
+		expect( model.get( "isSelected" ) ).toBe( false );
 	});
 	
 	
@@ -558,10 +557,9 @@ describe("Backbone.Epoxy.View", function() {
 		var $els = $(".check-list");
 		
 		// Add new selection to the checkbox group:
-		var obs = bindingModel.getObservable("checkList");
 		expect( !!$els.filter("[value='b']" ).prop("checked") ).toBe( true );
 		expect( !!$els.filter("[value='c']" ).prop("checked") ).toBe( false );
-		obs.modifyArray("push", "c");
+		bindingModel.modifyArray("checkList", "push", "c");
 		expect( !!$els.filter("[value='b']" ).prop("checked") ).toBe( true );
 		expect( !!$els.filter("[value='c']" ).prop("checked") ).toBe( true );
 	});
