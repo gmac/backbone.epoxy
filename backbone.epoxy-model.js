@@ -9,6 +9,11 @@
 	
 	Backbone.Epoxy = Backbone.Epoxy || {};
 	
+	// Bindings Map:
+	// stores an attributes binding map while configuring model bindings.
+	var bindingsMap;
+	
+	
 	// Epoxy.Model
 	// -----------
 	var EpoxyModel = Backbone.Epoxy.Model = Backbone.Model.extend({
@@ -55,8 +60,8 @@
 		get: function( property ) {
 			
 			// Automatically register bindings while building a computed dependency graph:
-			if ( EpoxyModel._map ) {
-				EpoxyModel._map.push( [property, this] );
+			if ( bindingsMap ) {
+				bindingsMap.push( [property, this] );
 			}
 			
 			// Return observable property value, if available:
@@ -262,9 +267,9 @@
 		// may perform a secondary init pass after constructing all observables.
 		init: function() {
 			// Configure event capturing, then update and bind observable:
-			EpoxyModel._map = this.deps;
+			bindingsMap = this.deps;
 			this.update();
-			EpoxyModel._map = null;
+			bindingsMap = null;
 			
 			if ( this.deps.length ) {
 				// Has dependencies:

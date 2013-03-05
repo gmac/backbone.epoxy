@@ -10,9 +10,9 @@
 	Backbone.Epoxy = Backbone.Epoxy || {};
 	
 	
-	// Binding Map:
+	// Bindings Map:
 	// stores an attributes binding map while configuring view bindings.
-	var bindingMap;
+	var bindingsMap;
 	
 	
 	// Epoxy.View
@@ -45,7 +45,7 @@
 			
 			// Compile custom binding handler definitions:
 			// assigns raw functions as setter definitions by default.
-			_.each(this.bindingHandlers, function( handler, name ) {
+			_.each(this.bindingHandlers||{}, function( handler, name ) {
 			    handlers[ name ] = _.isFunction(handler) ? {set: handler} : handler;
 			});
 			
@@ -54,8 +54,8 @@
 			_.each(_.extend({},model.attributes,model.obs||{}), function( value, property ) {
 				accessors[ property ] = function( value ) {
 					// Record property to binding map, when enabled:
-					if ( bindingMap ) {
-						bindingMap.push( "change:"+property );
+					if ( bindingsMap ) {
+						bindingsMap.push( "change:"+property );
 					}
 					
 					// Get / Set value:
@@ -75,14 +75,14 @@
 			function bind( $element, bindings, selector ) {
 				// Try to compile bindings, throw errors if encountered:
 				try {
-					self._bind.push( new EpoxyBinding($element, bindings, accessors, handlers, model) );
+					self._bind.push( new EpoxyBinding($element, bindings, accessors, handlers, model, this) );
 				} catch( error ) {
 					throw( 'Error parsing bindings for "'+ selector +'" >> '+error );
 				}
 			}
 			
 			// Create bindings:
-			if ( this.bindings && typeof this.bindings == "object" ) {
+			if ( _.isObject(this.bindings) ) {
 				
 				// Mapped bindings:
 				_.each(this.bindings, function( bindings, selector ) {
@@ -374,7 +374,7 @@
 
 	// EpoxyBinding
 	// ------------
-	var EpoxyBinding = function( $element, bindings, accessors, handlers, model ) {
+	var EpoxyBinding = function( $element, bindings, accessors, handlers, model, view ) {
 		this.$el = $element;
 		
 		var self = this;
@@ -407,9 +407,9 @@
 				
 				// Set default binding:
 				// Configure accessor table to collect events.
-				bindingMap = triggers;
-				handler.set.call( self, self.$el, readAccessor(accessor) );
-				bindingMap = null;
+				bindingsMap = triggers;
+				handler.set.call(view, self.$el, readAccessor(accessor), self);
+				bindingsMap = null;
 				
 				// Getting, requires:
 				// => Form element.
@@ -417,7 +417,7 @@
 				// => Value accessor is a function.
 				if ( changable && handler.get && _.isFunction(accessor) ) {
 					self.$el.on(self.events, function() {
-						accessor( handler.get.call(self, self.$el, readAccessor(accessor)) );
+						accessor( handler.get.call(view, self.$el, readAccessor(accessor), self) );
 					});
 				}
 				
@@ -425,7 +425,7 @@
 				// => One or more events triggers.
 				if ( triggers.length ) {
 					self.listenTo( model, triggers.join(" "), function() {
-						handler.set.call(self, self.$el, readAccessor(accessor));
+						handler.set.call(view, self.$el, readAccessor(accessor), self);
 					});
 				}
 				
