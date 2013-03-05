@@ -9,6 +9,12 @@
 	
 	Backbone.Epoxy = Backbone.Epoxy || {};
 	
+	
+	// Binding Map:
+	// stores an attributes binding map while configuring view bindings.
+	var bindingMap;
+	
+	
 	// Epoxy.View
 	// ----------
 	var EpoxyView = Backbone.Epoxy.View = Backbone.View.extend({
@@ -22,6 +28,9 @@
 			this.applyBindings();
 		},
 		
+		// Default bindings definition: provides a DOM element attribute to query.
+		bindings: "data-bind",
+		
 		// Compiles model accessors, then applies bindings to the view:
 		// Note: Model->View relationships are baked at the time of binding.
 		// If model adds new properties or view adds new bindings, view must be re-bound.
@@ -34,9 +43,9 @@
 			var accessors = {};
 			var handlers = _.clone( defaultHandlers );
 			
-			// Compile custom handler definitions:
+			// Compile custom binding handler definitions:
 			// assigns raw functions as setter definitions by default.
-			_.each(this.handlers, function( handler, name ) {
+			_.each(this.bindingHandlers, function( handler, name ) {
 			    handlers[ name ] = _.isFunction(handler) ? {set: handler} : handler;
 			});
 			
@@ -45,8 +54,8 @@
 			_.each(_.extend({},model.attributes,model.obs||{}), function( value, property ) {
 				accessors[ property ] = function( value ) {
 					// Record property to binding map, when enabled:
-					if ( EpoxyView._map ) {
-						EpoxyView._map.push( "change:"+property );
+					if ( bindingMap ) {
+						bindingMap.push( "change:"+property );
 					}
 					
 					// Get / Set value:
@@ -178,7 +187,7 @@
 		},
 		
 		// Class Name: write-only. Toggles a collection of class name definitions.
-		className: {
+		classes: {
 			set: function( $element, value ) {
 				_.each(value, function(enabled, className) {
 					$element.toggleClass(className, !!enabled);
@@ -398,9 +407,9 @@
 				
 				// Set default binding:
 				// Configure accessor table to collect events.
-				EpoxyView._map = triggers;
+				bindingMap = triggers;
 				handler.set.call( self, self.$el, readAccessor(accessor) );
-				EpoxyView._map = null;
+				bindingMap = null;
 				
 				// Getting, requires:
 				// => Form element.

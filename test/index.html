@@ -27,7 +27,7 @@
 		margin-top: 15px;
 		padding-top: 10px;
 	}
-	.test-classname {
+	.test-classes {
 		color: #999;
 	}
 	.active {
@@ -46,9 +46,9 @@
 	<div id="dom-view" class="test-view">
 		<strong>DOM / Attribute Mapping</strong>
 		<div class="section">
-			<p><label class="test-classname" data-bind="className:{error:firstNameError,active:active}">First name:</label></p>
+			<p><label class="test-classes" data-bind="classes:{error:firstNameError,active:active}">First name:</label></p>
 			<input class="test-input-first" type="text" data-bind="value:firstName,events:['keyup']">
-			<p><label class="test-classname" data-bind="className:{error:lastNameError,active:active}">Last name:</label></p>
+			<p><label class="test-classes" data-bind="classes:{error:lastNameError,active:active}">Last name:</label></p>
 			<input class="test-input-last" type="text" data-bind="value:lastName,events:['keyup']">
 			<p class="test-css" data-bind="css:{display:errorDisplay}">Error: incomplete form.</p>
 		</div>
@@ -97,9 +97,9 @@
 	<div id="mod-view" class="test-view">
 		<p class="test-toggle" data-bind="toggle:active">Toggled ON</p>
 		<p class="test-mod-not" data-bind="toggle:not(active)">Toggled OFF</p>
-		<p class="test-mod-all" data-bind="className:{hilite:all(firstName,lastName)}">first AND last name.</p>
-		<p class="test-mod-none" data-bind="className:{hilite:none(firstName,lastName)}">NOT first AND last name.</p>
-		<p class="test-mod-any" data-bind="className:{hilite:any(firstName,lastName)}">first OR last name.</p>
+		<p class="test-mod-all" data-bind="classes:{hilite:all(firstName,lastName)}">first AND last name.</p>
+		<p class="test-mod-none" data-bind="classes:{hilite:none(firstName,lastName)}">NOT first AND last name.</p>
+		<p class="test-mod-any" data-bind="classes:{hilite:any(firstName,lastName)}">first OR last name.</p>
 		<p class="test-mod-format" data-bind="text:format('Name: $1 $2',firstName,lastName)"></p>
 		
 		<div class="section test-collection">

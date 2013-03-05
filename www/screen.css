@@ -1,6 +1,17 @@
+body {
+	background-color: #000;
+	margin: 0;
+}
+
+a {
+	color: #A8380C;
+}
+
 #page {
+	background-color: #fff;
 	font: 14px/1.5em 'Helvetica Neue', Helvetica, Arial;
 	margin: 0 auto;
+	padding: 1px 0;
 	width: 990px;
 }
 
@@ -15,6 +26,11 @@
 .toc-content {
 	padding: 30px;
 	padding-right: 0;
+}
+
+.toc-content ul {
+	margin: 10px 0;
+	padding-left: 20px;
 }
 
 .main {

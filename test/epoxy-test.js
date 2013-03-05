@@ -393,7 +393,7 @@ describe("Backbone.Epoxy.View", function() {
 		model: bindingModel,
 		bindings: "data-bind",
 		
-		handlers: {
+		bindingHandlers: {
 			printArray: function( $element, value ) {
 				$element.text( value.sort().join(", ") );
 			}
@@ -578,8 +578,8 @@ describe("Backbone.Epoxy.View", function() {
 	});
 	
 	
-	it("binding 'className:' should establish a one-way binding with an element's class definitions.", function() {
-		var $el = $(".test-classname").eq(0);
+	it("binding 'classes:' should establish a one-way binding with an element's class definitions.", function() {
+		var $el = $(".test-classes").eq(0);
 		expect( $el.hasClass("error") ).toBe( false );
 		expect( $el.hasClass("active") ).toBe( true );
 		bindingModel.set({
