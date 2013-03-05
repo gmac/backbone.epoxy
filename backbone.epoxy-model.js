@@ -57,20 +57,34 @@
 		
 		// Backbone.Model.get() override:
 		// accesses observable properties & maps computed dependency bindings.
-		get: function( property ) {
+		get: function( attribute ) {
 			
 			// Automatically register bindings while building a computed dependency graph:
 			if ( bindingsMap ) {
-				bindingsMap.push( [property, this] );
+				bindingsMap.push( [attribute, this] );
 			}
 			
 			// Return observable property value, if available:
-			if ( this.hasObservable(property) ) {
-				return this.obs[ property ].get();
+			if ( this.hasObservable(attribute) ) {
+				return this.obs[ attribute ].get();
 			}
 			
 			// Default to normal Backbone.Model getter:
 			return this._super( "get", arguments );
+		},
+		
+		// Gets a copy of a model attribute value:
+		// Arrays and Object values will return a shallow clone,
+		// primitive values will be returned directly.
+		getCopy: function( attribute ) {
+			var value = this.get( attribute );
+			
+			if ( _.isArray(value) ) {
+				return value.slice();
+			} else if ( _.isObject(value) ) {
+				return _.clone(value);
+			}
+			return value;
 		},
 		
 		// Backbone.Model.set() override:
@@ -216,17 +230,11 @@
 			}
 		},
 		
-		// Provides direct access to an underlying attribute value:
-		// Not intended for general use.
-		_attr: function( attribute ) {
-			return this.hasObservable( attribute ) ? this.obs[ attribute ].value : this.attributes[ attribute ];
-		},
-		
 		// Array attribute modifier method:
 		// performs array ops on an array attribute, then fires change.
 		// No action is taken if the attribute value isn't an array.
 		modifyArray: function( attribute, method ) {
-			var obj = this._attr( attribute );
+			var obj = this.get( attribute );
 			var array = Array.prototype;
 			
 			if ( _.isArray(obj) && _.isFunction(array[method]) ) {
@@ -242,7 +250,7 @@
 		// sets new object property values, then fires change.
 		// No action is taken if the observable value isn't an object.
 		modifyObject: function( attribute, property, value ) {
-			var obj = this._attr( attribute );
+			var obj = this.get( attribute );
 			var change = false;
 			
 			// If property is an Object:
@@ -366,7 +374,7 @@
 				var val = this._get.call( this.model );
 				this.change( val );
 			}
-			return this.copy();
+			return this.value;
 		},
 		
 		// Sets the observable's current value:
@@ -392,21 +400,7 @@
 		fire: function() {
 			this.model.trigger( "change change:"+this.name );
 		},
-		
-		// Returns a copy of the value object:
-		copy: function() {
-			var value = this.value;
-			
-			if ( this.custom ) {
-				return this.custom;
-			} else if ( _.isArray(value) ) {
-				return value.slice();
-			} else if ( _.isObject(value) ) {
-				return _.clone(value);
-			}
-			return value;
-		},
-		
+
 		// Changes the observable's value:
 		// new values are cached, then fire an update event.
 		change: function( value ) {

@@ -156,6 +156,7 @@
 					
 				} else if ( _.isArray(currentValue) ) {
 					// Checkbox array: add/remove value from list.
+					currentValue = currentValue.slice();
 					var index = _.indexOf(currentValue, value);
 
 					if ( checked && index < 0 ) {

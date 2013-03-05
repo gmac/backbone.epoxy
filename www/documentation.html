@@ -18,7 +18,10 @@
 					<li><a href="#model-computeds">computeds</a></li>
 					<li><a href="#model-destroy">destroy</a></li>
 					<li><a href="#model-get">get</a></li>
+					<li><a href="#model-get-copy">getCopy</a></li>
 					<li><a href="#model-has-observable">hasObservable</a></li>
+					<li><a href="#model-modify-array">modifyArray</a></li>
+					<li><a href="#model-modify-object">modifyObject</a></li>
 					<li><a href="#model-observables">observables</a></li>
 					<li><a href="#model-remove-observable">removeObservable</a></li>
 					<li><a href="#model-set">set</a></li>
@@ -76,11 +79,13 @@
 				<code>Backbone.Epoxy.Model.extend(properties, [classProperties])</code>
 				<p>Extends the <tt>Epoxy.Model</tt> constructor for use in your own implementation.</p>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="model-constructor">constructor</b>
 				<code>new Backbone.Epoxy.Model([attributes], [options])</code>
 				<p>Creates a new <tt>Epoxy.Model</tt> instance.</p>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="model-add-observable">addObservable</b>
 				<code>model.addObservable(name, value)</code>
@@ -88,7 +93,7 @@
 
 				<p>Observable attributes may store any type of data, and will trigger normal <tt>"change:attributeName"</tt> events when set through the model's standard <b>set</b> method.</p>
 				
-				<p>Observable attributes storing object values (<tt>Object</tt> or <tt>Array</tt>) will trigger <tt>"change"</tt> events in response to changes in the object's composition, rather than just its identity (this differs from the base Backbone Model, which will only trigger <tt>"change"</tt> events when a unique object instance replaces another within the model). Object comparison checks are performed using Underscore's <b>isEqual</b> method, which will compare the composition of objects and the contents of arrays. Performance should be considered when storing large objects.</p>
+				<p>Observable attributes storing object values (<tt>Object</tt> or <tt>Array</tt>) will trigger <tt>"change"</tt> events in response to changes in object composition, rather than object identity (this differs from the base Backbone Model, which will only trigger <tt>"change"</tt> events when a unique object instance replaces another within the model). Object comparison checks are performed using Underscore's <b>isEqual</b> method, which will compare the composition of objects and the contents of arrays. Performance should be considered when managing large objects.</p>
 				
 <pre><button class="run">Run</button><code>var model = new Backbone.Epoxy.Model();
 model.addObservable("isSelected", false);
@@ -96,6 +101,7 @@ alert( model.get("isSelected") );</code>
 </pre>
 				<p>Use the <b><a href="#model-observables">observables</a></b> hash to automatically construct observables on your model instances.</p>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="model-add-computed">addComputed</b><br>
 				<code>model.addComputed(name, params) or...</code><br>
@@ -167,16 +173,17 @@ model.addComputed("displayName", function() {
 </pre>
 				<p>Use the <b><a href="#model-computeds">computeds</a></b> hash to automatically construct computed observables on your model instances.</p>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="model-clear-observables">clearObservables</b>
 				<code>model.clearObservables()</code>
 				<p>Removes all observable properties on the model and cleans up their bound events. Cleared observables will no longer exist on the model, so will no longer be accessible or trigger events. Be sure to call <b>clearObservables</b> when deprecating an Epoxy model without specifically calling its <b>destroy</b> method.</p>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="model-computeds">computeds</b>
 				<code>model.computeds</code>
-				<p>A hash table declaring computed observable attributes to be automatically added to a model instance by the constructor. Uses <b><a href="#model-add-computed">addComputed</a></b> to create observable attributes. Computed observables may be declared with a <a href="#model-computed-params">computed params</a> object, or as a getter function (uses <a href="#model-computed-deps">automatic dependency mapping</a>).</p>
-				
+				<p>A hash table declaring computed observable attributes to be automatically added to a model instance by the constructor. Uses <b><a href="#model-add-computed">addComputed</a></b> to create observable attributes. Computed observables may be declared with a <a href="#model-computed-params">computed params</a> object, or as a getter function (uses <a href="#model-computed-deps">automatic dependency mapping</a>).</p>	
 <pre>
 <code>var ComputedModel = Backbone.Epoxy.Model.extend({
     defaults: {
@@ -202,22 +209,44 @@ model.addComputed("displayName", function() {
 });</code>
 </pre>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="model-destroy">destroy</b>
 				<code>model.destroy([options])</code>
 				<p>Override wrapper for the Backbone Model's native <b>destroy</b> method. This wrapper cleans up Epoxy model configuration, then defers to the Backbone Model's native <b>destroy</b> method. If you'd like to clean up a model without completely destroying it, use the <b>clearObservables</b> method.</p>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="model-get">get</b>
 				<code>model.get(attribute)</code>
 				<p>Override wrapper for the Backbone Model's native <b>get</b> method. This override allows basic model attributes and Epoxy observable/computed attributes to be accessed through a common API.</p>
 				<p>The Epoxy <b>get</b> method will first check for an observable attribute, then defers to the Backbone Model's native <b>get</b> method if no observable was found. Remember that an observable attribute overrides a native attribute with the same name, so be mindful of naming collisions.</p>
 			</div>
+			
+			<div class="section">
+				<b class="header" id="model-get-copy">getCopy</b>
+				<code>model.getCopy(attribute)</code>
+				<p>Gets and returns any model attribute value (native, observable, or computed), returning a shallow copy of non-primitive values. This is useful for getting copies of <tt>Object</tt> and <tt>Array</tt> values that you plan to modify outside of the model, then resubmit with changes. Also consider using <b><a href="#model-modify-array">modifyArray</a></b> and <b><a href="#model-modify-object">modifyObject</a></b> to perform object changes within the model.</p>
+			</div>
+			
 			<div class="section">
 				<b class="header" id="model-has-observable">hasObservable</b>
 				<code>model.hasObservable(attribute)</code>
 				<p>Returns <tt>true</tt> if the model has an observable or computed observable attribute with the specified name. Note that the Backbone Model's native <b>has</b> method is NOT modified by Epoxy, so will still only report on the presence of Backbone-native model attributes.</p>
 			</div>
+			
+			<div class="section">
+				<b class="header" id="model-modify-array">modifyArray</b>
+				<code>model.modifyArray(attribute, arrayMethod, [*args])</code>
+				<p></p>
+			</div>
+			
+			<div class="section">
+				<b class="header" id="model-modify-object">modifyObject</b>
+				<code>model.modifyObject(attribute, objectProperty, value)</code>
+				<p></p>
+			</div>
+			
 			<div class="section">
 				<b class="header" id="model-observables">observables</b>
 				<code>model.observables</code>
@@ -231,17 +260,20 @@ model.addComputed("displayName", function() {
 });</code>
 </pre>	
 			</div>
+			
 			<div class="section">
 				<b class="header" id="model-remove-observable">removeObservable</b>
 				<code>model.removeObservable(attribute)</code>
 				<p>Removes an observable attribute by name, and cleans up all bound listeners. A removed observable property will no longer exist within the model, so may no longer be accessed or trigger events.</p>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="model-set">set</b>
 				<code>model.set(attributes, [options])</code>
 				<p>Override wrapper for the Backbone Model's native <b>set</b> method. This override allows basic model attributes and Epoxy observable/computed attributes to be accessed through a common API.</p>
 				<p>The Epoxy <b>set</b> method will first check for an observable attribute, then defers to the Backbone Model's native <b>set</b> method if no observable was found. Remember that an observable attribute overrides a native attribute with the same name, so be mindful of naming collisions.</p>
 			</div>
+			
 			<div class="section">
 				<h1 id="view">Epoxy.View</h1>
 
@@ -293,7 +325,7 @@ model.addComputed("displayName", function() {
 </pre>				
 				<ul>
 					<li><b>set:</b> <i>Required function, invoked in context of the view</i>. This function is used to WRITE data from the model into the view. The <b>set</b> function receives two arguments: a jQuery representation of the bound element, and the model attribute value to be written into the view. The <b>set</b> function returns nothing.</li>
-					<li><b>[get]:</b> <i>Optional function, invoked in context of the view</i>. This function is used to READ data from the view to be sent to the model. The <b>get</b> function receives two arguments: a jQuery representation of the bound element, and the current model attribute value to be changed (useful when updating objects). The <b>get</b> function should return a value to replace the current bound model attribute.</li>
+					<li><b>[get]:</b> <i>Optional function, invoked in context of the view</i>. This function is used to READ data from the view to be sent to the model. The <b>get</b> function receives two arguments: a jQuery representation of the bound element, and the current model attribute value to be changed (useful when modifying objects). The <b>get</b> function should return a value to replace the current bound model attribute. When modifying <tt>Object</tt> and <tt>Array</tt> values, be sure to make changes to a <i>copy</i> of the current value, then submit that back to the model.</li>
 				</ul>
 				
 				<p>Note that the <b>get</b> and <b>set</b> functions are invoked in the context of their parent view, so referencing <tt>this</tt> within their scopes refers to the view.</p>

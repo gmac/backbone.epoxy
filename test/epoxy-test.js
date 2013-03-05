@@ -394,7 +394,7 @@ describe("Backbone.Epoxy.View", function() {
 		
 		bindingHandlers: {
 			printArray: function( $element, value ) {
-				$element.text( value.sort().join(", ") );
+				$element.text( value.slice().sort().join(", ") );
 			}
 		}
 	}));
