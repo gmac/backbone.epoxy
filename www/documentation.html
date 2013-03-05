@@ -226,7 +226,7 @@ model.addComputed("displayName", function() {
 			<div class="section">
 				<b class="header" id="model-get-copy">getCopy</b>
 				<code>model.getCopy(attribute)</code>
-				<p>Gets and returns any model attribute value (native, observable, or computed), returning a shallow copy of non-primitive values. This is useful for getting copies of <tt>Object</tt> and <tt>Array</tt> values that you plan to modify outside of the model, then resubmit with changes. Also consider using <b><a href="#model-modify-array">modifyArray</a></b> and <b><a href="#model-modify-object">modifyObject</a></b> to perform object changes within the model.</p>
+				<p>Gets a model attribute value (native, observable, or computed), and performs a shallow copy on any non-primitive values returned. This is useful for getting copies of <tt>Object</tt> and <tt>Array</tt> values that you plan to modify outside of the model, then resubmit with changes (remember that <tt>"change"</tt> events only trigger for non-primitive values when their identity changes). The <b><a href="#model-modify-array">modifyArray</a></b> and <b><a href="#model-modify-object">modifyObject</a></b> methods may also be used to perform object changes internally within the model.</p>
 			</div>
 			
 			<div class="section">
@@ -238,13 +238,23 @@ model.addComputed("displayName", function() {
 			<div class="section">
 				<b class="header" id="model-modify-array">modifyArray</b>
 				<code>model.modifyArray(attribute, arrayMethod, [*args])</code>
-				<p></p>
+				<p>Performs an internal update on a stored <tt>Array</tt> model attribute (native or observable) using a standard JavaScript array modifier (<tt>pop</tt>, <tt>push</tt>, <tt>reverse</tt>, <tt>shift</tt>, <tt>slice</tt>, <tt>sort</tt>, <tt>splice</tt>, and <tt>unshift</tt>), then triggers a change event for the modified model attribute. Invoke with the model attribute name to modify, a string of the array method name to call, and any additional arguments to be passed into the array method. Returns any results from the array method. Calling <b>modifyArray</b> on a non-array attribute will take no action.</p>
+				
+<pre><button class="run">Run</button><code>var model = new Backbone.Epoxy.Model({wordList:[]});
+model.modifyArray("wordList", "push", "coconut");
+alert( model.get("wordList").length );</code>	
+</pre>
 			</div>
-			
+
 			<div class="section">
 				<b class="header" id="model-modify-object">modifyObject</b>
 				<code>model.modifyObject(attribute, objectProperty, value)</code>
-				<p></p>
+				<p>Performs an internal update on a stored <tt>Object</tt> model attribute (native or observable), then triggers a change event for the modified model attribute. Invoke with the model attribute name to modify, a property name to set on the object, and a value to set as the object property. Setting <tt>undefined</tt> to a property will delete it from the object. Returns the modified object. Calling <b>modifyObject</b> will only take action on model attributes with an assessed type of <tt>"object"</tt>.</p>
+				
+<pre><button class="run">Run</button><code>var model = new Backbone.Epoxy.Model({ wordsDict:{} });
+model.modifyObject("wordsDict", "coconut", true);
+alert( model.get("wordsDict").hasOwnProperty("coconut") );</code>	
+</pre>
 			</div>
 			
 			<div class="section">
@@ -296,7 +306,7 @@ model.addComputed("displayName", function() {
 			<div class="section">
 				<b class="header" id="view-apply-bindings">applyBindings</b>
 				<code>view.applyBindings()</code>
-				<p>Removes any existing view bindings, then applies all bindings defined within the view's <b>bindings</b> object, targeting the view's <b>model</b> object (the <b>model</b> must be a valid <tt>Backbone.Model</tt> instance). If the <b>bindings</b> object is a string, that string will be used as an attribute selector query for extracting bindings from the view container's DOM elements.</p>
+				<p>Removes any existing view bindings, then applies all bindings defined within the view's <b>bindings</b> object. All bindings are established using the view's <b>$el</b> as the display target, and the view's <b>model</b> as the data target (<b>model</b> must reference a valid <tt>Backbone.Model</tt> instance). A view with invalid display or data targets will apply no bindings. If the <b>bindings</b> object is a string, that string will be used as an attribute selector query for extracting bindings from the view's <b>$el</b> container.</p>
 
 				<p>The <b>applyBindings</b> method is automatically called by the view constructor after the view's <b>initialize</b> method runs. This allows the <b>initialize</b> step to make adjustments within the view prior to bindings being applied. You generally shouldn't need to call <b>applyBindings</b> manually.</p>
 
@@ -345,7 +355,7 @@ model.addComputed("displayName", function() {
 			<div class="section">
 				<b class="header" id="view-bindings">bindings</b>
 				<code>view.bindings</code>
-				<p>A hash declaring the view's element-to-attribute binding scheme, or a string defining a binding attribute to query from the DOM.</p>
+				<p>A hash declaring the view's element-to-attribute binding scheme, or a string defining a binding attribute to query from the DOM. All bindings are established using the view's <b>$el</b> DOM tree as the display, and the view's <b>model</b> property as the bound model. A view missing its <b>$el</b> and/or <b>model</b> properties will apply no bindings.</p>
 			</div>
 			<div class="section">
 				<b class="header" id="view-remove">remove</b>
