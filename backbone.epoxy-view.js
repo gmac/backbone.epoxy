@@ -24,7 +24,7 @@
 		constructor: function( options ) {
 			// Create bindings list:
 			this._bind = [];
-			Backbone.View.prototype.constructor.call( this, arguments );
+			Backbone.View.prototype.constructor.apply( this, arguments );
 			this.applyBindings();
 		},
 		

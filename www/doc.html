@@ -2,16 +2,22 @@
 <html lang="en">
 <head>
 	<title></title>
-	<link href="css/screen.css" rel="stylesheet" media="screen">
+	<link href="css/reset.css" rel="stylesheet">
+	<link href="css/screen.css" rel="stylesheet">
 </head>
 <body>
 	<div id="page">
+		<ul class="main-nav" role="navigation">
+			<li><a href="index.html">About</a></li>
+			<li><a href="tutorial.html">Tutorial</a></li>
+			<li><a href="doc.html">Documentation</a></li>
+		</ul>
 		<div id="toc" class="toc">
 			<div class="toc-content">
-				<a href="#model">Epoxy.Model</a>
+				<b><a href="#model">Epoxy.Model</a></b>
 				<ul>
-					<li><a href="#model-extend">extend</a></li>
-					<li><a href="#model-constructor">constructor</a></li>
+					<li><b><a href="#model-extend">extend</a></b></li>
+					<li><b><a href="#model-constructor">constructor</a></b></li>
 					<li><a href="#model-add-computed">addComputed</a></li>
 					<li><a href="#model-add-observable">addObservable</a></li>
 					<li><a href="#model-clear-observables">clearObservables</a></li>
@@ -27,10 +33,10 @@
 					<li><a href="#model-set">set</a></li>
 				</ul>
 			
-				<a href="#view">Epoxy.View</a>
+				<b><a href="#view">Epoxy.View</a></b>
 				<ul>
-					<li><a href="#view-extend">extend</a></li>
-					<li><a href="#view-constructor">constructor</a></li>
+					<li><b><a href="#view-extend">extend</a></b></li>
+					<li><b><a href="#view-constructor">constructor</a></b></li>
 					<li><a href="#view-apply-bindings">applyBindings</a></li>
 					<li><a href="#view-binding-handlers">bindingHandlers</a></li>
 					<li><a href="#view-bindings">bindings</a></li>
@@ -38,7 +44,7 @@
 					<li><a href="#view-remove-bindings">removeBindings</a></li>
 				</ul>
 			
-				<a href="#binding-handlers">View Binding Handlers</a>
+				<b><a href="#binding-handlers">View Binding Handlers</a></b>
 				<ul>
 					<li><a href="#handler-attr">attr</a></li>
 					<li><a href="#handler-checked">checked</a></li>
@@ -54,7 +60,7 @@
 					<li><a href="#handler-value">value</a></li>
 				</ul>
 			
-				<a href="#binding-operators">View Binding Operators</a>
+				<b><a href="#binding-operators">View Binding Operators</a></b>
 				<ul>
 					<li><a href="#operator-all">all</a></li>
 					<li><a href="#operator-any">any</a></li>
@@ -544,6 +550,6 @@ var BindingView = Backbone.Epoxy.View.extend({
 	<script src="../lib/underscore.js"></script>
 	<script src="../lib/backbone.js"></script>
 	<script src="../backbone.epoxy.min.js"></script>
-	<script src="js/doc.js"></script>
+	<script src="js/global.js"></script>
 </body>
 </html>
