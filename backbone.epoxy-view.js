@@ -41,7 +41,7 @@
 			var self = this;
 			var model = this.model;
 			var accessors = {};
-			var handlers = _.clone( defaultHandlers );
+			var handlers = _.clone( bindingHandlers );
 			
 			// Compile custom binding handler definitions:
 			// assigns raw functions as setter definitions by default.
@@ -60,7 +60,7 @@
 					
 					// Get / Set value:
 					if ( !_.isUndefined(value) ) {
-						if ( value && _.isObject(value) && !_.isArray(value) ) {
+						if ( _.isObject(value) && !_.isArray(value) ) {
 							// Set Object (non-null, non-array) hashtable value:
 							return model.set( value );
 						}
@@ -134,9 +134,36 @@
 	});
 	
 	
-	// defaultHandlers
-	// ---------------
-	var defaultHandlers = {
+	// readAccessor()
+	// --------------
+	// Reads value from an accessor:
+	// Accessors come in three potential forms:
+	// => A function to call for the requested value.
+	// => An object with a collection of attribute accessors.
+	// => A primitive (string, number, boolean, etc).
+	// This method unpacks an accessor and returns its underlying value(s).
+	function readAccessor( accessor ) {
+		
+		if ( _.isFunction(accessor) ) {
+			// Accessor is function: return invoked value.
+			return accessor();
+		}
+		else if ( _.isObject(accessor) ) {
+			// Accessor is object: return copy with all attributes read.
+			accessor = _.isArray(accessor) ? accessor.slice() : _.clone(accessor);
+			
+			_.each(accessor, function( value, key ) {
+				accessor[ key ] = readAccessor( value );
+			});
+		}
+		// return formatted value, or pass through primitives:
+		return accessor;
+	}
+	
+	
+	// Binding Handlers
+	// ----------------
+	var bindingHandlers = {
 		// Attribute: write-only. Sets element attributes.
 		attr: {
 			set: function( $element, value ) {
@@ -278,101 +305,84 @@
 		}
 	};
 	
-	
-	// readAccessor()
-	// --------------
-	// Reads value from an accessor:
-	// Accessors come in three potential forms:
-	// => A function to call for the requested value.
-	// => An object with a collection of attribute accessors.
-	// => A primitive (string, number, boolean, etc).
-	// This method unpacks an accessor and returns its underlying value(s).
-	function readAccessor( accessor ) {
-		
-		if ( _.isFunction(accessor) ) {
-			// Accessor is function: return invoked value.
-			return accessor();
-		}
-		else if ( _.isObject(accessor) ) {
-			// Accessor is object: return copy with all attributes read.
-			accessor = _.isArray(accessor) ? accessor.slice() : _.clone(accessor);
-			
-			_.each(accessor, function( value, key ) {
-				accessor[ key ] = readAccessor( value );
-			});
-		}
-		// return formatted value, or pass through primitives:
-		return accessor;
-	}
-	
-	
-	// bindingFormatters
+	// binding operators
 	// -----------------
-	// Formatters are invoked while binding, and return a wrapper function used to modify how accessors are read.
+	// Operators are special binding handlers that may be invoked while binding;
+	// they will return a wrapper function used to modify how accessors are read.
 	// **IMPORTANT:
-	// Note that binding formatters must access ALL of their dependent params while running,
+	// Binding operators must access ALL of their dependent params while running,
 	// otherwise accessor params become unreachable and will not provide binding hooks.
-	// Therefore, it's very important that assessment loops do NOT exit early... so avoid temptation to optimize!
-	var bindingFormatters = {
-		
+	// Therefore, assessment loops must NOT exit early... so do not optimize!
+	var bindingOperators = {
 		// Tests if all of the provided accessors are truthy (and):
 		all: function() {
 			var params = arguments;
 			return function() {
 				var result = true;
-				for ( var i=0, len=params.length; i < len; i++) {
+				for ( var i=0, len=params.length; i < len; i++ ) {
 					if ( !readAccessor(params[i]) ) result = false;
 				}
 				return result;
 			}
 		},
-		
+	
 		// Tests if any of the provided accessors are truthy (or):
 		any: function() {
 			var params = arguments;
 			return function() {
 				var result = false;
-				for ( var i=0, len=params.length; i < len; i++) {
+				for ( var i=0, len=params.length; i < len; i++ ) {
 					if ( readAccessor(params[i]) ) result = true;
 				}
 				return result;
 			}
 		},
-		
+	
 		// Tests if none of the provided accessors are truthy (and not):
 		none: function() {
 			var params = arguments;
 			return function() {
 				var result = true;
-				for ( var i=0, len=params.length; i < len; i++) {
+				for ( var i=0, len=params.length; i < len; i++ ) {
 					if ( readAccessor(params[i]) ) result = false;
 				}
 				return result;
 			}
 		},
-		
+	
 		// Negates an accessor's value:
 		not: function( accessor ) {
 			return function() {
 				return !readAccessor( accessor );
 			}
 		},
-		
+	
 		// Formats one or more accessors into a text string:
 		// ("$1 $2 did $3", firstName, lastName, action)
 		format: function() {
 			var params = arguments;
 			return function() {
-				var str = params[0];
-				for ( var i=1, len=params.length; i < len; i++) {
+				var str = readAccessor(params[0]);
+				for ( var i=1, len=params.length; i < len; i++ ) {
 					str = str.replace( "$"+i, readAccessor(params[i]) );
 				}
 				return str;
 			}
+		},
+		
+		// Provides one of two values based on a ternary condition:
+		// uses first param (a) as condition, and returns either b (true) or c (false).
+		select: function() {
+			var params = arguments;
+			return function() {
+				var a = readAccessor(params[0]);
+				var b = readAccessor(params[1]);
+				var c = readAccessor(params[2]);
+				return a ? b : c;
+			}
 		}
 	};
 	
-
 	// EpoxyBinding
 	// ------------
 	var EpoxyBinding = function( $element, bindings, accessors, handlers, model, view ) {
@@ -381,11 +391,11 @@
 		var self = this;
 		var tag = ($element[0].tagName).toLowerCase();
 		var changable = (tag == "input" || tag == "select" || tag == "textarea");
-		var parser = new Function("$f", "$a", "with($f){with($a){return{" + bindings + "}}}");
+		var parser = new Function("$o", "$a", "with($o){with($a){return{"+ bindings +"}}}");
 		var events = ["change"];
 		
 		// Parse all bindings to a hash table of accessor functions:
-		bindings = parser( bindingFormatters, accessors );
+		bindings = parser( bindingOperators, accessors );
 		
 		// Collect additional event bindings param from parsed bindings:
 		// specifies dom triggers on which the DOM binding should update.
