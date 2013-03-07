@@ -1,34 +1,20 @@
 // TOC controller:
-(function() {
-	var $toc = $("#toc");
+$(function() {
+	var $toc = $(".nav-toc");
 	
 	if ( $toc.length ) {
 		var $win = $(window);
-		var top = $toc.offset().top;
-		var fixed = false;
+		var delta = $toc.offset().top;
 		
 		function setHeight() {
-			$toc.height( $win.height() );
+			$toc.height( $win.height()-delta );
 		}
 		
-		// Fixed TOC position:
-		$win.on("scroll", function() {
-			var scroll = $win.scrollTop();
-			
-			if (fixed && scroll <= top) {
-				$toc.removeClass("fixed");
-				fixed = false;
-				
-			} else if (!fixed && scroll > top) {
-				$toc.addClass("fixed");
-				fixed = true;
-			}
-		}).on("resize", setHeight);
-		
-		// Set initial height:
+		// Fixed TOC height:
+		$win.on("resize", setHeight);
 		setHeight();
 	}
-}());
+});
 
 // Scenario mini-application views:
 var ScenarioView = Backbone.View.extend({

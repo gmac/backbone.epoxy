@@ -7,67 +7,72 @@
 </head>
 <body>
 	<div id="page">
-		<ul class="main-nav" role="navigation">
-			<li><a href="index.html">About</a></li>
-			<li><a href="tutorial.html">Tutorial</a></li>
-			<li><a href="doc.html">Documentation</a></li>
-		</ul>
-		<div id="toc" class="toc">
-			<div class="toc-content">
-				<b><a href="#model">Epoxy.Model</a></b>
-				<ul>
-					<li><b><a href="#model-extend">extend</a></b></li>
-					<li><b><a href="#model-constructor">constructor</a></b></li>
-					<li><a href="#model-add-computed">addComputed</a></li>
-					<li><a href="#model-add-observable">addObservable</a></li>
-					<li><a href="#model-clear-observables">clearObservables</a></li>
-					<li><a href="#model-computeds">computeds</a></li>
-					<li><a href="#model-destroy">destroy</a></li>
-					<li><a href="#model-get">get</a></li>
-					<li><a href="#model-get-copy">getCopy</a></li>
-					<li><a href="#model-has-observable">hasObservable</a></li>
-					<li><a href="#model-modify-array">modifyArray</a></li>
-					<li><a href="#model-modify-object">modifyObject</a></li>
-					<li><a href="#model-observables">observables</a></li>
-					<li><a href="#model-remove-observable">removeObservable</a></li>
-					<li><a href="#model-set">set</a></li>
-				</ul>
+		<div class="banner" role="banner">
+			<h1>Epoxy.js: Elegant Data Binding for Backbone</h1>
+		</div>
+		<div class="navigation" role="navigation">
+			<ul class="nav-main">
+				<li><a href="index.html">About</a></li>
+				<li><a href="tutorial.html">Tutorial</a></li>
+				<li><a href="doc.html">Documentation</a></li>
+			</ul>
+			<div class="nav-toc">
+				<div class="nav-toc-content">
+					<b><a href="#model">Epoxy.Model</a></b>
+					<ul>
+						<li><b><a href="#model-extend">extend</a></b></li>
+						<li><b><a href="#model-constructor">constructor</a></b></li>
+						<li><a href="#model-add-computed">addComputed</a></li>
+						<li><a href="#model-add-observable">addObservable</a></li>
+						<li><a href="#model-clear-observables">clearObservables</a></li>
+						<li><a href="#model-computeds">computeds</a></li>
+						<li><a href="#model-destroy">destroy</a></li>
+						<li><a href="#model-get">get</a></li>
+						<li><a href="#model-get-copy">getCopy</a></li>
+						<li><a href="#model-has-observable">hasObservable</a></li>
+						<li><a href="#model-modify-array">modifyArray</a></li>
+						<li><a href="#model-modify-object">modifyObject</a></li>
+						<li><a href="#model-observables">observables</a></li>
+						<li><a href="#model-remove-observable">removeObservable</a></li>
+						<li><a href="#model-set">set</a></li>
+					</ul>
 			
-				<b><a href="#view">Epoxy.View</a></b>
-				<ul>
-					<li><b><a href="#view-extend">extend</a></b></li>
-					<li><b><a href="#view-constructor">constructor</a></b></li>
-					<li><a href="#view-apply-bindings">applyBindings</a></li>
-					<li><a href="#view-binding-handlers">bindingHandlers</a></li>
-					<li><a href="#view-bindings">bindings</a></li>
-					<li><a href="#view-remove">remove</a></li>
-					<li><a href="#view-remove-bindings">removeBindings</a></li>
-				</ul>
+					<b><a href="#view">Epoxy.View</a></b>
+					<ul>
+						<li><b><a href="#view-extend">extend</a></b></li>
+						<li><b><a href="#view-constructor">constructor</a></b></li>
+						<li><a href="#view-apply-bindings">applyBindings</a></li>
+						<li><a href="#view-binding-handlers">bindingHandlers</a></li>
+						<li><a href="#view-bindings">bindings</a></li>
+						<li><a href="#view-remove">remove</a></li>
+						<li><a href="#view-remove-bindings">removeBindings</a></li>
+					</ul>
 			
-				<b><a href="#binding-handlers">View Binding Handlers</a></b>
-				<ul>
-					<li><a href="#handler-attr">attr</a></li>
-					<li><a href="#handler-checked">checked</a></li>
-					<li><a href="#handler-class-name">className</a></li>
-					<li><a href="#handler-collection">collection</a></li>
-					<li><a href="#handler-css">css</a></li>
-					<li><a href="#handler-disabled">disabled</a></li>
-					<li><a href="#handler-enabled">enabled</a></li>
-					<li><a href="#handler-events">events</a></li>
-					<li><a href="#handler-html">html</a></li>
-					<li><a href="#handler-text">text</a></li>
-					<li><a href="#handler-toggle">toggle</a></li>
-					<li><a href="#handler-value">value</a></li>
-				</ul>
+					<b><a href="#binding-handlers">View Binding Handlers</a></b>
+					<ul>
+						<li><a href="#handler-attr">attr</a></li>
+						<li><a href="#handler-checked">checked</a></li>
+						<li><a href="#handler-class-name">className</a></li>
+						<li><a href="#handler-collection">collection</a></li>
+						<li><a href="#handler-css">css</a></li>
+						<li><a href="#handler-disabled">disabled</a></li>
+						<li><a href="#handler-enabled">enabled</a></li>
+						<li><a href="#handler-events">events</a></li>
+						<li><a href="#handler-html">html</a></li>
+						<li><a href="#handler-text">text</a></li>
+						<li><a href="#handler-toggle">toggle</a></li>
+						<li><a href="#handler-value">value</a></li>
+					</ul>
 			
-				<b><a href="#binding-operators">View Binding Operators</a></b>
-				<ul>
-					<li><a href="#operator-all">all</a></li>
-					<li><a href="#operator-any">any</a></li>
-					<li><a href="#operator-none">none</a></li>
-					<li><a href="#operator-not">not</a></li>
-					<li><a href="#operator-format">format</a></li>
-				</ul>
+					<b><a href="#binding-operators">View Binding Operators</a></b>
+					<ul>
+						<li><a href="#operator-all">all</a></li>
+						<li><a href="#operator-any">any</a></li>
+						<li><a href="#operator-none">none</a></li>
+						<li><a href="#operator-not">not</a></li>
+						<li><a href="#operator-format">format</a></li>
+					</ul>
+				</div>
 			</div>
 		</div>
 		<div class="main">

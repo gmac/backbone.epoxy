@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
 	<title></title>
@@ -6,26 +7,31 @@
 </head>
 <body>
 	<div id="page">
-		<ul class="main-nav" role="navigation">
-			<li><a href="index.html">About</a></li>
-			<li><a href="tutorial.html">Tutorial</a></li>
-			<li><a href="doc.html">Documentation</a></li>
-		</ul>
-		<div id="toc" class="toc">
-			<div class="toc-content">
-				<ol>
-					<li><a href="#installation">Installation</a></li>
-					<li><a href="#simple-bindings">Simple View Bindings</a></li>
-					<li><a href="#computed-bindings">Using Computed Observables</a></li>
-					<li><a href="#computed-dependencies">Computed Dependencies</a></li>
-					<li><a href="#computed-readwrite">Read-Write Computeds</a></li>
-					<li><a href="#binding-operators">Formatting View Bindings</a></li>
-					<li><a href="#binding-handlers">Custom Binding Handlers</a></li>
-					<li><a href="#epoxy-todos">Epoxy ToDos</a></li>
-				</ol>
+		<div class="banner" role="banner">
+			<h1>Epoxy.js: Elegant Data Binding for Backbone</h1>
+		</div>
+		<div class="navigation" role="navigation">
+			<ul class="nav-main">
+				<li><a href="index.html">About</a></li>
+				<li><a href="tutorial.html">Tutorial</a></li>
+				<li><a href="doc.html">Documentation</a></li>
+			</ul>
+			<div class="nav-toc">
+				<div class="nav-toc-content">
+					<ol>
+						<li><a href="#installation">Installation</a></li>
+						<li><a href="#simple-bindings">Simple View Bindings</a></li>
+						<li><a href="#computed-bindings">Computed Observables</a></li>
+						<li><a href="#computed-dependencies">Computed Dependencies</a></li>
+						<li><a href="#computed-get-set">Computed Getters and Setters</a></li>
+						<li><a href="#binding-operators">Formatting View Bindings</a></li>
+						<li><a href="#binding-handlers">Custom Binding Handlers</a></li>
+						<li><a href="#epoxy-todos">Epoxy ToDos</a></li>
+					</ol>
+				</div>
 			</div>
 		</div>
-		<div class="main">
+		<div class="main" role="main">
 			<h1 id="installation">Installation</h1>
 
 			<p>Epoxy requires <a href="http://jquery.com/">jQuery</a> 1.7.0+, <a href="http://underscorejs.org/">Underscore</a> 1.4.3+, and <a href="http://backbonejs.org/">Backbone</a> 0.9.9+. To quickly install Epoxy, download the full Epoxy bundle (7k, 3k gzipped) and include its script tag in your document after all of its dependencies:</p>
@@ -116,7 +122,7 @@ var view = new BindingView({model: bindModel});</code></pre>
 
 			<p>The above examples are functionally identical, and purely subjective as to your preferred approach.</p>
 
-			<h1 id="computed-bindings">Binding with Computeds</h1>
+			<h1 id="computed-bindings">Computed Observables</h1>
 
 			<p>Now let's add an <tt>Epoxy.Model</tt> into the mix. With Epoxy models, we can encapsulate a few tricks within the model architecture. Let's add in an Epoxy computed property, which will generate a computed value based on other model properties:</p>
 
@@ -225,9 +231,9 @@ var FixedModel = Backbone.Epoxy.Model.extend({
 
 			<p>In the above solution, we've defined the computed attribute using a params object with a <tt>deps</tt> array. This array declares property names that the computed getter depends on. Manually declaring dependencies alleviates the margin for automation errors, but introduces a margin for human errors. It's your call as to which direction seems safer.</p>
 
-			<h1 id="computed-readwrite">Computed Getters and Setters</h1>
+			<h1 id="computed-get-set">Computed Getters and Setters</h1>
 
-			<p>So far, we've only looked at computed properties as getter functions which assemble values. Now lets look at their setter capabilities, which mutate values before setting to the model:</p>
+			<p>So far we've only looked at computed attributes that use <b>get</b> functions to access their values. Now let's look at computed <b>set</b> capabilities, which will mutate values before setting them to the model:</p>
 
 <div class="scenario">
 <ul class="tabs">
@@ -243,7 +249,7 @@ var FixedModel = Backbone.Epoxy.Model.extend({
     computeds: {
         displayPrice: {
             get: function() {
-                return "$"+ this.get("price");
+                return "$"+this.get("price");
             },
             set: function( value ) {
                 return {price: parseInt(value.replace("$", "")||0, 10)};
@@ -269,9 +275,9 @@ var view = new Backbone.Epoxy.View({
 &lt;/div&gt;</code></pre>
 </div>
 
-			<p>Here, we've defined our computed property using another params object, as we saw previously. This time, we've provided both <b>get</b> and <b>set</b> functions; <b>get</b> will access our assembled model value, and <b>set</b> will provided a mutated value to be stored in the model. In the above example, we're formatting a number for display within the <b>get</b> method, then reformatting input as a number in the <b>set</b> method before submitting it back to the model.</p>
+			<p>Here, we've defined our computed property using a params object with both a <b>get</b> and <b>set</b> function. The <b>get</b> function will access our assembled model attribute, and <b>set</b> will mutate a raw value into formatted model data. In the above <tt>displayPrice</tt> example, we're formatting a currency string using the <b>get</b> method, and then reformatting input as a valid number within the <b>set</b> method before storing it in the model.</p>
 
-			<p>Note that the setter function returns a properties object rather than calling <b>set</b> on its model directly. Properties returned by an Epoxy computed setter will be merged into the current <b>set</b> operation, which allows a computed attribute setter to define multiple attribute modifications, and have all of those modifications performed at once within the model.</p>
+			<p>Note that the setter function returns an <i>attributes hash</i> rather than calling <b>set</b> on its model directly. Attribute objects returned by a computed setter will be merged into the model's running <b>set</b> operation. This allows a computed setter to define multiple attribute modifications, all of which are performed synchronously with any other queued model changes.</p>
 
 			<h1 id="binding-operators">Formatting View Bindings</h1>
 
@@ -285,27 +291,7 @@ var view = new Backbone.Epoxy.View({
 	<li data-tab="html">HTML</li>
 </ul>
 
-<pre class="js"><code>var PriceModel = Backbone.Epoxy.Model.extend({
-    defaults: {
-        productName: "Light Saber",
-        price: 5000
-    },
-    computeds: {
-        displayPrice: {
-            get: function() {
-                return "$"+ this.get("price");
-            },
-            set: function( value ) {
-                return {price: parseInt(value.replace("$", "")||0, 10)};
-            }
-        }
-    }
-});
-
-var view = new Backbone.Epoxy.View({
-    el: "#bind-readwrite",
-    model: new PriceModel()
-});</code></pre>
+<pre class="js"><code></code></pre>
 
 <pre class="html"><code>&lt;div id="bind-readwrite"&gt;
     &lt;label&gt;Price:&lt;/label&gt;
@@ -323,11 +309,41 @@ var view = new Backbone.Epoxy.View({
 
 			<h1 id="binding-handlers">Custom Binding Handlers</h1>
 
-			<p>Epoxy provides a collection of default binding handlers to cover many basic view operations. For everything else, Epoxy encourages developers to write their own binding handlers for specific scenarios. Custom bindings handlers are easy to define, and simple to compose:</p>
+			<p>Epoxy provides a collection of default binding handlers to cover many basic view operations. For everything else, developers are encouraged to write their own binding handlers for custom scenarios. Custom bindings handlers are easy to define:</p>
 
-<pre><code></code></pre>
+<div class="scenario">
+<ul class="tabs">
+	<li data-tab="js">JavaScript</li>
+	<li data-tab="html">HTML</li>
+</ul>
 
-			<p>In the above example, we've set up a custom binding handler to print out an array of values as a comma-separated list. Our binding handler is a function that accepts two arguments: the first is a jQuery object wrapping the binding element, and the second is the model value being provided to the binding. Within our custom binding handler, we simply specify the process by which the value is formatted and applied to the element. Easy! See custom binding documentation for information on how to configure a two-way binding handler.</p>
+<pre class="js"><code>var model = new Backbone.Model({shipsList: []});
+
+var BindingView = Backbone.Epoxy.View.extend({
+    el: "#bind-custom",
+    bindingHandlers: {
+        listing: function( $element, value ) {
+            $element.text( value.join(", ") );
+        }
+    }
+});
+
+var view = new BindingView({model: model});</code></pre>
+
+<pre class="html"><code>&lt;div id="bind-custom"&gt;
+    &lt;label&gt;Millennium Falcon:&lt;/label&gt;
+    &lt;input type="checkbox" value="Millennium Falcon" data-bind="checked:shipsList"&gt;
+
+    &lt;label&gt;Death Star:&lt;/label&gt;
+    &lt;input type="checkbox" value="Death Star" data-bind="checked:shipsList"&gt;
+
+    &lt;b&gt;Shopping Cart:&lt;/b&gt;
+    &lt;span data-bind="listing:shipsList">&lt;/span&gt;
+&lt;/div&gt;</code></pre>
+</div>
+
+			<p>In the above example, we've set up a custom binding handler called <tt>listing</tt> to neatly print out an array of values. That custom handler may then be declared as normal within the view's bindings, as demonstrated with the <tt>"listing:shipsList"</tt> binding.</p>
+			<p>A binding handler is just a function that accepts two arguments: the first is a jQuery object wrapping the bound element, and the second is the model value being provided to the binding. Within a custom binding handler, we simply specify a process by which the value is formatted and then applied to the element. Note, the above example demonstrates a simple <i>read-only</i> binding. See the complete <a href="#view-binding-handlers">binding handlers documentation</a> for information on setting up <i>read-write</i> handlers.</p>
 
 			<h1>Epoxy ToDos</h1>
 
