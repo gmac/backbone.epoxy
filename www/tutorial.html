@@ -15,18 +15,18 @@
 			<div class="toc-content">
 				<ol>
 					<li><a href="#installation">Installation</a></li>
-					<li><a href="#simple-view-binding">Simple View Bindings</a></li>
-					<li><a href="#computed-binding">Using Computed Observables</a></li>
+					<li><a href="#simple-bindings">Simple View Bindings</a></li>
+					<li><a href="#computed-bindings">Using Computed Observables</a></li>
 					<li><a href="#computed-dependencies">Computed Dependencies</a></li>
-					<li><a href="#computed-get-set">Read-Write Computeds</a></li>
-					<li><a href="#binding-formatters">Formatting View Bindings</a></li>
+					<li><a href="#computed-readwrite">Read-Write Computeds</a></li>
+					<li><a href="#binding-operators">Formatting View Bindings</a></li>
 					<li><a href="#binding-handlers">Custom Binding Handlers</a></li>
 					<li><a href="#epoxy-todos">Epoxy ToDos</a></li>
 				</ol>
 			</div>
 		</div>
 		<div class="main">
-			<h1>Installation</h1>
+			<h1 id="installation">Installation</h1>
 
 			<p>Epoxy requires <a href="http://jquery.com/">jQuery</a> 1.7.0+, <a href="http://underscorejs.org/">Underscore</a> 1.4.3+, and <a href="http://backbonejs.org/">Backbone</a> 0.9.9+. To quickly install Epoxy, download the full Epoxy bundle (7k, 3k gzipped) and include its script tag in your document after all of its dependencies:</p>
 
@@ -37,7 +37,7 @@
 
 			<p>Note that Epoxy's <tt>Model</tt> and <tt>View</tt> components operate independently of each other, so you may choose to only include a single Epoxy component script. Each individual component script is roughly 3k, 1.5k gzipped.</p>
 
-			<h1>Simple View Binding</h1>
+			<h1 id="simple-bindings">Simple View Binding</h1>
 
 			<p>Let's start by setting up a simple binding between a few DOM elements who's content we want to update when their underlying model data changes:</p>
 
@@ -116,7 +116,7 @@ var view = new BindingView({model: bindModel});</code></pre>
 
 			<p>The above examples are functionally identical, and purely subjective as to your preferred approach.</p>
 
-			<h1>Binding with Computeds</h1>
+			<h1 id="computed-bindings">Binding with Computeds</h1>
 
 			<p>Now let's add an <tt>Epoxy.Model</tt> into the mix. With Epoxy models, we can encapsulate a few tricks within the model architecture. Let's add in an Epoxy computed property, which will generate a computed value based on other model properties:</p>
 
@@ -161,7 +161,7 @@ var view = new Backbone.Epoxy.View({
 
 			<p>Now, if <tt>firstName</tt> or <tt>lastName</tt> attributes update within the model, what happens to <tt>fullName</tt>? Epoxy is smart enough to map computed property dependencies, and update computed properties when their dependencies update, and in turn propagate their revised values out to the display. We'll discuss dependency management of computed model properties in the next section.</p>
 
-			<h1>Managing Computed Dependencies</h1>
+			<h1 id="computed-dependencies">Managing Computed Dependencies</h1>
 
 			<p>As we saw in the previous example, Epoxy is smart enough to automatically map computed dependencies. While this may seem like black magic, all that's really going on is that Epoxy has wrapped the Backbone model's native <b>get</b> method, and is using it to keep track of requested attribute names. As long as you use an Epoxy model's <b>get</b> method for all attribute access (no digging directly into a model's <b>attributes</b> table), then one or more <tt>Epoxy.Model</tt> instances will automatically map references between one another.</p>
 
@@ -225,7 +225,7 @@ var FixedModel = Backbone.Epoxy.Model.extend({
 
 			<p>In the above solution, we've defined the computed attribute using a params object with a <tt>deps</tt> array. This array declares property names that the computed getter depends on. Manually declaring dependencies alleviates the margin for automation errors, but introduces a margin for human errors. It's your call as to which direction seems safer.</p>
 
-			<h1>Computed Getters and Setters</h1>
+			<h1 id="computed-readwrite">Computed Getters and Setters</h1>
 
 			<p>So far, we've only looked at computed properties as getter functions which assemble values. Now lets look at their setter capabilities, which mutate values before setting to the model:</p>
 
@@ -259,7 +259,7 @@ var view = new Backbone.Epoxy.View({
 
 <pre class="html"><code>&lt;div id="bind-readwrite"&gt;
     &lt;label&gt;Price:&lt;/label&gt;
-    &lt;input type="text" data-bind="value:displayPrice,events:['keyup']"&gt;
+    &lt;input type="text" data-bind="value:displayPrice"&gt;
 
     &lt;b&gt;Display Price:&lt;/b&gt;
     &lt;span data-bind="text:displayPrice">&lt;/span&gt;
@@ -269,21 +269,59 @@ var view = new Backbone.Epoxy.View({
 &lt;/div&gt;</code></pre>
 </div>
 
-			<p>Here, we've defined our computed property using another params object, as we saw previously. This time, we've provided both <b>get</b> and <b>set</b> functions; <b>get</b> will access our assembled model value, and <b>set</b> will provided a mutated value to be stored in the model. In the above example, we're getting a date as a formatted display value, then setting a formatted display as a parsed date.</p>
+			<p>Here, we've defined our computed property using another params object, as we saw previously. This time, we've provided both <b>get</b> and <b>set</b> functions; <b>get</b> will access our assembled model value, and <b>set</b> will provided a mutated value to be stored in the model. In the above example, we're formatting a number for display within the <b>get</b> method, then reformatting input as a number in the <b>set</b> method before submitting it back to the model.</p>
 
 			<p>Note that the setter function returns a properties object rather than calling <b>set</b> on its model directly. Properties returned by an Epoxy computed setter will be merged into the current <b>set</b> operation, which allows a computed attribute setter to define multiple attribute modifications, and have all of those modifications performed at once within the model.</p>
 
-			<h1>Formatting View Bindings</h1>
+			<h1 id="binding-operators">Formatting View Bindings</h1>
 
-			<p>Now let's turn our attention back to bindings within the Epoxy view. Epoxy tries to balance between powerful capabilities and binding cleanliness. While Epoxy uses a similar binding technique to Knockout.js, it intentionally discourages some of Knockout's inline-javascript allowances, which can become difficult to read and map back to their implementation.</p>
+			<p>Now let's turn our attention back to bindings within the Epoxy view. Epoxy tries to balance between powerful capabilities and binding cleanliness. While Epoxy uses a similar binding technique to <a href="http://knockoutjs.com/">Knockout.js</a>, it intentionally discourages some of Knockout's inline-javascript allowances.</p>
 
 			<p>Instead, Epoxy provides a few binding wrapper operations, which may be used to modify and/or format binding values:</p>
 
-<pre><code></code></pre>
+<div class="scenario">
+<ul class="tabs">
+	<li data-tab="js">JavaScript</li>
+	<li data-tab="html">HTML</li>
+</ul>
+
+<pre class="js"><code>var PriceModel = Backbone.Epoxy.Model.extend({
+    defaults: {
+        productName: "Light Saber",
+        price: 5000
+    },
+    computeds: {
+        displayPrice: {
+            get: function() {
+                return "$"+ this.get("price");
+            },
+            set: function( value ) {
+                return {price: parseInt(value.replace("$", "")||0, 10)};
+            }
+        }
+    }
+});
+
+var view = new Backbone.Epoxy.View({
+    el: "#bind-readwrite",
+    model: new PriceModel()
+});</code></pre>
+
+<pre class="html"><code>&lt;div id="bind-readwrite"&gt;
+    &lt;label&gt;Price:&lt;/label&gt;
+    &lt;input type="text" data-bind="value:displayPrice"&gt;
+
+    &lt;b&gt;Display Price:&lt;/b&gt;
+    &lt;span data-bind="text:displayPrice">&lt;/span&gt;
+
+    &lt;b&gt;Model Price:&lt;/b&gt;
+    &lt;span data-bind="text:price">&lt;/span&gt;
+&lt;/div&gt;</code></pre>
+</div>
 
 			<p>In the above example, wrapper operations are used to format a few model values for their specific implementations. The not() operator is used to negate selection status while toggling visibility, and the format() operator is used to format multiple model values into a display string neatly within the binding. See a full list of binding operators.</p>
 
-			<h1>Custom Binding Handlers</h1>
+			<h1 id="binding-handlers">Custom Binding Handlers</h1>
 
 			<p>Epoxy provides a collection of default binding handlers to cover many basic view operations. For everything else, Epoxy encourages developers to write their own binding handlers for specific scenarios. Custom bindings handlers are easy to define, and simple to compose:</p>
 
