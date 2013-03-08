@@ -364,7 +364,6 @@ describe("Backbone.Epoxy.View", function() {
 		},
 		
 		observables: {
-			testCollection: new TestCollection(),
 			checkList: ["b"]
 		},
 		
@@ -588,7 +587,7 @@ describe("Backbone.Epoxy.View", function() {
 		expect( $el.hasClass("active") ).toBe( false );
 	});
 	
-	
+	/*
 	it("binding 'collection:' should establish a one-way binding that displays a Backbone.Collection.", function() {
 		//var $el = $(".test-css");
 		var collection = bindingModel.get( "testCollection" );
@@ -598,7 +597,7 @@ describe("Backbone.Epoxy.View", function() {
 			{name: "Chewy"}
 		]);
 	});
-	
+	*/
 	
 	it("binding 'css:' should establish a one-way binding with an element's css styles.", function() {
 		var $el = $(".test-css");
@@ -713,7 +712,7 @@ describe("Backbone.Epoxy.View", function() {
 		expect( $el.hasClass("hilite") ).toBe( false );
 	});
 	
-	
+
 	it("modifying with format() should bind true when any bound value is truthy.", function() {
 		var $el = $(".test-mod-format");
 		expect( $el.text() ).toBe( "Name: Luke Skywalker" );

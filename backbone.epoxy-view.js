@@ -1,4 +1,4 @@
-// Backbone.Epoxy 0.1
+// Backbone.Epoxy
 
 // (c) 2013 Greg MacWilliam
 // Epoxy may be freely distributed under the MIT license.
@@ -13,6 +13,68 @@
 	// Bindings Map:
 	// stores an attributes binding map while configuring view bindings.
 	var bindingsMap;
+	
+	
+	// Adds a data provider to a view:
+	// Data providers are Backbone.Model and Backbone.Collection instances.
+	// @param provider: a provider instance, or a function that returns a provider.
+	// @param accessors: a hash of accessors functions. All bindings in a view share an accessors table.
+	function addDataProvider( provider, accessors, name ) {
+		
+		// Abort on missing providers, or construct non-instance
+		if (!provider) return;
+		else if (_.isFunction(provider)) provider = provider();
+		
+		// Add Backbone.Model provider instance:
+		if ( provider instanceof Backbone.Model ) {
+			
+			// Establish provider prefix:
+			var prefix = name ? name+"_" : "";
+			
+			// Compile table of all provider attributes (native and observable):
+			var attrs = _.extend({}, provider.attributes, provider.obs||{});
+			
+			// Create special read-only model accessor for provider instance:
+			accessors[ "$"+(name||"model") ] = function() {
+				bindingsMap && bindingsMap.push([provider, "change"]);
+				return provider;
+			};
+			
+			// Compile all provider attributes as accessors:
+			_.each(attrs, function(value, attribute) {
+				// Create named accessor function:
+				// -> Direct view.model attributes use normal names.
+				// -> Attributes from additional providers are named as "provider_attribute".
+				accessors[ attribute ] = function( value ) {
+					// Record property to binding map, when enabled:
+					bindingsMap && bindingsMap.push([provider, "change:"+attribute]);
+
+					// Get / Set value:
+					if ( !_.isUndefined(value) ) {
+						if ( _.isObject(value) && !_.isArray(value) ) {
+							// Set Object (non-null, non-array) hashtable value:
+							return provider.set( value );
+						}
+						// Set single property/value pair:
+						return provider.set( attribute, value );
+					}
+					return provider.get( attribute );
+				};
+			});
+			
+		}
+		// Add Backbone.Collection provider instance:
+		else if ( provider instanceof Backbone.Collection ) {
+			
+			// Create special read-only collection accessor:
+			accessors[ "$"+(name||"collection") ] = function() {
+				bindingsMap && bindingsMap.push([provider, "reset add remove sort"]);
+				return provider;
+			};
+		}
+		
+		return provider;
+	}
 	
 	
 	// Epoxy.View
@@ -36,46 +98,30 @@
 		// If model adds new properties or view adds new bindings, view must be re-bound.
 		applyBindings: function() {
 			this.removeBindings();
-			if ( !this.model || !this.bindings ) return;
+			if (!this.model && !this.collection) return;
 			
 			var self = this;
-			var model = this.model;
-			var accessors = {};
 			var handlers = _.clone( bindingHandlers );
+			var accessors = {};
 			
 			// Compile custom binding handler definitions:
 			// assigns raw functions as setter definitions by default.
-			_.each(this.bindingHandlers||{}, function( handler, name ) {
+			_.each(self.bindingHandlers||{}, function( handler, name ) {
 			    handlers[ name ] = _.isFunction(handler) ? {set: handler} : handler;
 			});
 			
-			// Compile model accessors:
-			// accessor functions will get, set, and map binding properties.
-			_.each(_.extend({},model.attributes,model.obs||{}), function( value, property ) {
-				accessors[ property ] = function( value ) {
-					// Record property to binding map, when enabled:
-					if ( bindingsMap ) {
-						bindingsMap.push( "change:"+property );
-					}
-					
-					// Get / Set value:
-					if ( !_.isUndefined(value) ) {
-						if ( _.isObject(value) && !_.isArray(value) ) {
-							// Set Object (non-null, non-array) hashtable value:
-							return model.set( value );
-						}
-						// Set single property/value pair:
-						return model.set( property, value );
-					}
-					return model.get( property );
-				};
-			});
+			// Add directly-referenced model and collection providers:
+			self.model = addDataProvider( self.model, accessors );
+			self.collection = addDataProvider( self.collection, accessors );
+			
+			// Add additional providers...
+			// TODO.
 			
 			// Binds an element onto the model:
 			function bind( $element, bindings, selector ) {
 				// Try to compile bindings, throw errors if encountered:
 				try {
-					self._bind.push( new EpoxyBinding($element, bindings, accessors, handlers, model, this) );
+					self._bind.push(new EpoxyBinding($element, bindings, accessors, handlers, this));
 				} catch( error ) {
 					throw( 'Error parsing bindings for "'+ selector +'" >> '+error );
 				}
@@ -225,29 +271,80 @@
 		
 		// Collection: write-only. Manages a list of views bound to a Backbone.Collection.
 		collection: {
-			set: function( $element, collection ) {
+			set: function( $element, collection, target ) {
+				var Collection = Backbone.Collection;
+				
 				// Requires a valid collection argument with an associated view:
-				if ( collection instanceof Backbone.Collection && _.isFunction(collection.view) ) {
+				if ( collection instanceof Collection && _.isFunction(collection.view) ) {
 					
-					//console.log( collection.lastEvent );
+					var models = collection.models;
+					var views = this.v;
+					var view;
 					
-					// Create staging container, and empty the element:
-					var $staging = $( "<div/>" );
-					$element.empty();
-				
-					// Loop through all models, creating missing views and staging new order:
-					collection.each(function(model, index) {
-						if ( !model.view ) {
-							model.view = new collection.view({model: model});
+					// Default target to the bound collection object:
+					// during init (or failure), the binding will reset.
+					target = target || collection;
+
+					if ( target instanceof Backbone.Model ) {
+						
+						// ADD/REMOVE Event (from a Model):
+						// test if view exists within the binding...
+						if ( !views.hasOwnProperty(target.cid) ) {
+							
+							// Add new view:
+							views[ target.cid ] = view = new collection.view({model: target});
+							var index = _.indexOf(models, target);
+							
+							// Attempt to add at proper index,
+							// otherwise just append into the element.
+							if ($element.children().length < index) {
+								$element.eq( index ).before( view.$el );
+							} else {
+								$element.append( view.$el );
+							}
+							
+						} else {
+							
+							// Remove existing view:
+							view = views[ target.cid ];
+							view.remove();
+							delete views[ target.cid ];
 						}
-						$staging.append( model.view.$el );
-					});
-				
-					// Push staging order out to the main element view:
-					$element.append( $staging.children() );
+						
+					} else if ( target instanceof Collection ) {
+						
+						// SORT/RESET Event (from a Collection):
+						// First test if we're sorting (all views are present):
+						var sort = _.every(models, function( model ) {
+							return views.hasOwnProperty(model.cid);
+						});
+						
+						// Hide element before manipulating:
+						$element.hide();
+						
+						if ( sort ) {
+							// Sort existing views:
+							collection.each(function( model ) {
+								$element.append( views[model.cid].$el );
+							});
+							
+						} else {
+							// Reset with new views:
+							this.empty();
+							
+							collection.each(function( model ) {
+								views[ model.cid ] = view = new collection.view({model: model});
+								$element.append( view.$el );
+							});
+						}
+						
+						// Show element after manipulating:
+						$element.show();
+					}
+					
 				} else {
 					// Throw error for invalid binding params:
-					throw( "Binding 'collection:' requires a Backbone.Collection with a '.view' property." );
+					throw( "Binding 'collection:' requires a Collection with a 'view' constructor." );
 				}
 			}
 		},
@@ -385,8 +482,9 @@
 	
 	// EpoxyBinding
 	// ------------
-	var EpoxyBinding = function( $element, bindings, accessors, handlers, model, view ) {
+	var EpoxyBinding = function( $element, bindings, accessors, handlers, view ) {
 		this.$el = $element;
+		this.v = {};
 		
 		var self = this;
 		var tag = ($element[0].tagName).toLowerCase();
@@ -419,25 +517,29 @@
 				// Set default binding:
 				// Configure accessor table to collect events.
 				bindingsMap = triggers;
-				handler.set.call(view, self.$el, readAccessor(accessor), self);
+				handler.set.call(self, self.$el, readAccessor(accessor));
 				bindingsMap = null;
 				
-				// Getting, requires:
+				// READ/GET, requires:
 				// => Form element.
 				// => Binding handler has getter method.
 				// => Value accessor is a function.
 				if ( changable && handler.get && _.isFunction(accessor) ) {
 					self.$el.on(self.events, function() {
-						accessor( handler.get.call(view, self.$el, readAccessor(accessor), self) );
+						accessor( handler.get.call(self, self.$el, readAccessor(accessor)) );
 					});
 				}
-				
-				// Setting, requires:
+
+				// WRITE/SET, requires:
 				// => One or more events triggers.
 				if ( triggers.length ) {
-					self.listenTo( model, triggers.join(" "), function() {
-						handler.set.call(view, self.$el, readAccessor(accessor), self);
-					});
+					var onUpdate = function(target) {
+						handler.set.call(self, self.$el, readAccessor(accessor), target);
+					};
+					
+					for (var i=0, len=triggers.length; i < len; i++) {
+						self.listenTo(triggers[i][0], triggers[i][1], onUpdate);
+					}
 				}
 				
 			} else {
@@ -448,11 +550,20 @@
 	};
 
 	_.extend(EpoxyBinding.prototype, Backbone.Events, {
-		events: "",
+		// Empties all stored sub-views from the binding:
+		empty: function() {
+			for (var view in this.v) {
+				if ( this.v.hasOwnProperty(view) ) {
+					view.remove();
+					delete this.v[ view ];
+				}
+			}
+		},
 		
 		// Destroys the binding:
-		// all events and 
+		// all events and managed sub-views are killed.
 		dispose: function() {
+			this.empty();
 			this.stopListening();
 			this.$el.off( this.events );
 			this.$el = null;

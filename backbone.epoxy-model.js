@@ -1,4 +1,4 @@
-// Backbone.Epoxy 0.1
+// Backbone.Epoxy
 
 // (c) 2013 Greg MacWilliam
 // Epoxy may be freely distributed under the MIT license.
@@ -303,7 +303,6 @@
 		this.model = model;
 		this.name = name;
 		this.deps = this.deps || [];
-		this.bindCustom();
 		
 		// Skip init while parent model is initializing:
 		// Model will initialize in two passes...
@@ -313,17 +312,13 @@
 	};
 	
 	_.extend(EpoxyObservable.prototype, Backbone.Events, {
-		deps: undefined,
-		value: undefined,
-		custom: undefined,
-		
 		// Initializes the observable bindings:
 		// this is called independently from the constructor so that the parent model
 		// may perform a secondary init pass after constructing all observables.
 		init: function() {
 			// Configure event capturing, then update and bind observable:
 			bindingsMap = this.deps;
-			this.update();
+			this.get( true );
 			bindingsMap = null;
 			
 			if ( this.deps.length ) {
@@ -360,7 +355,7 @@
 				// Bind all event declarations to their respective targets:
 				_.each(bindings, function( targets, binding ) {
 					for (var i=0, len=targets.length; i < len; i++) {
-						this.listenTo( targets[i], binding, this.update );
+						this.listenTo( targets[i], binding, _.bind(this.get, this, true) );
 					}
 				}, this);
 			}
@@ -368,9 +363,9 @@
 		
 		// Gets the observable's current value:
 		// Computed values flagged as dirty will need to regenerate themselves.
-		// Note: "dirty" is strongly checked as TRUE to prevent unintended arguments (handler events, etc) from qualifying.
-		get: function( dirty ) {
-			if ( dirty === true && this._get ) {
+		// Note: "update" is strongly checked as TRUE to prevent unintended arguments (handler events, etc) from qualifying.
+		get: function( update ) {
+			if ( update === true && this._get ) {
 				var val = this._get.call( this.model );
 				this.change( val );
 			}
@@ -390,12 +385,6 @@
 			return null;
 		},
 		
-		// Updates the value with a dirty .get() operation:
-		// triggered in response to binding updates.
-		update: function() {
-			this.get( true );
-		},
-		
 		// Fires a change event for the observable property on the parent model:
 		fire: function() {
 			this.model.trigger( "change change:"+this.name );
@@ -406,38 +395,16 @@
 		change: function( value ) {
 			if ( !_.isEqual(value, this.value) ) {
 				this.value = value;
-				this.bindCustom();
-				
-				// Fire update event:
 				this.fire();
 			}
 		},
 		
-		// Update customized bindings:
-		bindCustom: function() {
-			var custom = this.custom;
-			var value = this.value;
-
-			// Unbind events on any deprecated custom reference:
-			if ( custom && custom !== value ) {
-				this.stopListening( custom );
-				this.custom = null;
-			}
-			
-			// If current value is a collection, bind to collection update events:
-			if ( value instanceof Backbone.Collection ) {
-				custom = this.custom = value;
-				this.listenTo( custom, "add remove reset sort", this.fire );
-				this.listenTo( custom, "destroy", _.bind(this.model.removeObservable, this.model, this.name) )
-			}
-		},
-
 		// Disposal:
 		// cleans up events and releases references.
 		dispose: function() {
 			this.stopListening();
 			this.off();
-			this.model = this.value = this.custom = null;
+			this.model = this.value = null;
 		}
 	});
 	

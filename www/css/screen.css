@@ -124,11 +124,12 @@ pre button {
 .scenario .tabs {
 	display: none;
 	height: 30px;
+	list-style: none;
 	margin: 0;
 	padding: 0 10px;
 }
 
-.scenario li {
+.scenario .tabs li {
 	background-color: #fff;
 	border: 1px solid #ccc;
 	border-bottom: none;
@@ -143,7 +144,7 @@ pre button {
 	padding: 0 15px;
 }
 
-.scenario li.active {
+.scenario .tabs li.active {
 	background-color: #f9f9f9;
 	cursor: default;
 	position: relative;
@@ -181,6 +182,42 @@ pre button {
 
 .scenario .app b {
 	margin-left: 15px;
+}
+
+#epoxy-todos b {
+	margin: 0;
+}
+
+#epoxy-todos ul {
+	list-style: none;
+}
+
+#epoxy-todos input {
+	margin: 0 5px 0 0;
+}
+
+#epoxy-todos input.todo:focus {
+	background-color: #fff;
+	border: 1px solid #ccc;
+}
+
+#epoxy-todos input.todo,
+#epoxy-todos input.todo[readonly],
+#epoxy-todos input.todo[readonly]:focus {
+	background-color: transparent;
+	border: none;
+}
+
+#epoxy-todos input.todo[readonly] {
+	text-decoration: line-through;
+}
+
+#epoxy-todos .cleanup {
+	background-color: transparent;
+	border: none;
+	cursor: pointer;
+	padding: 0;
+	text-decoration: underline;
 }
 
 @media only screen and (max-width: 990px) {

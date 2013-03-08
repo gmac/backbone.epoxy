@@ -349,14 +349,96 @@ var view = new BindingView({model: model});</code></pre>
 
 			<p>Per the requirement of JavaScript MV* frameworks, let's build a simple ToDos app using Epoxy view binding:</p>
 
-<pre><code></code></pre>
+<div class="scenario">
+<ul class="tabs">
+	<li data-tab="js">JavaScript</li>
+	<li data-tab="html">HTML</li>
+</ul>
+
+<pre class="js"><code>// Model for each ToDo item:
+var TodoItemModel = Backbone.Model.extend({
+    defaults: {
+        todo: "",
+        complete: false
+    }
+});
+
+// Epoxy View for each ToDo item:
+var TodoItemView = Backbone.Epoxy.View.extend({
+    el:"&lt;li&gt;&lt;input type='checkbox'&gt; &lt;input type='text' class='todo'&gt;&lt;/li&gt;",
+    bindings: {
+        "input[type='text']": "value:todo,readonly:complete,save:$model",
+        "input[type='checkbox']": "checked:complete,save:$model"
+    },
+    bindingHandlers: {
+        readonly: function( $element, value ) {
+            $element.prop( "readonly", !!value );
+        },
+        save: function( $element, $model ) {
+            $model.save();
+        }
+    }
+});
+
+// Collection for ToDo items:
+var TodosCollection = Backbone.Collection.extend({
+    model: TodoItemModel,
+    view: TodoItemView,
+    localStorage: new Backbone.LocalStorage("todos")
+});
+
+// Epoxy View for main ToDos app:
+var TodoAppView = Backbone.Epoxy.View.extend({
+    el: "#epoxy-todos",
+    collection: new TodosCollection(),
+    initialize: function() {
+        this.collection.fetch();
+    },
+    bindings: {
+        ".todos": "collection:$collection"
+    },
+    events: {
+        "click .add": "onAdd",
+        "click .cleanup": "onCleanup",
+        "keydown .todo-add": "onEnter"
+    },
+    onEnter: function( evt ) {
+        if ( evt.which == 13 ) this.onAdd();
+    },
+    onAdd: function() {
+        var input = this.$(".todo-add");
+		
+        if ( input.val() ) {
+            this.collection.create({todo: input.val()});
+            input.val("");
+        }
+    },
+    onCleanup: function() {
+        _.invoke(this.collection.where({complete:true}), 'destroy');
+    }
+});
+
+var app = new TodoAppView();</code></pre>
+
+<pre class="html"><code>&lt;div id="epoxy-todos"&gt;
+    &lt;b&gt;What do you need to do?&lt;/b&gt;
+    &lt;p&gt;
+        &lt;input type="text" class="todo-add"&gt;
+        &lt;button class="add"&gt;Add&lt;/button&gt;
+    &lt;/p&gt;
+    &lt;ul class="todos"&gt;&lt;/ul&gt;
+    &lt;button class="cleanup"&gt;Clear complete&lt;/button&gt;
+&lt;/div&gt;</code></pre>
+</div>
 
 			<p>You'll see that the key binding used here is the collection binding handler, which will manage the display of a Backbone Collection. The one unique addition to a standard Backbone Collection used by Epoxy is the Collection's "view" property, which defines a View constructor to use while building collection item views.</p>
+			
 		</div>
 	</div>
 	<script src="../lib/jquery.js"></script>
 	<script src="../lib/underscore.js"></script>
 	<script src="../lib/backbone.js"></script>
+	<script src="../lib/backbone-localstorage.js"></script>
 	<script src="../backbone.epoxy-model.js"></script>
 	<script src="../backbone.epoxy-view.js"></script>
 	<script src="js/global.js"></script>
