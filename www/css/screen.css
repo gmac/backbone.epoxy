@@ -12,6 +12,14 @@ p {
 	margin: 15px 0;
 }
 
+ul {
+	margin-left: 15px;
+}
+
+li {
+	margin: 10px 0;
+}
+
 a {
 	color: #A8380C;
 }
@@ -26,6 +34,15 @@ a {
 	float: left;
 	left: 280px;
 	position: relative;
+}
+
+.footer {
+	border-top: 1px solid #999;
+	color: #777;
+	font-size: 13px;
+	line-height: 1.75em;
+	margin-top: 75px;
+	padding-bottom: 50px;
 }
 
 .navigation {
@@ -78,14 +95,6 @@ a {
 
 .section {
 	margin: 35px 0;
-}
-
-.section ul {
-	margin-left: 15px;
-}
-
-.section li {
-	margin: 10px 0;
 }
 
 code,

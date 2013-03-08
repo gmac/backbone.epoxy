@@ -347,7 +347,7 @@ var view = new BindingView({model: model});</code></pre>
 
 			<h1>Epoxy ToDos</h1>
 
-			<p>Per the requirement of JavaScript MV* frameworks, let's build a simple ToDos app using Epoxy view binding:</p>
+			<p>Per the requirement of JavaScript MV* frameworks, let's build a small ToDos app using Epoxy view bindings paired with native Backbone models:</p>
 
 <div class="scenario">
 <ul class="tabs">
@@ -430,9 +430,23 @@ var app = new TodoAppView();</code></pre>
     &lt;button class="cleanup"&gt;Clear complete&lt;/button&gt;
 &lt;/div&gt;</code></pre>
 </div>
-
-			<p>You'll see that the key binding used here is the collection binding handler, which will manage the display of a Backbone Collection. The one unique addition to a standard Backbone Collection used by Epoxy is the Collection's "view" property, which defines a View constructor to use while building collection item views.</p>
+				
+			<p>There are four components used within this application, including:</p>
 			
+			<ul>
+				<li><tt>TodoItemModel</tt> : this is a native Backbone model used to store the data required for each individual todo; in this example, each todo item has a <tt>todo</tt> caption, and a <tt>complete</tt> status.</li>
+				<li><tt>TodoItemView</tt> : this is an Epoxy view used for the display of each individual todo list item. This view constructs a DOM fragment with a checkbox and text input, and then binds those elements' values to the view's model. In addition, the view adds a few extra binding handlers to help manage the view: the <tt>readonly:</tt> handler toggles the text input's <tt>"readonly"</tt> property, and the <tt>save:</tt> binding is used used to call <b>save</b> on the bound model after elements are changed.</li>
+				<li><tt>TodosCollection</tt> : this is a native Backbone collection used to manage our active list of todos. It cites <tt>TodoItemModel</tt> as its model constructor, and <tt>TodoItemView</tt> as its view constructor. Remember, a collection must specify a <b>view</b> constructor property in order to work with Epoxy's <tt>collection:</tt> binding.</li>
+				<li><tt>TodoAppView</tt> : finally, this Epoxy view manages the main application container view. It uses native Backbone <tt>events</tt> to setup the application's primary controls used to add and remove items from the <tt>TodosCollection</tt> instance. It also applies an Epoxy <tt>collection:</tt> binding to the view's default collection source (referenced as <tt>$collection</tt>).</li>
+			</ul>
+			
+			<p>This application certainly did not require data binding to make it work. In fact, data binding is generally overkill for most common application scenarios. Keep that in mind while assessing the goals and objectives of your projects... Ironically, the author of this library is a very reserved advocate of data binding: while data binding is a great tool that can work wonders at the moments when you need it, it should NOT be considered an automatic choice approach for setting up an interface.</p>
+			
+			
+			<div class="footer">
+				<p>Epoxy.js for Backbone is available in a <a href="https://github.com/gmac/backbone.epoxy">GitHub Repo</a>.<br>
+					&copy; 2013 Greg MacWilliam (<a href="https://twitter.com/gmacwilliam">@gmacwilliam</a>), a project of <a href="http://www.threespot.com">Threespot</a>.</p>
+			</div>
 		</div>
 	</div>
 	<script src="../lib/jquery.js"></script>
