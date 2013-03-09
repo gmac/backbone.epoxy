@@ -278,7 +278,7 @@ var view = new Backbone.Epoxy.View({
 });</code></pre>
 
 <pre class="html"><code>&lt;div id="bind-readwrite"&gt;
-    &lt;label&gt;Price:&lt;/label&gt;
+    &lt;label&gt;Price (updates on blur):&lt;/label&gt;
     &lt;input type="text" data-bind="value:displayPrice"&gt;
 
     &lt;b&gt;Display Price:&lt;/b&gt;
@@ -445,7 +445,7 @@ var TodosCollection = Backbone.Collection.extend({
 
 // Epoxy View for main ToDos app:
 var TodoAppView = Backbone.Epoxy.View.extend({
-    el: "#epoxy-todos",
+    el: "#epoxy-todo-app",
     collection: new TodosCollection(),
     initialize: function() {
         this.collection.fetch();
@@ -476,7 +476,7 @@ var TodoAppView = Backbone.Epoxy.View.extend({
 
 var app = new TodoAppView();</code></pre>
 
-<pre class="html"><code>&lt;div id="epoxy-todos"&gt;
+<pre class="html"><code>&lt;div id="epoxy-todo-app"&gt;
     &lt;b&gt;What do you need to do?&lt;/b&gt;
     &lt;p&gt;
         &lt;input type="text" class="todo-add"&gt;

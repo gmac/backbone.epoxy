@@ -288,38 +288,46 @@ pre button {
 	margin: 5px 0;
 }
 
-#epoxy-todos b {
+#epoxy-todo-app b {
 	margin: 0;
 }
 
-#epoxy-todos ul {
+#epoxy-todo-app ul {
 	list-style: none;
+	margin: 0;
+	padding: 0;
 }
 
-#epoxy-todos input {
+#epoxy-todo-app li {
+	margin: 0;
+}
+
+#epoxy-todo-app input {
 	margin: 0 5px 0 0;
 }
 
-#epoxy-todos input.todo:focus {
+#epoxy-todo-app input.todo:focus {
 	background-color: #fff;
-	border: 1px solid #ccc;
+	border: 1px solid #8f2d0b;
+	color: #000;
 }
 
-#epoxy-todos input.todo,
-#epoxy-todos input.todo[readonly],
-#epoxy-todos input.todo[readonly]:focus {
+#epoxy-todo-app input.todo,
+#epoxy-todo-app input.todo[readonly],
+#epoxy-todo-app input.todo[readonly]:focus {
 	background-color: transparent;
-	border: none;
+	border-color: transparent;
+	color: #fff;
 }
 
-#epoxy-todos input.todo[readonly] {
+#epoxy-todo-app input.todo[readonly] {
 	text-decoration: line-through;
 }
 
-#epoxy-todos .cleanup {
+#epoxy-todo-app .cleanup {
 	background-color: transparent;
 	border: none;
-	color: #511906;
+	color: #fff;
 	cursor: pointer;
 	padding: 0;
 	text-decoration: underline;

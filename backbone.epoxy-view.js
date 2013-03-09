@@ -124,7 +124,7 @@
 			function bind( $element, bindings, selector ) {
 				// Try to compile bindings, throw errors if encountered:
 				try {
-					self._bind.push(new EpoxyBinding($element, bindings, context, handlers, this));
+					self._bind.push(new EpoxyBinding($element, bindings, context, handlers));
 				} catch( error ) {
 					throw( 'Error parsing bindings for "'+ selector +'" >> '+error );
 				}
@@ -485,7 +485,7 @@
 	
 	// EpoxyBinding
 	// ------------
-	var EpoxyBinding = function( $element, bindings, context, handlers, view ) {
+	var EpoxyBinding = function( $element, bindings, context, handlers ) {
 		this.$el = $element;
 		this.v = {};
 		

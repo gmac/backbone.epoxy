@@ -279,12 +279,12 @@ alert( model.get("wordsDict").hasOwnProperty("coconut") );</code>
 			<div class="section">
 				<h3 id="model-observable-defaults">observableDefaults</h3>
 				<code>model.observableDefaults</code>
-				<p>A hash table declaring observable attributes to be automatically added to a model instance by the constructor. Uses <b><a href="#model-add-observable">addObservable</a></b> to create the specified observable attributes. After a model instance has been constructed, observable values are managed through the model's <b>get</b> and <b>set</b> methods.</p>
+				<p>A hash table declaring observable attributes to be automatically added to a model instance by the constructor. Uses <b><a href="#model-add-observable">addObservable</a></b> to create the specified observable attributes. After a model instance has been constructed, observable values are managed through the model's <b>get</b> and <b>set</b> methods. Any observable values declared as a function will be invoked while getting added to the model; this is useful for creating unique Object/Array values for each model instance.</p>
 <pre>
 <code>var ComputedModel = Backbone.Epoxy.Model.extend({
     observableDefaults: {
         isSelected: false,
-        todosList: new Backbone.Collection()
+        keysList: function() { return ["a", "b"]; }
     }
 });</code>
 </pre>	
