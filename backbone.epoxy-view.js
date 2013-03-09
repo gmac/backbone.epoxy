@@ -18,8 +18,8 @@
 	// Adds a data provider to a view:
 	// Data providers are Backbone.Model and Backbone.Collection instances.
 	// @param provider: a provider instance, or a function that returns a provider.
-	// @param accessors: a hash of accessors functions. All bindings in a view share an accessors table.
-	function addDataProvider( provider, accessors, name ) {
+	// @param context: the working binding context. All bindings in a view share a context.
+	function addDataSource( provider, context, name ) {
 		
 		// Abort on missing providers, or construct non-instance
 		if (!provider) return;
@@ -35,17 +35,17 @@
 			var attrs = _.extend({}, provider.attributes, provider.obs||{});
 			
 			// Create special read-only model accessor for provider instance:
-			accessors[ "$"+(name||"model") ] = function() {
+			context[ "$"+(name||"model") ] = function() {
 				bindingsMap && bindingsMap.push([provider, "change"]);
 				return provider;
 			};
 			
-			// Compile all provider attributes as accessors:
+			// Compile all provider attributes as accessors within the context:
 			_.each(attrs, function(value, attribute) {
 				// Create named accessor function:
 				// -> Direct view.model attributes use normal names.
 				// -> Attributes from additional providers are named as "provider_attribute".
-				accessors[ attribute ] = function( value ) {
+				context[ prefix+attribute ] = function( value ) {
 					// Record property to binding map, when enabled:
 					bindingsMap && bindingsMap.push([provider, "change:"+attribute]);
 
@@ -67,7 +67,7 @@
 		else if ( provider instanceof Backbone.Collection ) {
 			
 			// Create special read-only collection accessor:
-			accessors[ "$"+(name||"collection") ] = function() {
+			context[ "$"+(name||"collection") ] = function() {
 				bindingsMap && bindingsMap.push([provider, "reset add remove sort"]);
 				return provider;
 			};
@@ -93,7 +93,7 @@
 		// Default bindings definition: provides a DOM element attribute to query.
 		bindings: "data-bind",
 		
-		// Compiles model accessors, then applies bindings to the view:
+		// Compiles a model context, then applies bindings to the view:
 		// Note: Model->View relationships are baked at the time of binding.
 		// If model adds new properties or view adds new bindings, view must be re-bound.
 		applyBindings: function() {
@@ -101,8 +101,9 @@
 			if (!this.model && !this.collection) return;
 			
 			var self = this;
+			var sources = this.bindingSources;
 			var handlers = _.clone( bindingHandlers );
-			var accessors = {};
+			var context = {};
 			
 			// Compile custom binding handler definitions:
 			// assigns raw functions as setter definitions by default.
@@ -111,17 +112,19 @@
 			});
 			
 			// Add directly-referenced model and collection providers:
-			self.model = addDataProvider( self.model, accessors );
-			self.collection = addDataProvider( self.collection, accessors );
+			self.model = addDataSource( self.model, context );
+			self.collection = addDataSource( self.collection, context );
 			
-			// Add additional providers...
-			// TODO.
+			// Add additional sources...
+			_.each(sources, function( provider, providerName ) {
+				sources[ providerName ] = addDataSource( provider, context, providerName );
+			});
 			
 			// Binds an element onto the model:
 			function bind( $element, bindings, selector ) {
 				// Try to compile bindings, throw errors if encountered:
 				try {
-					self._bind.push(new EpoxyBinding($element, bindings, accessors, handlers, this));
+					self._bind.push(new EpoxyBinding($element, bindings, context, handlers, this));
 				} catch( error ) {
 					throw( 'Error parsing bindings for "'+ selector +'" >> '+error );
 				}
@@ -482,7 +485,7 @@
 	
 	// EpoxyBinding
 	// ------------
-	var EpoxyBinding = function( $element, bindings, accessors, handlers, view ) {
+	var EpoxyBinding = function( $element, bindings, context, handlers, view ) {
 		this.$el = $element;
 		this.v = {};
 		
@@ -493,7 +496,7 @@
 		var events = ["change"];
 		
 		// Parse all bindings to a hash table of accessor functions:
-		bindings = parser( bindingOperators, accessors );
+		bindings = parser( bindingOperators, context );
 		
 		// Collect additional event bindings param from parsed bindings:
 		// specifies dom triggers on which the DOM binding should update.

@@ -12,9 +12,9 @@
 		</div>
 		<div class="navigation" role="navigation">
 			<ul class="nav-main">
-				<li><a href="index.html">About</a></li>
+				<li><a href="index.html">About Epoxy</a></li>
 				<li><a href="tutorial.html">Tutorial</a></li>
-				<li><a href="doc.html">Documentation</a></li>
+				<li class="active"><a href="doc.html">Documentation</a></li>
 			</ul>
 			<div class="nav-toc">
 				<div class="nav-toc-content">
@@ -41,6 +41,7 @@
 					<ul>
 						<li><b><a href="#view-extend">extend</a></b></li>
 						<li><b><a href="#view-constructor">constructor</a></b></li>
+						<li><b><a href="#view-context">binding context</a></b></li>
 						<li><a href="#view-apply-bindings">applyBindings</a></li>
 						<li><a href="#view-binding-handlers">bindingHandlers</a></li>
 						<li><a href="#view-bindings">bindings</a></li>
@@ -77,7 +78,7 @@
 		</div>
 		<div class="main">
 			<div class="section">
-				<h1 id="model">Epoxy.Model</h1>
+				<h2 id="model">Epoxy.Model</h2>
 			
 				<p>The Epoxy Model object extends <tt>Backbone.Model</tt>, providing a new model abstract to be extended into your application.</p>
 
@@ -296,7 +297,7 @@ alert( model.get("wordsDict").hasOwnProperty("coconut") );</code>
 			</div>
 			
 			<div class="section">
-				<h1 id="view">Epoxy.View</h1>
+				<h2 id="view">Epoxy.View</h2>
 
 				<p>The Epoxy View object extends <tt>Backbone.View</tt>, providing a new view abstract to be extended into your application.</p>
 
@@ -304,16 +305,25 @@ alert( model.get("wordsDict").hasOwnProperty("coconut") );</code>
 
 				<p>Note that an Epoxy View may bind directly to a native Backbone Model, or to an <tt>Epoxy.Model</tt> with specialized observable attributes. Because both model types operate through a common API, the Epoxy View does not depend on its <tt>Epoxy.Model</tt> counterpart to support model bindings (unless otherwise noted). Therefore, you're free to exclude <tt>Epoxy.Model</tt> resources from your project if you just want view binding features.</p>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="view-extend">extend</b>
 				<code>Backbone.Epoxy.View.extend(properties, [classProperties])</code>
 				<p>Extends the <tt>Epoxy.View</tt> constructor for use in your own implementation.</p>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="view-constructor">constructor</b>
 				<code>new Backbone.Epoxy.View([options])</code>
 				<p>Creates a new <tt>Epoxy.View</tt> instance.</p>
 			</div>
+			
+			<div class="section">
+				<b class="header" id="view-context">binding context</b>
+				<code>{$model:model, $collection:collection, [*attributes]}</code>
+				<p>To establish bindings, an Epoxy view generates a <i>binding context</i> with routes pointing to all available <i>data sources</i> and their attributes. Data sources are instances of <tt>Backbone.Model</tt> and/or <tt>Backbone.Collection</tt> that provide themselves and their attributes to the view for binding. By default, an Epoxy view looks for two potential data sources: the view's <b>model</b> property, and its <b>collection</b> property. References to these data sources are automatically configured in the binding context as <tt>$model</tt> and <tt>$collection</tt>. Additionally, aliases to all <tt>$model</tt> attributes are created.</p>
+			</div>
+			
 			<div class="section">
 				<b class="header" id="view-apply-bindings">applyBindings</b>
 				<code>view.applyBindings()</code>
@@ -323,6 +333,7 @@ alert( model.get("wordsDict").hasOwnProperty("coconut") );</code>
 
 				<p>Also note that view bindings are baked at the time they are applied. All relationships between the model and the view are established during this binding step, and will NOT update automatically to new configurations. Dynamically adding and removing model attributes and/or view bindings will require the view to be completely unbound, and then rebound.</p>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="view-binding-handlers">bindingHandlers</b>
 				<code>view.bindingHandlers</code>
@@ -363,6 +374,7 @@ alert( model.get("wordsDict").hasOwnProperty("coconut") );</code>
 });</code>
 </pre>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="view-bindings">bindings</b>
 				<code>view.bindings</code>
@@ -407,6 +419,7 @@ var BindingView = Backbone.Epoxy.View.extend({
 &lt;/div&gt;</code>
 </pre>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="view-remove">remove</b>
 				<code>view.remove()</code>
@@ -430,12 +443,14 @@ var BindingView = Backbone.Epoxy.View.extend({
 				
 				<p>Be aware that binding declarations are parsed as JavaScript <tt>Object</tt> bodies, therefore a binding declaration <i>must</i> conform to proper JavaScript syntax. To give due credit, Epoxy's binding system is modeled after the clever technique used in <a href="http://knockoutjs.com/">Knockout.js</a>. However, Epoxy deliberately limits some of Knockout's free-form binding allowances, such as inline concatenation (which becomes overly technical within the presentation layer, IMHO). If you're coming from Knockout, don't expect to write as much inline binding JavaScript.</p>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="handler-attr">attr</b>
 				<span class="alias">read-only</span>
 				<code>data-bind="attr:{name:modelAttribute,'data-name':modelAttribute}"</code>
 				<p>Binds model attribute values to a list of element attributes. Attribute bindings are defined as a hash of key/value pairs, where each key defines an element attribute and the model reference defines the attribute value. Attribute keys may be defined as strings.</p>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="handler-checked">checked</b>
 				<span class="alias">read-write</span>
@@ -450,12 +465,14 @@ var BindingView = Backbone.Epoxy.View.extend({
 				 	<li><b>Checkbox toggles:</b> when a <tt>checkbox</tt> element is bound to a primitive model attribute (types <tt>String</tt>, <tt>Boolean</tt>, or <tt>Number</tt>), the element will be checked based on a loosely-typed assessment of the model attribute's truthiness. When the element's <tt>"checked"</tt> status is toggled, it will submit a <tt>Boolean</tt> value back to the model attribute.</li>
 				</ul>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="handler-class-name">classes</b>
 				<span class="alias">read-only</span>
 				<code>data-bind="classes:{active:modelAttr,'is-active':modelAttr}"</code>
 				<p>Toggles a list of element class names based on the truthiness of their bound model attributes. Class bindings are defined as a hash of key/value pairs, where each key defines a class name and is value references a model attribute that will be loosely-type checked for truthiness; truthy attributes will enable their class, while falsey attributes will disable their class. Class name keys may be defined as strings.</p>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="handler-collection">collection</b>
 				<span class="alias">read-only</span>
@@ -472,82 +489,102 @@ var BindingView = Backbone.Epoxy.View.extend({
 
 				<p>For a working demonstration of setting up a <b>collection</b> binding, see the Epoxy <a href="#">ToDo demo</a>.</p>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="handler-css">css</b>
 				<span class="alias">read-only</span>
 				<code>data-bind="css:{color:modelAttribute,'font-size':modelAttribute}"</code>
 				<p>Binds a list of CSS styles to model attributes. CSS style bindings are defined as a hash of key/value pairs, where each key defines a CSS style name and the model attribute defines the style's literal value. CSS keys may be defined as strings.</p>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="handler-disabled">disabled</b>
 				<span class="alias">read-only</span>
 				<code>data-bind="disabled:modelAttribute"</code>
 				<p>Toggles a form element's <tt>"disabled"</tt> property based on a loosely-typed assessment of the bound model attribute's truthiness. A truthy value disables the element (inversion of the <b>enabled</b> handler).</p>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="handler-enabled">enabled</b>
 				<span class="alias">read-only</span>
 				<code>data-bind="enabled:modelAttribute"</code>
 				<p>Toggles a form element's <tt>"disabled"</tt> status based on a loosely-typed assessment of the bound model attribute's truthiness. A truthy value enables the element (inversion of the <b>disabled</b> handler).</p>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="handler-events">events</b>
 				<span class="alias">read-only</span>
 				<code>data-bind="events:['keydown','focus']"</code>
 				<p>The <b>events</b> handler is a special binding used to parameterize what DOM events will trigger changes for read-write element bindings. By default, all read-write bindings will subscribe to their bound element's <tt>"change"</tt> event to trigger model updates. You may bind additional DOM event triggers for the element by listing them in the <b>events</b> array.</p>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="handler-html">html</b>
 				<span class="alias">read-only</span>
 				<code>data-bind="html:modelAttribute"</code>
 				<p>Sets the element's HTML content to the bound model attribute value. Uses the jQuery <b>html</b> method.</p>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="handler-text">text</b>
 				<span class="alias">read-only</span>
 				<code>data-bind="text:modelAttribute"</code>
 				<p>Sets the element's text content to the bound model attribute value. Uses the jQuery <b>text</b> method.</p>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="handler-toggle">toggle</b>
 				<span class="alias">read-only</span>
 				<code>data-bind="toggle:modelAttribute"</code>
 				<p>Toggles the element's display based on a loosely-typed assessment of the bound model attribute's truthiness. Uses the jQuery <b>toggle( [boolean] )</b> method.</p>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="handler-value">value</b>
 				<span class="alias">read-write</span>
 				<code>data-bind="value:modelAttribute"</code>
 				<p>Binds an input element's (<tt>input</tt>, <tt>select</tt>, <tt>textarea</tt>) value to an underlying model attribute. The element will set its <tt>value</tt> to the bound model attribute upon change event triggers (see the <b><a href="#handler-events">events</a></b> handler), and update its <tt>value</tt> when the underlying model attribute changes.</p>
 			</div>
+			
 			<div class="section">
 				<h2 id="binding-operators">View Binding Operators</h2>
 				<p>Binding operators provide a layer of flexibility for formatting model attribute values directly within a binding declaration, while still conforming to a preset binding API. Binding operators work by wrapping one or more model attribute accessors, allowing their values to be formatted specifically for the context of the binding.</p>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="operator-all">all</b>
 				<code>data-bind="toggle:all(modelAttribute,modelAttribute)"</code>
 				<p>Assesses one or more model attributes as <tt>true</tt> if <i>all</i> attributes are truthy.</p>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="operator-any">any</b>
 				<code>data-bind="toggle:any(modelAttribute,modelAttribute)"</code>
 				<p>Assesses one or more model attributes as <tt>true</tt> if <i>any</i> of the attributes are truthy.</p>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="operator-none">none</b>
 				<code>data-bind="toggle:none(modelAttribute,modelAttribute)"</code>
 				<p>Assesses one or more model attributes as <tt>true</tt> if <i>none</i> of the attributes are truthy.</p>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="operator-not">not</b>
 				<code>data-bind="toggle:not(modelAttribute)"</code>
 				<p>Inverts the loosely-typed boolean value of a model attribute.</p>
 			</div>
+			
 			<div class="section">
 				<b class="header" id="operator-format">format</b>
 				<code>data-bind="text:format('$1 of $2',modelAttribute,modelAttribute)"</code>
 				<p>Formats a string with a series of model attribute replacements. Operates the same as string replacement for <tt>RegExp</tt> capture groups, where field insertions are denoted as <tt>"$1,&nbsp;$2,&nbsp;...&nbsp;$n"</tt>. Escape intentional "$n" patterns within the template string as "\$n". Note that the first value insertion index is 1, not 0.</p>
+			</div>
+			
+			
+			<div class="footer">
+				<p>Epoxy.js for Backbone is available in a <a href="https://github.com/gmac/backbone.epoxy">GitHub Repo</a>.<br>
+					&copy; 2013 Greg MacWilliam (<a href="https://twitter.com/gmacwilliam">@gmacwilliam</a>), a project of <a href="http://www.threespot.com">Threespot</a>.</p>
 			</div>
 		</div>
 	</div>

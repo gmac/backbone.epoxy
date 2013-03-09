@@ -46,14 +46,39 @@ a {
 }
 
 .navigation {
-	position: fixed;
-	top: 0;
+	position: absolute;
 	width: 230px;
 }
 
+.nav-main {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.nav-main li {
+	background-color: #999;
+	border-bottom: 1px solid #777;
+	margin: 0;
+	padding: 0;
+}
+
+.nav-main li.active {
+	background-color: #ccc;
+}
+
+.nav-main a {
+	color: #fff;
+	display: block;
+	font-size: 18px;
+	font-weight: bold;
+	line-height: 40px;
+	height: 40px;
+	padding: 0 20px;
+}
+
 .nav-toc {
-	max-height: 300px;
-	overflow: auto;
+
 }
 
 .nav-toc-content {

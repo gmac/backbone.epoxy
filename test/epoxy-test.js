@@ -633,9 +633,10 @@ describe("Backbone.Epoxy.View", function() {
 	
 	it("binding 'html:' should establish a one-way binding with an element's html contents.", function() {
 		var $el = $(".test-html");
-		expect( $el.html() ).toBe( "<strong>Skywalker</strong>, Luke" );
+		// Compare markup as case insensitive to accomodate variances in browser DOM styling:
+		expect( $el.html() ).toMatch( /<strong>Skywalker<\/strong>, Luke/i );
 		bindingModel.set("firstName", "Anakin");
-		expect( $el.html() ).toBe( "<strong>Skywalker</strong>, Anakin" );
+		expect( $el.html() ).toMatch( /<strong>Skywalker<\/strong>, Anakin/i );
 	});
 	
 	
