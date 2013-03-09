@@ -1,23 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<title></title>
-	<link href="css/reset.css" rel="stylesheet">
-	<link href="css/screen.css" rel="stylesheet">
+	<title>Epoxy.js : Elegant Data Binding for Backbone : Getting Started</title>
+	<link href="style/reset.css" rel="stylesheet">
+	<link href="style/screen.css" rel="stylesheet">
 </head>
 <body>
 	<div id="page">
-		<div class="banner" role="banner">
-			<h1>Epoxy.js: Elegant Data Binding for Backbone</h1>
+		<div class="banner clearfix" role="banner">
+			<p class="title"><span><b>Epoxy</b>.js</span> Elegant Data Binding for Backbone</p>
+			<div class="download">
+				<button>Get it</button>
+			</div>
 		</div>
 		<div class="navigation" role="navigation">
-			<ul class="nav-main">
-				<li><a href="index.html">About Epoxy</a></li>
-				<li class="active"><a href="tutorial.html">Tutorial</a></li>
-				<li><a href="doc.html">Documentation</a></li>
+			<ul class="nav-main clearfix">
+				<li><a href="index.html">About Epoxy.js</a></li>
+				<li class="active"><a href="tutorial.html">Getting Started</a></li>
+				<li><a href="documentation.html">Documentation</a></li>
 			</ul>
 			<div class="nav-toc">
 				<div class="nav-toc-content">
+					<b>Tutorial Subjects</b>
 					<ol>
 						<li><a href="#installation">Installation</a></li>
 						<li><a href="#simple-bindings">Simple View Bindings</a></li>
@@ -33,6 +37,8 @@
 			</div>
 		</div>
 		<div class="main" role="main">
+			<h1>Getting Started</h1>
+			
 			<h2 id="installation">Installation</h2>
 
 			<p>Epoxy requires <a href="http://jquery.com/">jQuery</a> 1.7.0+, <a href="http://underscorejs.org/">Underscore</a> 1.4.3+, and <a href="http://backbonejs.org/">Backbone</a> 0.9.9+. To quickly install Epoxy, download the <a href="https://github.com/gmac/backbone.epoxy/blob/master/backbone.epoxy.min.js">full Epoxy library</a> (8k minified, ~3.5k gzipped) and include its script tag in your document after all dependencies:</p>
@@ -50,7 +56,7 @@
 
 			<p>Let's start by setting up a simple binding between a few DOM elements who's content we want to update when their underlying model data changes:</p>
 
-<div class="scenario">
+<div class="example">
 <ul class="tabs">
 	<li data-tab="js">JavaScript</li>
 	<li data-tab="html">HTML</li>
@@ -95,7 +101,7 @@ var view = new BindingView({model: bindModel});</code></pre>
 			
 			<p>Another popular approach to data binding is to declare bindings as attributes directly on the DOM elements that they target. This approach shifts bindings declarations out of the View and into the DOM. Epoxy does also supports this syntax, should you prefer it:</p>
 
-<div class="scenario">
+<div class="example">
 <ul class="tabs">
 	<li data-tab="js">JavaScript</li>
 	<li data-tab="html">HTML</li>
@@ -136,7 +142,7 @@ var view = new BindingView({model: bindModel});</code></pre>
 				
 			<p>Let's start by adding an Epoxy computed attribute, which will assemble its value using other model values:</p>
 
-<div class="scenario">
+<div class="example">
 <ul class="tabs">
 	<li data-tab="js">JavaScript</li>
 	<li data-tab="html">HTML</li>
@@ -243,7 +249,7 @@ var FixedModel = Backbone.Epoxy.Model.extend({
 
 			<p>So far we've only looked at computed attributes using read-only <b>get</b> functions. Now let's create a read-write computed attribute that will both <b>get</b> a computed value, and <b>set</b> one or more mutated values back to the model:</p>
 
-<div class="scenario">
+<div class="example">
 <ul class="tabs">
 	<li data-tab="js">JavaScript</li>
 	<li data-tab="html">HTML</li>
@@ -293,7 +299,7 @@ var view = new Backbone.Epoxy.View({
 
 			<p>Instead, Epoxy provides some operational wrappers for formatting data directly within your bindings:</p>
 
-<div class="scenario">
+<div class="example">
 <ul class="tabs">
 	<li data-tab="js">JavaScript</li>
 	<li data-tab="html">HTML</li>
@@ -319,7 +325,7 @@ var view = new Backbone.Epoxy.View({
 
 			<p>Epoxy provides a collection of default binding handlers to cover many basic view operations. For everything else, developers are encouraged to write their own binding handlers for specific operations within the view. Custom bindings handlers are easy to define:</p>
 
-<div class="scenario">
+<div class="example">
 <ul class="tabs">
 	<li data-tab="js">JavaScript</li>
 	<li data-tab="html">HTML</li>
@@ -360,7 +366,7 @@ var view = new BindingView({model: model});</code></pre>
 			
 			<p>To establish bindings, an Epoxy view generates a <i>binding context</i> with routes pointing to all available <i>data sources</i> and their attributes. Data sources are instances of <tt>Backbone.Model</tt> and/or <tt>Backbone.Collection</tt> that provide themselves and their attributes to the view for binding. By default, an Epoxy view looks for two potential data sources: the view's <b>model</b> property, and its <b>collection</b> property. References to these data sources are automatically configured in the binding context as <tt>$model</tt> and <tt>$collection</tt>. Additionally, aliases to all <tt>$model</tt> attributes are created. You're welcome to pass aliases to the data providers themselves into view bindings, such as in the <tt>collection:</tt> binding:</p>
 
-<div class="scenario">
+<div class="example">
 <ul class="tabs">
 	<li data-tab="js">JavaScript</li>
 	<li data-tab="html">HTML</li>
@@ -388,7 +394,9 @@ var ListView = Backbone.Epoxy.View.extend({
 
 var view = new ListView();</code></pre>
 
-<pre class="html"><code>&lt;ul id="bind-collection" data-bind="collection:$collection"&gt;&lt;/ul&gt;</code></pre>
+<pre class="html"><code>&lt;div id="bind-collection"&gt;
+    &lt;ul data-bind="collection:$collection"&gt;&lt;/ul&gt;
+&lt;/div&gt;</code></pre>
 </div>
 			
 			<p>In the above example, we've used <tt>data-bind="collection:$collection"</tt> to bind an unordered list's contents to the view's <b>collection</b> data source. If our view defined a <b>model</b> property, then <tt>$model</tt> and all of its attributes would also be available within the binding context. Keep in mind that you can always pass direct references to a data source into a binding; this can be very handy when setting up custom data bindings... see the <a href="#epoxy-todos">Epoxy ToDos</a> demo for some ideas on this.</p>
@@ -397,7 +405,7 @@ var view = new ListView();</code></pre>
 
 			<p>Per the status-quo of JavaScript MV* frameworks, let's build a small ToDos app using Epoxy view bindings paired with native Backbone models:</p>
 
-<div class="scenario">
+<div class="example">
 <ul class="tabs">
 	<li data-tab="js">JavaScript</li>
 	<li data-tab="html">HTML</li>

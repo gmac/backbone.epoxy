@@ -1,20 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<title></title>
-	<link href="css/reset.css" rel="stylesheet">
-	<link href="css/screen.css" rel="stylesheet">
+	<title>Epoxy.js : Elegant Data Binding for Backbone : Documentation</title>
+	<link href="style/reset.css" rel="stylesheet">
+	<link href="style/screen.css" rel="stylesheet">
 </head>
 <body>
 	<div id="page">
-		<div class="banner" role="banner">
-			<h1>Epoxy.js: Elegant Data Binding for Backbone</h1>
+		<div class="banner clearfix" role="banner">
+			<p class="title"><span><b>Epoxy</b>.js</span> Elegant Data Binding for Backbone</p>
+			<div class="download">
+				<button>Get it</button>
+			</div>
 		</div>
 		<div class="navigation" role="navigation">
-			<ul class="nav-main">
-				<li><a href="index.html">About Epoxy</a></li>
-				<li><a href="tutorial.html">Tutorial</a></li>
-				<li class="active"><a href="doc.html">Documentation</a></li>
+			<ul class="nav-main clearfix">
+				<li><a href="index.html">About Epoxy.js</a></li>
+				<li><a href="tutorial.html">Getting Started</a></li>
+				<li class="active"><a href="documentation.html">Documentation</a></li>
 			</ul>
 			<div class="nav-toc">
 				<div class="nav-toc-content">
@@ -32,7 +35,7 @@
 						<li><a href="#model-has-observable">hasObservable</a></li>
 						<li><a href="#model-modify-array">modifyArray</a></li>
 						<li><a href="#model-modify-object">modifyObject</a></li>
-						<li><a href="#model-observables">observables</a></li>
+						<li><a href="#model-observable-defaults">observableDefaults</a></li>
 						<li><a href="#model-remove-observable">removeObservable</a></li>
 						<li><a href="#model-set">set</a></li>
 					</ul>
@@ -45,6 +48,7 @@
 						<li><a href="#view-apply-bindings">applyBindings</a></li>
 						<li><a href="#view-binding-handlers">bindingHandlers</a></li>
 						<li><a href="#view-bindings">bindings</a></li>
+						<li><a href="#view-binding-sources">bindingSources</a></li>
 						<li><a href="#view-remove">remove</a></li>
 						<li><a href="#view-remove-bindings">removeBindings</a></li>
 					</ul>
@@ -69,14 +73,17 @@
 					<ul>
 						<li><a href="#operator-all">all</a></li>
 						<li><a href="#operator-any">any</a></li>
+						<li><a href="#operator-format">format</a></li>
 						<li><a href="#operator-none">none</a></li>
 						<li><a href="#operator-not">not</a></li>
-						<li><a href="#operator-format">format</a></li>
+						<li><a href="#operator-select">select</a></li>
 					</ul>
 				</div>
 			</div>
 		</div>
 		<div class="main">
+			<h1>Documentation</h1>
+			
 			<div class="section">
 				<h2 id="model">Epoxy.Model</h2>
 			
@@ -87,19 +94,19 @@
 				<p>Additionally, Epoxy's observable attributes may be <i>computed</i>. Computed attributes operate as accessors and mutators, where a computed attribute will <b>get</b> an assembled value derived from other model attributes, and will <b>set</b> one more more mutated values derived from an input. Computed observables bind themselves to their dependency model attributes and will update themselves in response to any of their dependencies changing, then in turn trigger their own <tt>"change:attributeName"</tt> event on the model.</p>
 			</div>
 			<div class="section">
-				<b class="header" id="model-extend">extend</b>
+				<h3 id="model-extend">extend</h3>
 				<code>Backbone.Epoxy.Model.extend(properties, [classProperties])</code>
 				<p>Extends the <tt>Epoxy.Model</tt> constructor for use in your own implementation.</p>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="model-constructor">constructor</b>
+				<h3 id="model-constructor">constructor</h3>
 				<code>new Backbone.Epoxy.Model([attributes], [options])</code>
 				<p>Creates a new <tt>Epoxy.Model</tt> instance.</p>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="model-add-observable">addObservable</b>
+				<h3 id="model-add-observable">addObservable</h3>
 				<code>model.addObservable(name, value)</code>
 				<p>Adds an observable attribute to the model. Observable attributes are virtualized properties of the model: they may be <b>get</b> and <b>set</b> just like normal model attributes, and will trigger <tt>"change"</tt> events on the model when modified, however they do not exist within the model's <b>attributes</b> table, nor will they be saved with model data. Observable model attributes exist only in memory for the lifespan of a model instance. The goal of observable attributes is to provide an intermediary layer between a model's data and its display; allowing stateful view data (such as view selection states) to be managed within the model, yet not be retained by data stores.</p>
 
@@ -111,11 +118,11 @@
 model.addObservable("isSelected", false);
 alert( model.get("isSelected") );</code>	
 </pre>
-				<p>Use the <b><a href="#model-observables">observables</a></b> hash to automatically construct observables on your model instances.</p>
+				<p>Use the <b><a href="#model-observable-defaults">observableDefaults</a></b> hash to automatically construct observables on your model instances.</p>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="model-add-computed">addComputed</b><br>
+				<h3 id="model-add-computed">addComputed</h3><br>
 				<code>model.addComputed(name, params) or...</code><br>
 				<code>model.addComputed(name, getter, [setter], [*deps])</code>
 				<p>Adds a computed observable attribute to the model. Computed attributes operate as accessors and mutators, where a computed attribute will <b>get</b> an assembled value derived from other model attributes, and will <b>set</b> one more more mutated values derived from an input. Computed observables bind themselves to their dependency attributes and will update themselves in response to any of their dependencies changing, then in turn trigger their own <tt>"change:attributeName"</tt> event on the model.</p>
@@ -187,13 +194,13 @@ model.addComputed("displayName", function() {
 			</div>
 			
 			<div class="section">
-				<b class="header" id="model-clear-observables">clearObservables</b>
+				<h3 id="model-clear-observables">clearObservables</h3>
 				<code>model.clearObservables()</code>
 				<p>Removes all observable properties on the model and cleans up their bound events. Cleared observables will no longer exist on the model, so will no longer be accessible or trigger events. Be sure to call <b>clearObservables</b> when deprecating an Epoxy model without specifically calling its <b>destroy</b> method.</p>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="model-computeds">computeds</b>
+				<h3 id="model-computeds">computeds</h3>
 				<code>model.computeds</code>
 				<p>A hash table declaring computed observable attributes to be automatically added to a model instance by the constructor. Uses <b><a href="#model-add-computed">addComputed</a></b> to create observable attributes. Computed observables may be declared with a <a href="#model-computed-params">computed params</a> object, or as a getter function (uses <a href="#model-computed-deps">automatic dependency mapping</a>).</p>	
 <pre>
@@ -223,32 +230,32 @@ model.addComputed("displayName", function() {
 			</div>
 			
 			<div class="section">
-				<b class="header" id="model-destroy">destroy</b>
+				<h3 id="model-destroy">destroy</h3>
 				<code>model.destroy([options])</code>
 				<p>Override wrapper for the Backbone Model's native <b>destroy</b> method. This wrapper cleans up Epoxy model configuration, then defers to the Backbone Model's native <b>destroy</b> method. If you'd like to clean up a model without completely destroying it, use the <b>clearObservables</b> method.</p>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="model-get">get</b>
+				<h3 id="model-get">get</h3>
 				<code>model.get(attribute)</code>
 				<p>Override wrapper for the Backbone Model's native <b>get</b> method. This override allows basic model attributes and Epoxy observable/computed attributes to be accessed through a common API.</p>
 				<p>The Epoxy <b>get</b> method will first check for an observable attribute, then defers to the Backbone Model's native <b>get</b> method if no observable was found. Remember that an observable attribute overrides a native attribute with the same name, so be mindful of naming collisions.</p>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="model-get-copy">getCopy</b>
+				<h3 id="model-get-copy">getCopy</h3>
 				<code>model.getCopy(attribute)</code>
 				<p>Gets a model attribute value (native, observable, or computed), and performs a shallow copy on any non-primitive values returned. This is useful for getting copies of <tt>Object</tt> and <tt>Array</tt> values that you plan to modify outside of the model, then resubmit with changes (remember that <tt>"change"</tt> events only trigger for non-primitive values when their identity changes). The <b><a href="#model-modify-array">modifyArray</a></b> and <b><a href="#model-modify-object">modifyObject</a></b> methods may also be used to perform object changes internally within the model.</p>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="model-has-observable">hasObservable</b>
+				<h3 id="model-has-observable">hasObservable</h3>
 				<code>model.hasObservable(attribute)</code>
 				<p>Returns <tt>true</tt> if the model has an observable or computed observable attribute with the specified name. Note that the Backbone Model's native <b>has</b> method is NOT modified by Epoxy, so will still only report on the presence of Backbone-native model attributes.</p>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="model-modify-array">modifyArray</b>
+				<h3 id="model-modify-array">modifyArray</h3>
 				<code>model.modifyArray(attribute, arrayMethod, [*args])</code>
 				<p>Performs an internal update on a stored <tt>Array</tt> model attribute (native or observable) using a standard JavaScript array modifier (<tt>pop</tt>, <tt>push</tt>, <tt>reverse</tt>, <tt>shift</tt>, <tt>slice</tt>, <tt>sort</tt>, <tt>splice</tt>, and <tt>unshift</tt>), then triggers a change event for the modified model attribute. Invoke with the model attribute name to modify, a string of the array method name to call, and any additional arguments to be passed into the array method. Returns any results from the array method. Calling <b>modifyArray</b> on a non-array attribute will take no action.</p>
 				
@@ -259,7 +266,7 @@ alert( model.get("wordList").length );</code>
 			</div>
 
 			<div class="section">
-				<b class="header" id="model-modify-object">modifyObject</b>
+				<h3 id="model-modify-object">modifyObject</h3>
 				<code>model.modifyObject(attribute, objectProperty, value)</code>
 				<p>Performs an internal update on a stored <tt>Object</tt> model attribute (native or observable), then triggers a change event for the modified model attribute. Invoke with the model attribute name to modify, a property name to set on the object, and a value to set as the object property. Setting <tt>undefined</tt> to a property will delete it from the object. Returns the modified object. Calling <b>modifyObject</b> will only take action on model attributes with an assessed type of <tt>"object"</tt>.</p>
 				
@@ -270,12 +277,12 @@ alert( model.get("wordsDict").hasOwnProperty("coconut") );</code>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="model-observables">observables</b>
-				<code>model.observables</code>
-				<p>A hash table declaring observable attributes to be automatically added to a model instance by the constructor. Uses <b><a href="#model-add-observable">addObservable</a></b> to create observable attributes.</p>
+				<h3 id="model-observable-defaults">observableDefaults</h3>
+				<code>model.observableDefaults</code>
+				<p>A hash table declaring observable attributes to be automatically added to a model instance by the constructor. Uses <b><a href="#model-add-observable">addObservable</a></b> to create the specified observable attributes. After a model instance has been constructed, observable values are managed through the model's <b>get</b> and <b>set</b> methods.</p>
 <pre>
 <code>var ComputedModel = Backbone.Epoxy.Model.extend({
-    observables: {
+    observableDefaults: {
         isSelected: false,
         todosList: new Backbone.Collection()
     }
@@ -284,13 +291,13 @@ alert( model.get("wordsDict").hasOwnProperty("coconut") );</code>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="model-remove-observable">removeObservable</b>
+				<h3 id="model-remove-observable">removeObservable</h3>
 				<code>model.removeObservable(attribute)</code>
 				<p>Removes an observable attribute by name, and cleans up all bound listeners. A removed observable property will no longer exist within the model, so may no longer be accessed or trigger events.</p>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="model-set">set</b>
+				<h3 id="model-set">set</h3>
 				<code>model.set(attributes, [options])</code>
 				<p>Override wrapper for the Backbone Model's native <b>set</b> method. This override allows basic model attributes and Epoxy observable/computed attributes to be accessed through a common API.</p>
 				<p>The Epoxy <b>set</b> method will first check for an observable attribute, then defers to the Backbone Model's native <b>set</b> method if no observable was found. Remember that an observable attribute overrides a native attribute with the same name, so be mindful of naming collisions.</p>
@@ -307,25 +314,25 @@ alert( model.get("wordsDict").hasOwnProperty("coconut") );</code>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="view-extend">extend</b>
+				<h3 id="view-extend">extend</h3>
 				<code>Backbone.Epoxy.View.extend(properties, [classProperties])</code>
 				<p>Extends the <tt>Epoxy.View</tt> constructor for use in your own implementation.</p>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="view-constructor">constructor</b>
+				<h3 id="view-constructor">constructor</h3>
 				<code>new Backbone.Epoxy.View([options])</code>
 				<p>Creates a new <tt>Epoxy.View</tt> instance.</p>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="view-context">binding context</b>
+				<h3 id="view-context">binding context</h3>
 				<code>{$model:model, $collection:collection, [*attributes]}</code>
 				<p>To establish bindings, an Epoxy view generates a <i>binding context</i> with routes pointing to all available <i>data sources</i> and their attributes. Data sources are instances of <tt>Backbone.Model</tt> and/or <tt>Backbone.Collection</tt> that provide themselves and their attributes to the view for binding. By default, an Epoxy view looks for two potential data sources: the view's <b>model</b> property, and its <b>collection</b> property. References to these data sources are automatically configured in the binding context as <tt>$model</tt> and <tt>$collection</tt>. Additionally, aliases to all <tt>$model</tt> attributes are created.</p>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="view-apply-bindings">applyBindings</b>
+				<h3 id="view-apply-bindings">applyBindings</h3>
 				<code>view.applyBindings()</code>
 				<p>Removes any existing view bindings, then applies all bindings defined within the view's <b>bindings</b> object. All bindings are established using the view's <b>$el</b> as the display target, and the view's <b>model</b> as the data target (<b>model</b> must reference a valid <tt>Backbone.Model</tt> instance). A view with invalid display or data targets will apply no bindings. If the <b>bindings</b> object is a string, that string will be used as an attribute selector query for extracting bindings from the view's <b>$el</b> container.</p>
 
@@ -335,7 +342,7 @@ alert( model.get("wordsDict").hasOwnProperty("coconut") );</code>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="view-binding-handlers">bindingHandlers</b>
+				<h3 id="view-binding-handlers">bindingHandlers</h3>
 				<code>view.bindingHandlers</code>
 				<p>A hash table defining a view's custom binding handlers. Binding handlers are used to interchange model data with elements in the view. While Epoxy includes a <a href="#binding-handlers">core set</a> of basic binding handlers for managing an element's content and formatting, developers are encouraged to extend their views with customized binding handlers.</p>
 					
@@ -356,11 +363,11 @@ alert( model.get("wordsDict").hasOwnProperty("coconut") );</code>
 });</code>
 </pre>				
 				<ul>
-					<li><b>set:</b> <i>Required function, invoked in context of the view</i>. This function is used to WRITE data from the model into the view. The <b>set</b> function receives two arguments: a jQuery representation of the bound element, and the model attribute value to be written into the view. The <b>set</b> function returns nothing.</li>
-					<li><b>[get]:</b> <i>Optional function, invoked in context of the view</i>. This function is used to READ data from the view to be sent to the model. The <b>get</b> function receives two arguments: a jQuery representation of the bound element, and the current model attribute value to be changed (useful when modifying objects). The <b>get</b> function should return a value to replace the current bound model attribute. When modifying <tt>Object</tt> and <tt>Array</tt> values, be sure to make changes to a <i>copy</i> of the current value, then submit that back to the model.</li>
+					<li><b>set:</b> <i>Required function, invoked in context of the binding</i>. This function is used to WRITE data from the model into the view. The <b>set</b> function receives two arguments: a jQuery representation of the bound element, and the model attribute value to be written into the view. The <b>set</b> function returns nothing.</li>
+					<li><b>[get]:</b> <i>Optional function, invoked in context of the binding</i>. This function is used to READ data from the view to be sent to the model. The <b>get</b> function receives two arguments: a jQuery representation of the bound element, and the current model attribute value to be changed (useful when modifying objects). The <b>get</b> function should return a value to replace the current bound model attribute. When modifying <tt>Object</tt> and <tt>Array</tt> values, be sure to make changes to a <i>copy</i> of the current value, then submit that back to the model.</li>
 				</ul>
 				
-				<p>Note that the <b>get</b> and <b>set</b> functions are invoked in the context of their parent view, so referencing <tt>this</tt> within their scopes refers to the view.</p>
+				<!--p>Note that the <b>get</b> and <b>set</b> functions are invoked in the context of their parent view, so referencing <tt>this</tt> within their scopes refers to the view.</p-->
 				
 				<p>While declaring a display-only binding handler (one-way binding), you may declare its setter function directly on the <b>bindingHandlers</b> hash:</p>
 
@@ -374,9 +381,9 @@ alert( model.get("wordsDict").hasOwnProperty("coconut") );</code>
 });</code>
 </pre>
 			</div>
-			
+						
 			<div class="section">
-				<b class="header" id="view-bindings">bindings</b>
+				<h3 id="view-bindings">bindings</h3>
 				<code>view.bindings</code>
 				<p>A hash declaring the view's element-to-attribute binding scheme, or a string defining an element attribute to query from the view's DOM. All bindings are established using the view's <b>$el</b> reference as the display target, and the view's <b>model</b> reference as the data target. A view missing its <b>$el</b> and/or <b>model</b> properties will apply no bindings.</p>
 				
@@ -421,15 +428,52 @@ var BindingView = Backbone.Epoxy.View.extend({
 			</div>
 			
 			<div class="section">
-				<b class="header" id="view-remove">remove</b>
+				<h3 id="view-binding-sources">bindingSources</h3>
+				<code>view.bindingSources</code>
+				<p class="draft">This API is a working draft. Implementation is subject to change.</p>
+				<p>A hash table defining additional binding sources to be added to the view's binding context. Binding sources are instances of <tt>Backbone.Model</tt> and/or <tt>Backbone.Collection</tt>. By default, an Epoxy view configures two potential binding sources: the view's <b>model</b> and <b>collection</b> properties are automatically added to the binding context under the aliases <tt>$model</tt> and <tt>$collection</tt>. Additional model and collection data sources may be specified within the <b>bindingSources</b> hash; these additional data sources will be added into the binding context under the alias <tt>$sourceName</tt>.</p>
+
+				<p>Additionally, model data sources provide aliases to all of their attributes within the binding context. In the case of the default <tt>$model</tt> data source, all model attributes are aliased within the binding context using their normal <tt>attribute</tt> name. For additional model sources added through the <b>bindingSources</b> hash, model attributes are added under the alias <tt>source_attributeName</tt>. This avoids attribute naming conflicts while binding multiple models of the same type.</p>
+
+<pre>
+<code>// Epoxy view specifying five data sources:
+var BindingView = Backbone.Epoxy.View.extend({
+    model: new Backbone.Model({name: "Luke Skywalker"}),
+    collection: new Backbone.Collection(),
+    bindingSources: {
+        han: new Backbone.Model({name: "Han Solo"}),
+        obiwan: new Backbone.Model({name: "Obi-Wan Kenobi"}),
+        users: new Backbone.Collection()
+    }
+});
+
+// Resulting binding context (psudocode):
+{
+    $model: &lt;Backbone.Model&gt;,
+    $collection: &lt;Backbone.Collection&gt;,
+    $han: &lt;Backbone.Model&gt;,
+    $obiwan: &lt;Backbone.Model&gt;,
+    $users: &lt;Backbone.Collection&gt;,
+    name: &lt;$model:name&gt;,
+    han_name: &lt;$han:name&gt;,
+    obiwan_name: &lt;$obiwan:name&gt;
+}
+</code>
+</pre>
+			</div>
+			
+			<div class="section">
+				<h3 id="view-remove">remove</h3>
 				<code>view.remove()</code>
 				<p>Override wrapper for the Backbone Views's native <b>remove</b> method. This override calls <b>removeBindings</b>, then defers to the Backbone View's native <b>remove</b> method.</p>
 			</div>
+			
 			<div class="section">
-				<b class="header" id="view-remove-bindings">removeBindings</b>
+				<h3 id="view-remove-bindings">removeBindings</h3>
 				<code>view.removeBindings()</code>
 				<p>Removes and cleans up all bindings applied to the view. All binding hooks will be nullified, leaving the view's DOM elements formatted in their final bound state. The <b>removeBindings</b> method is automatically called with the <b>remove</b> method. Be mindful that you should manually call <b>removeBindings</b> when deprecating an Epoxy view without specifically calling its <b>remove</b> method.</p>
 			</div>
+			
 			<div class="section">
 				<h2 id="binding-handlers">View Binding Handlers</h2>
 				<p>Binding handlers are used to interchange model data with elements in the view. The Epoxy <tt>View</tt> includes default binding handlers for common tasks such as managing a bound element's content, class, and style. However, don't feel limited to just Epoxy's out-of-the-box binding handlers. You may easily <a href="#view-binding-handlers">define your own binding handlers</a> within a view.</p>
@@ -445,14 +489,14 @@ var BindingView = Backbone.Epoxy.View.extend({
 			</div>
 			
 			<div class="section">
-				<b class="header" id="handler-attr">attr</b>
+				<h3 id="handler-attr">attr</h3>
 				<span class="alias">read-only</span>
 				<code>data-bind="attr:{name:modelAttribute,'data-name':modelAttribute}"</code>
 				<p>Binds model attribute values to a list of element attributes. Attribute bindings are defined as a hash of key/value pairs, where each key defines an element attribute and the model reference defines the attribute value. Attribute keys may be defined as strings.</p>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="handler-checked">checked</b>
+				<h3 id="handler-checked">checked</h3>
 				<span class="alias">read-write</span>
 				<code>data-bind="checked:modelAttribute"</code>
 				<p>Binds <tt>checkbox</tt> and <tt>radio</tt> elements to the model. The binding behavior differs slightly for various element/value combinations:</p>
@@ -467,80 +511,80 @@ var BindingView = Backbone.Epoxy.View.extend({
 			</div>
 			
 			<div class="section">
-				<b class="header" id="handler-class-name">classes</b>
+				<h3 id="handler-class-name">classes</h3>
 				<span class="alias">read-only</span>
 				<code>data-bind="classes:{active:modelAttr,'is-active':modelAttr}"</code>
 				<p>Toggles a list of element class names based on the truthiness of their bound model attributes. Class bindings are defined as a hash of key/value pairs, where each key defines a class name and is value references a model attribute that will be loosely-type checked for truthiness; truthy attributes will enable their class, while falsey attributes will disable their class. Class name keys may be defined as strings.</p>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="handler-collection">collection</b>
+				<h3 id="handler-collection">collection</h3>
 				<span class="alias">read-only</span>
-				<code>data-bind="collection:observableName"</code>
-				<p>Binds the display of a <tt>Backbone.Collection</tt>. The bound collection defines a <tt>View</tt> for its models, which allows the collection handler to take care of adding, removing, and resorting views to keep the display in sync with the collection. One key feature of the <b>collection</b> binding's view management is that it does NOT perform a full re-render of the collection contents for each change. Instead, the <b>collection</b> binding attempts to retain as much existing view as possible, only adding and removing as needed, and performing optimized element sorts when required. You may choose to use <tt>Epoxy.View</tt> elements for the display of individual collection items, allowing each collection item view to also bind to its model.</p>
+				<code>data-bind="collection:$collectionSource"</code>
+				<p>Manages the display of a <tt>Backbone.Collection</tt>. The bound collection must specify a <tt>Backbone.View</tt> constructor for displaying its models, at which time the <b>collection</b> handler will manage adding, removing, resorting, and resetting a list of those views to synchronize display with the collection's contents. The <b>collection</b> binding performs discrete view management, where collection models will be assigned a single view instance for their lifespans, rather than re-rendering all collection views in response to changes. You may choose to use an <tt>Epoxy.View</tt> constructor for the display of individual collection items, allowing each collection view item to bind to its respective model.</p>
 
-				<p>The collection binding requires the following setup:</p>
+				<p>The <b>collection</b> binding requires the following setup:</p>
 
 				<ul>
-					<li>The binding view's model must be an instance of <tt>Epoxy.Model</tt>, with the target collection stored as an observable property. This observable wrapper is required for aggregating collection events that will trigger view updates.</li>
+					<li>The binding must target a <tt>Backbone.Collection</tt> <a href="#view-binding-sources">data source</a> within the binding context. </li>
 
-					<li>The bound collection must have a property called <b>view</b> which defines a Backbone View constructor for displaying collection items (this mirrors the pattern of a collection's <b>model</b> property defining its Model constructor).</li>
+					<li>The bound collection must have a property called <b>view</b>, which defines a <tt>Backbone.View</tt> constructor for rendering collection items.</li>
 				</ul>
 
-				<p>For a working demonstration of setting up a <b>collection</b> binding, see the Epoxy <a href="#">ToDo demo</a>.</p>
+				<p>For a working demonstration of setting up a <b>collection</b> binding, see the <a href="tutorial.html#epoxy-todos">Epoxy ToDos</a> demo.</p>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="handler-css">css</b>
+				<h3 id="handler-css">css</h3>
 				<span class="alias">read-only</span>
 				<code>data-bind="css:{color:modelAttribute,'font-size':modelAttribute}"</code>
 				<p>Binds a list of CSS styles to model attributes. CSS style bindings are defined as a hash of key/value pairs, where each key defines a CSS style name and the model attribute defines the style's literal value. CSS keys may be defined as strings.</p>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="handler-disabled">disabled</b>
+				<h3 id="handler-disabled">disabled</h3>
 				<span class="alias">read-only</span>
 				<code>data-bind="disabled:modelAttribute"</code>
 				<p>Toggles a form element's <tt>"disabled"</tt> property based on a loosely-typed assessment of the bound model attribute's truthiness. A truthy value disables the element (inversion of the <b>enabled</b> handler).</p>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="handler-enabled">enabled</b>
+				<h3 id="handler-enabled">enabled</h3>
 				<span class="alias">read-only</span>
 				<code>data-bind="enabled:modelAttribute"</code>
 				<p>Toggles a form element's <tt>"disabled"</tt> status based on a loosely-typed assessment of the bound model attribute's truthiness. A truthy value enables the element (inversion of the <b>disabled</b> handler).</p>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="handler-events">events</b>
+				<h3 id="handler-events">events</h3>
 				<span class="alias">read-only</span>
 				<code>data-bind="events:['keydown','focus']"</code>
 				<p>The <b>events</b> handler is a special binding used to parameterize what DOM events will trigger changes for read-write element bindings. By default, all read-write bindings will subscribe to their bound element's <tt>"change"</tt> event to trigger model updates. You may bind additional DOM event triggers for the element by listing them in the <b>events</b> array.</p>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="handler-html">html</b>
+				<h3 id="handler-html">html</h3>
 				<span class="alias">read-only</span>
 				<code>data-bind="html:modelAttribute"</code>
 				<p>Sets the element's HTML content to the bound model attribute value. Uses the jQuery <b>html</b> method.</p>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="handler-text">text</b>
+				<h3 id="handler-text">text</h3>
 				<span class="alias">read-only</span>
 				<code>data-bind="text:modelAttribute"</code>
 				<p>Sets the element's text content to the bound model attribute value. Uses the jQuery <b>text</b> method.</p>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="handler-toggle">toggle</b>
+				<h3 id="handler-toggle">toggle</h3>
 				<span class="alias">read-only</span>
 				<code>data-bind="toggle:modelAttribute"</code>
 				<p>Toggles the element's display based on a loosely-typed assessment of the bound model attribute's truthiness. Uses the jQuery <b>toggle( [boolean] )</b> method.</p>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="handler-value">value</b>
+				<h3 id="handler-value">value</h3>
 				<span class="alias">read-write</span>
 				<code>data-bind="value:modelAttribute"</code>
 				<p>Binds an input element's (<tt>input</tt>, <tt>select</tt>, <tt>textarea</tt>) value to an underlying model attribute. The element will set its <tt>value</tt> to the bound model attribute upon change event triggers (see the <b><a href="#handler-events">events</a></b> handler), and update its <tt>value</tt> when the underlying model attribute changes.</p>
@@ -552,35 +596,40 @@ var BindingView = Backbone.Epoxy.View.extend({
 			</div>
 			
 			<div class="section">
-				<b class="header" id="operator-all">all</b>
+				<h3 id="operator-all">all</h3>
 				<code>data-bind="toggle:all(modelAttribute,modelAttribute)"</code>
 				<p>Assesses one or more model attributes as <tt>true</tt> if <i>all</i> attributes are truthy.</p>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="operator-any">any</b>
+				<h3 id="operator-any">any</h3>
 				<code>data-bind="toggle:any(modelAttribute,modelAttribute)"</code>
 				<p>Assesses one or more model attributes as <tt>true</tt> if <i>any</i> of the attributes are truthy.</p>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="operator-none">none</b>
+				<h3 id="operator-format">format</h3>
+				<code>data-bind="text:format('$1 of $2',modelAttribute,modelAttribute)"</code>
+				<p>Formats a string with a series of model attribute replacements. Operates the same as string replacement for <tt>RegExp</tt> capture groups, where field insertions are denoted as <tt>"$1,&nbsp;$2,&nbsp;...&nbsp;$n"</tt>. Escape intentional "$n" patterns within the template string as "\$n". Note that the first value insertion index is 1, not 0.</p>
+			</div>
+			
+			<div class="section">
+				<h3 id="operator-none">none</h3>
 				<code>data-bind="toggle:none(modelAttribute,modelAttribute)"</code>
 				<p>Assesses one or more model attributes as <tt>true</tt> if <i>none</i> of the attributes are truthy.</p>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="operator-not">not</b>
+				<h3 id="operator-not">not</h3>
 				<code>data-bind="toggle:not(modelAttribute)"</code>
 				<p>Inverts the loosely-typed boolean value of a model attribute.</p>
 			</div>
 			
 			<div class="section">
-				<b class="header" id="operator-format">format</b>
-				<code>data-bind="text:format('$1 of $2',modelAttribute,modelAttribute)"</code>
-				<p>Formats a string with a series of model attribute replacements. Operates the same as string replacement for <tt>RegExp</tt> capture groups, where field insertions are denoted as <tt>"$1,&nbsp;$2,&nbsp;...&nbsp;$n"</tt>. Escape intentional "$n" patterns within the template string as "\$n". Note that the first value insertion index is 1, not 0.</p>
+				<h3 id="operator-select">select</h3>
+				<code>data-bind="text:select(conditionalValue,truthyValue,falseyValue)"</code>
+				<p>Performs a ternary operation using JavaScript's <tt>?:</tt> operator. The <b>select</b> operation receives three arguments: the first argument is assessed as a loosely-typed conditional; if truthy, the second argument is returned; if falsey, the third argument is returned.</p>
 			</div>
-			
 			
 			<div class="footer">
 				<p>Epoxy.js for Backbone is available in a <a href="https://github.com/gmac/backbone.epoxy">GitHub Repo</a>.<br>

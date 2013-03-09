@@ -1,10 +1,12 @@
 // TOC controller:
 $(function() {
-	var $toc = $(".nav-toc");
-	
+	var $nav = $(".navigation").addClass("fixed");
+	var $main = $nav.find(".nav-main").children();
+	var $toc = $nav.find(".nav-toc");
+
 	if ( $toc.length ) {
 		var $win = $(window);
-		var delta = $toc.offset().top;
+		var delta = $main.eq(0).height() * $main.length;
 		
 		function setHeight() {
 			$toc.height( $win.height()-delta );
@@ -17,7 +19,7 @@ $(function() {
 });
 
 // Scenario mini-application views:
-var ScenarioView = Backbone.View.extend({
+var ExampleView = Backbone.View.extend({
 	initialize: function() {
 		this.setTab("js");
 		this.$(".tabs").show();
@@ -54,8 +56,8 @@ var ScenarioView = Backbone.View.extend({
 
 
 // Create all scenario applications:
-$(".scenario").each(function() {
-	var view = new ScenarioView({el: this});
+$(".example").each(function() {
+	var view = new ExampleView({el: this});
 });
 
 

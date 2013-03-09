@@ -33,16 +33,16 @@
 			this._init = true;
 			
 			// Add all observable properties:
-			if ( this.observables ) {
-				_.each(this.observables, function( value, property ) {
-					this.addObservable( property, value );
+			if ( this.observableDefaults ) {
+				_.each(this.observableDefaults, function( value, attribute ) {
+					this.addObservable( attribute, _.isFunction(value) ? value() : value );
 				}, this);
 			}
 			
 			// Add all observable computed properties:
 			if ( this.computeds ) {
-				_.each(this.computeds, function( param, property ) {
-					this.addComputed( property, param );
+				_.each(this.computeds, function( param, attribute ) {
+					this.addComputed( attribute, param );
 				}, this);
 			}
 			

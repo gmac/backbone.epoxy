@@ -44,10 +44,10 @@ textarea { vertical-align: middle; }
 
 a img { border: 0; }
 
-// remember to define focus styles!
+/* remember to define focus styles! */
 :focus { outline: 0; }
 
-// remember to highlight inserts somehow!
+/* remember to highlight inserts somehow! */
 ins { text-decoration: none; }
 del { text-decoration: line-through; }
 
@@ -57,7 +57,7 @@ dfn, em, th, var {
   font-weight: normal;
 }
 
-// tables still need 'cellspacing="0"' in the markup
+/* tables still need 'cellspacing="0"' in the markup */
 table {
   border-collapse: collapse;
   border-spacing: 0;
@@ -67,13 +67,13 @@ th {
   text-align: left;
 }
 
-// Set new HTML5 elements to block level
+/* Set new HTML5 elements to block level */
 article, aside, canvas, details, figcaption, figure,
 footer, header, hgroup, menu, nav, section, summary {
   display:block;
 }
 
-// Clearfix helper: Used to contain floats: h5bp.com/q
+/* Clearfix helper: Used to contain floats: h5bp.com/q */
 .clearfix:before,
 .clearfix:after {
     content: "";

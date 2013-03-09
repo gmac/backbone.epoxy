@@ -13,7 +13,7 @@ describe("Backbone.Epoxy.Model", function() {
 			payment: 100
 		},
 		
-		observables: {
+		observableDefaults: {
 			isSelected: false,
 			testArray: []
 		},
@@ -80,7 +80,7 @@ describe("Backbone.Epoxy.Model", function() {
 	});
 	
 	
-	it("should use '.observables' to define basic virtual properties.", function() {
+	it("should use '.observableDefaults' to define basic virtual properties.", function() {
 		expect( model.get("isSelected") ).toBe( false );
 	});
 	
@@ -363,7 +363,7 @@ describe("Backbone.Epoxy.View", function() {
 			active: true
 		},
 		
-		observables: {
+		observableDefaults: {
 			checkList: ["b"]
 		},
 		
@@ -448,9 +448,9 @@ describe("Backbone.Epoxy.View", function() {
 	
 	// Teardown
 	afterEach(function() {
-		bindingModel.observables.checkList = [ "b" ];
+		bindingModel.observableDefaults.checkList = [ "b" ];
 		bindingModel.set( bindingModel.defaults );
-		bindingModel.set( bindingModel.observables );
+		bindingModel.set( bindingModel.observableDefaults );
 	});
 	
 	

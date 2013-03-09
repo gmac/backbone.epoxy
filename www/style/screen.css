@@ -1,11 +1,28 @@
+@font-face {
+    font-family: 'BebasRegular';
+    src: url('BEBAS___-webfont.eot');
+    src: url('BEBAS___-webfont.eot?#iefix') format('embedded-opentype'),
+         url('BEBAS___-webfont.woff') format('woff'),
+         url('BEBAS___-webfont.ttf') format('truetype'),
+         url('BEBAS___-webfont.svg#BebasRegular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+
 body {
-	background: #000 url(tile.png) repeat;
+	background: #000 url(tile-dk.png) repeat;
 	margin: 0;
 }
 
 h1, h2 {
 	font-size: 20px;
 	margin: 40px 0 20px;
+}
+
+h1 {
+	color: #c5350c;
+	font-size: 25px;
+	margin: 0 0 25px;
 }
 
 p {
@@ -21,19 +38,46 @@ li {
 }
 
 a {
-	color: #A8380C;
+	color: #8f2d0b;
 }
 
 #page {
-	background: #fff url(sidebar.png) repeat-y;
+	background-color: #fff;
 	font: 14px/1.5em 'Helvetica Neue', Helvetica, Arial;
+	margin: 0 auto;
 	width: 990px;
 }
 
 .banner {
+	border-bottom: 1px solid #ccc;
 	float: left;
 	left: 280px;
 	position: relative;
+	margin-bottom: 40px;
+	padding: 25px 0 40px;
+	width: 660px;
+}
+
+.banner .title {
+	float: left;
+	font-size: 20px;
+	font-weight: bold;
+	margin: 0;
+}
+
+.banner .title span {
+	color: #c5350c;
+	display: block;
+	font: 60px 'BebasRegular', 'Helvetica Neue', Helvetica, Arial;
+}
+
+.banner .title span b {
+	font-size: 100px;
+}
+
+.banner .download {
+	float: left;
+	padding: 75px 0 0 75px;
 }
 
 .footer {
@@ -46,50 +90,63 @@ a {
 }
 
 .navigation {
+	background: #fefefe url(tile-lt.png) repeat;
+	border-right: 1px solid #ccc;
 	position: absolute;
 	width: 230px;
 }
 
+.navigation.fixed {
+	position: fixed;
+	top: 0;
+}
+
+.fixed .nav-toc {
+	overflow: auto;
+}
+
 .nav-main {
+	background-color: #8f2d0b;
 	list-style: none;
 	margin: 0;
 	padding: 0;
 }
 
 .nav-main li {
-	background-color: #999;
-	border-bottom: 1px solid #777;
+	border-bottom: 1px solid #821f01;
 	margin: 0;
 	padding: 0;
 }
 
 .nav-main li.active {
-	background-color: #ccc;
+	background-color: #c5350c;
 }
 
 .nav-main a {
 	color: #fff;
 	display: block;
-	font-size: 18px;
+	font-size: 16px;
 	font-weight: bold;
 	line-height: 40px;
 	height: 40px;
-	padding: 0 20px;
-}
-
-.nav-toc {
-
+	padding: 0 30px;
+	text-decoration: none;
 }
 
 .nav-toc-content {
-	padding: 30px;
-	padding-right: 0;
+	padding: 20px 30px;
+	padding-right: 20px;
 }
 
 .nav-toc-content ul,
 .nav-toc-content ol {
 	margin: 10px 0;
 	padding-left: 20px;
+}
+
+.nav-toc-content ul li {
+	line-height: 1.6em;
+	margin: 0;
 }
 
 .main {
@@ -99,7 +156,12 @@ a {
 	width: 660px;
 }
 
-.header {
+.section {
+	margin: 35px 0;
+}
+
+.section h3 {
+	display: inline;
 	font-size: 18px;
 	font-weight: bold;
 	margin-right: 15px;
@@ -116,10 +178,6 @@ a {
 
 .alias:after {
 	content: "]";
-}
-
-.section {
-	margin: 35px 0;
 }
 
 code,
@@ -151,11 +209,11 @@ pre button {
 	top: 10px;
 }
 
-.scenario {
+.example {
 	margin: 25px 0;
 }
 
-.scenario .tabs {
+.example .tabs {
 	display: none;
 	height: 30px;
 	list-style: none;
@@ -163,11 +221,11 @@ pre button {
 	padding: 0 10px;
 }
 
-.scenario .tabs li {
+.example .tabs li {
 	background-color: #fff;
 	border: 1px solid #ccc;
 	border-bottom: none;
-	border-radius: 6px;
+	border-radius: 4px;
 	border-bottom-left-radius: 0;
 	border-bottom-right-radius: 0;
 	cursor: pointer;
@@ -178,44 +236,56 @@ pre button {
 	padding: 0 15px;
 }
 
-.scenario .tabs li.active {
+.example .tabs li.active {
 	background-color: #f9f9f9;
 	cursor: default;
 	position: relative;
 	z-index: 1;
 }
 
-.scenario pre {
+.example pre {
 	margin: 0 0 15px;
 }
 
-.scenario code {
+.example code {
 	display: block;
 }
 
-.scenario .app {
-	background-color: #D7EEFA;
-	border: 1px solid #C3D8E3;
+.example .app {
+	background-color: #c5350c;
+	border: 1px solid #8f2d0b;
 	border-radius: 3px;
+	color: #fff;
 	display: block;
 	margin: 15px 0;
 	padding: 10px;
 }
 
-.scenario input {
+.example input {
 	background-color: #fff;
-	border: 1px solid #ccc;
+	border: 1px solid #8f2d0b;
 	border-radius: 4px;
 	margin: 0 15px 0 5px;
 	padding: 5px 7px;
 }
 
-.scenario input[type="text"] {
+.example input[type="text"] {
 	width: 100px;
 }
 
-.scenario .app b {
+.example .app b {
 	margin-left: 15px;
+}
+
+.example ul {
+	
+}
+
+.draft {
+	color: #c5350c;
+	font-size: 12px;
+	font-style: italic;
+	margin: 5px 0;
 }
 
 #epoxy-todos b {
@@ -249,6 +319,7 @@ pre button {
 #epoxy-todos .cleanup {
 	background-color: transparent;
 	border: none;
+	color: #511906;
 	cursor: pointer;
 	padding: 0;
 	text-decoration: underline;
@@ -256,11 +327,59 @@ pre button {
 
 @media only screen and (max-width: 990px) {
 	#page {
+		background-image: none;
 		width: 600px;
 	}
 	
+	h1 {
+		margin-top: 40px;
+	}
+	
+	.banner {
+		border: none;
+		float: none;
+		left: auto;
+		margin: 0;
+		position: static;
+		padding-left: 30px;
+		width: auto;
+	}
+	
+	.navigation {
+		border: none;
+		border-bottom: 1px solid #ccc;
+		width: auto;
+	}
+	
+	.navigation.fixed {
+		position: static;
+		top: auto;
+	}
+	
+	.navigation .nav-main li {
+		float: left;
+	}
+	
+	.navigation.fixed .nav-toc {
+		height: auto !important;
+	}
+	
+	.nav-main {
+		border: 1px solid #821f01;
+		border-left: none;
+		border-right: none;
+	}
+	
+	.nav-main li {
+		border: none;
+		border-right: 1px solid #821f01;
+	}
+	
 	.main {
-		width: 320px;
+		left: auto;
+		margin: 0 30px;
+		position: static;
+		width: auto;
 	}
 }
 
@@ -269,7 +388,12 @@ pre button {
 		width: 350px;
 	}
 	
+	.nav-main a {
+		font-size: 12px;
+		padding: 0 10px;
+	}
+	
 	.main {
-		width: 320px;
+		margin: 0 20px;
 	}
 }
