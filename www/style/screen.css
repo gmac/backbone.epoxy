@@ -10,7 +10,7 @@
 }
 
 body {
-	background: #000 url(tile-dk.png) repeat;
+	background: #000 url(../images/tile-dk.png) repeat;
 	margin: 0;
 }
 
@@ -39,6 +39,10 @@ li {
 
 a {
 	color: #8f2d0b;
+}
+
+a:hover {
+	color: #c5350c;
 }
 
 #page {
@@ -77,7 +81,42 @@ a {
 
 .banner .download {
 	float: left;
-	padding: 75px 0 0 75px;
+	padding: 64px 0 0 60px;
+}
+
+.download-button {
+	-moz-box-shadow:inset 0px 1px 0px 0px #f29c93;
+	-webkit-box-shadow:inset 0px 1px 0px 0px #f29c93;
+	box-shadow:inset 0px 1px 0px 0px #f29c93;
+	background-color:#c5340c;
+	-moz-border-radius:6px;
+	-webkit-border-radius:6px;
+	border-radius:6px;
+	border:1px solid #821f01;
+	display:inline-block;
+	color:#ffffff;
+	font-family:Arial;
+	font-size:14px;
+	font-weight:normal;
+	padding:6px 24px;
+	text-decoration:none;
+}.download-button:hover {
+	color: #fff;
+	text-decoration: underline;
+}.download-button:active {
+	position:relative;
+	top:1px;
+}
+
+.download-info {
+	font-size: 12px;
+	margin: 10px 0 0;
+}
+
+.download-info i {
+	color: #999;
+	font-style: normal;
+	margin: 0 5px;
 }
 
 .footer {
@@ -90,7 +129,7 @@ a {
 }
 
 .navigation {
-	background: #fefefe url(tile-lt.png) repeat;
+	background: #fefefe url(../images/tile-lt.png) repeat;
 	border-right: 1px solid #ccc;
 	position: absolute;
 	width: 230px;
@@ -154,6 +193,36 @@ a {
 	left: 280px;
 	position: relative;
 	width: 660px;
+}
+
+.features {
+	list-style: none;
+	margin: 30px 0;
+	padding: 0;
+}
+
+.features li {
+	font-size: 16px;
+	font-weight: bold;
+	padding-left: 65px;
+	height: 50px;
+	line-height: 50px;
+}
+
+.features .computed {
+	background: url(../images/icon-computed.png) no-repeat;
+}
+
+.features .declarative {
+	background: url(../images/icon-declarative.png) no-repeat;
+}
+
+.features .mapping {
+	background: url(../images/icon-mapping.png) no-repeat;
+}
+
+.features .refresh {
+	background: url(../images/icon-refresh.png) no-repeat;
 }
 
 .section {

@@ -10,7 +10,8 @@
 		<div class="banner clearfix" role="banner">
 			<p class="title"><span><b>Epoxy</b>.js</span> Elegant Data Binding for Backbone</p>
 			<div class="download">
-				<button>Get it</button>
+				<a href="js/backbone.epoxy.min.js" class="download-button">Download Epoxy 0.9.0</a>
+				<p class="download-info">8k min, 3k gzip <i>|</i> <a href="https://github.com/gmac/backbone.epoxy">GitHub Full Source</a></p>
 			</div>
 		</div>
 		<div class="navigation" role="navigation">
@@ -25,61 +26,33 @@
 			
 			<h2>Two Components, One Tough Bond</h2>
 			
-			<p>Epoxy is an easy and extensible data binding library for Backbone,
-			providing model computations and declarative view binding for a modest
-			total file size (7kb minified, 3.5k gzipped). Epoxy borrows heavily
-			from some great parts of Knockout.js and Ember.js, and tries to
-			provide some of their power through a simple API that still feels
-			tastefully like Backbone. To that end, Epoxy provides extended
-			versions of Backbone's Model and View classes for you to build from.</p>
+			<p>Epoxy is an elegant and extensible data binding library for <a href="http://backbonejs.org">Backbone.js</a>; it provides feature-rich extensions of Backbone's <tt>Model</tt> and <tt>View</tt> components designed to hook view elements directly to data models. Epoxy captures some great aspects of <a href="http://knockoutjs.com">Knockout.js</a> and <a href="http://emberjs.com">Ember.js</a> within a familiar API that feels tastefully like Backbone, all for a modest additional file size (8k min, 3k gzip). Some key features in Epoxy include:</p>
 		
-			Key features of each:
-
-			Epoxy.Model
-			 - observable and computed properties.
-			 - automatic dependency mapping.
-
-			Epoxy.View
-			 - declarative data bindings.
-			 - automatic view updates.
-			 - easily extensible binding handlers.
+			<ul class="features">
+				<li class="computed">Computed Model Attributes</li>
+				<li class="declarative">Declarative View Bindings</li>
+				<li class="mapping">Automated Dependency Mapping</li>
+				<li class="refresh">Automatic View Updates</li>
+			</ul>
 			
-			Browser compatible:
-			 - IE6+
-			 - Firefox 3.6+
-			 - Safari
-			 - Chrome
+			
+			<p>Epoxy builds on <a href="http://jquery.com">jQuery</a>+<a href="http://backbonejs.org">Backbone</a> and works where they work: IE6+, Firefox 3+, Safari, Chrome.</p>
 			
 			<h2>Customize It</h2>
 
-			<p>Data binding is very powerful, and quite slick when you can make it
-			work for your purposes. While Epoxy's default binding handlers only
-			offer the basics, the system is designed to make it --truly-- easy and
-			efficient to compose your own binding hooks. The API has been
-			specifically designed to be simple, and its features slightly limited,
-			both to make it easy for developers to innovate within the system, and
-			to stave off the temptation for messy binding declarations that are
-			too smart for their own good.</p>
+			<p>Simply extend your project from Epoxy components and you're up and running. Data binding can be very powerful, and while Epoxy's default binding handlers only offer the basics, the system is designed to make it --truly-- easy and efficient to compose your own binding hooks. The API has been specifically designed to be simple, and its features slightly limited, both to make it easy for developers to innovate within the system, and to stave off the temptation for messy binding declarations that are too smart for their own good.</p>
 
 			<h2>Use Only What You Need</h2>
 
-			<p>While Epoxy's model and view components are designed to enhance one
-			another's capabilities, they do not depend on one another to function.
-			Therefore, you're welcome to use just Epoxy models or views within
-			your project, omitting the other component entirely (each component
-			weighs in at about 3.5kb, 1.5kb gzipped). The two Epoxy components are
-			available separately so you can include only what your project needs.</p>
+			<p>While Epoxy's model and view components are designed to enhance one another's capabilities, they do not depend on one another to function. Therefore, you're welcome to use just Epoxy models or views within your project, omitting the other component entirely (each component weighs in at about 3.5kb, 1.5kb gzipped). The two Epoxy components are available separately so you can include only what your project needs.</p>
 			
 			<div class="footer">
-				<p>Epoxy.js for Backbone is available in a <a href="https://github.com/gmac/backbone.epoxy">GitHub Repo</a>.<br>
-					&copy; 2013 Greg MacWilliam (<a href="https://twitter.com/gmacwilliam">@gmacwilliam</a>), a project of <a href="http://www.threespot.com">Threespot</a>.</p>
+				<p>Epoxy.js for Backbone is available on <a href="https://github.com/gmac/backbone.epoxy">GitHub</a>.<br>
+				&copy; 2013 Greg MacWilliam (<a href="https://twitter.com/gmacwilliam">@gmacwilliam</a>), a project of <a href="http://www.threespot.com">Threespot</a>.</p>
 			</div>
 		</div>
 	</div>
-	<script src="../lib/jquery.js"></script>
-	<script src="../lib/underscore.js"></script>
-	<script src="../lib/backbone.js"></script>
-	<script src="../backbone.epoxy.min.js"></script>
+	<script src="js/jquery.js"></script>
 	<script src="js/global.js"></script>
 </body>
 </html>
