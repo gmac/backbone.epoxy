@@ -2,15 +2,23 @@
 
 // (c) 2013 Greg MacWilliam
 // Epoxy may be freely distributed under the MIT license.
-// For all details and documentation:
+// For usage and documentation:
 // http://epoxyjs.org
 
-(function( Backbone, _ ) {
+(function() {
 	
+	// Establish operating scope:
+	var root = this;
+	var Backbone = root.Backbone;
+	var _ = root._;
+	
+	
+	// Create Epoxy namespace:
 	Backbone.Epoxy = Backbone.Epoxy || {};
 	
-	// Bindings Map:
-	// stores an attributes binding map while configuring model bindings.
+	
+	// Declare bindings mapper:
+	// will store working dependency maps used to configure model bindings.
 	var bindingsMap;
 	
 	
@@ -93,7 +101,7 @@
 			var params = key;
 			
 			// Convert params into object key/value format:
-			if ( params && typeof params != "object" ) {
+			if ( params && !_.isObject(params) ) {
 				params = {};
 				params[ key ] = value;
 			} else {
@@ -142,7 +150,7 @@
 							
 							// Recursively set new values for a returned params object:
 							// creates a new copy of the stack trace for each new search branch.
-							if ( value && typeof value == "object" ) {
+							if ( value && _.isObject(value) ) {
 								toKeep = this._deepset( value, toKeep, stack.slice().concat([property]) );
 							}
 							
@@ -408,4 +416,4 @@
 		}
 	});
 	
-}( Backbone, _ ));
+}).call( this );

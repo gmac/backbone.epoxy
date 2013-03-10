@@ -2,16 +2,23 @@
 
 // (c) 2013 Greg MacWilliam
 // Epoxy may be freely distributed under the MIT license.
-// For all details and documentation:
+// For usage and documentation:
 // http://epoxyjs.org
 
-(function( Backbone, _ ) {
+(function() {
 	
+	// Establish operating scope:
+	var root = this;
+	var Backbone = root.Backbone;
+	var _ = root._;
+	
+	
+	// Create Epoxy namespace:
 	Backbone.Epoxy = Backbone.Epoxy || {};
 	
 	
-	// Bindings Map:
-	// stores an attributes binding map while configuring view bindings.
+	// Declare bindings mapper:
+	// will store working dependency maps used to configure view bindings.
 	var bindingsMap;
 	
 	
@@ -573,4 +580,4 @@
 		}
 	});
 	
-}( Backbone, _ ));
+}).call( this );
