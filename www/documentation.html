@@ -17,7 +17,7 @@
 		<div class="navigation" role="navigation">
 			<ul class="nav-main clearfix">
 				<li><a href="index.html">About Epoxy.js</a></li>
-				<li><a href="tutorial.html">Getting Started</a></li>
+				<li><a href="tutorials.html">Getting Started</a></li>
 				<li class="active"><a href="documentation.html">Documentation</a></li>
 			</ul>
 			<div class="nav-toc">
@@ -45,7 +45,7 @@
 					<ul>
 						<li><b><a href="#view-extend">extend</a></b></li>
 						<li><b><a href="#view-constructor">constructor</a></b></li>
-						<li><b><a href="#view-context">binding context</a></b></li>
+						<li><b><a href="#view-binding-context">binding context</a></b></li>
 						<li><a href="#view-apply-bindings">applyBindings</a></li>
 						<li><a href="#view-binding-handlers">bindingHandlers</a></li>
 						<li><a href="#view-bindings">bindings</a></li>
@@ -151,9 +151,9 @@ model.addComputed("formattedPrice", {
     }
 });
 
-console.log( model.get("formattedPrice") ); // "$100"
+alert( model.get("formattedPrice") ); // "$100"
 model.set("formattedPrice", "$150");
-console.log( model.get("price") ); // 150</code>	
+alert( model.get("price") ); // 150</code>	
 </pre>
 				
 				<p><b id="model-computed-deps">Automatic Dependency Mapping</b></p>
@@ -261,7 +261,7 @@ model.addComputed("displayName", function() {
 				<p>Performs an internal update on a stored <tt>Array</tt> model attribute (native or observable) using a standard JavaScript array modifier (<tt>pop</tt>, <tt>push</tt>, <tt>reverse</tt>, <tt>shift</tt>, <tt>slice</tt>, <tt>sort</tt>, <tt>splice</tt>, and <tt>unshift</tt>), then triggers a change event for the modified model attribute. Invoke with the model attribute name to modify, a string of the array method name to call, and any additional arguments to be passed into the array method. Returns any results from the array method. Calling <b>modifyArray</b> on a non-array attribute will take no action.</p>
 				
 <pre><button class="run">Run</button><code>var model = new Backbone.Epoxy.Model({wordList:[]});
-model.modifyArray("wordList", "push", "coconut");
+model.modifyArray("wordList", "push", "deathstar");
 alert( model.get("wordList").length );</code>	
 </pre>
 			</div>
@@ -272,8 +272,8 @@ alert( model.get("wordList").length );</code>
 				<p>Performs an internal update on a stored <tt>Object</tt> model attribute (native or observable), then triggers a change event for the modified model attribute. Invoke with the model attribute name to modify, a property name to set on the object, and a value to set as the object property. Setting <tt>undefined</tt> to a property will delete it from the object. Returns the modified object. Calling <b>modifyObject</b> will only take action on model attributes with an assessed type of <tt>"object"</tt>.</p>
 				
 <pre><button class="run">Run</button><code>var model = new Backbone.Epoxy.Model({ wordsDict:{} });
-model.modifyObject("wordsDict", "coconut", true);
-alert( model.get("wordsDict").hasOwnProperty("coconut") );</code>	
+model.modifyObject("wordsDict", "deathstar", true);
+alert( model.get("wordsDict").hasOwnProperty("deathstar") );</code>	
 </pre>
 			</div>
 			
@@ -309,9 +309,9 @@ alert( model.get("wordsDict").hasOwnProperty("coconut") );</code>
 
 				<p>The Epoxy View object extends <tt>Backbone.View</tt>, providing a new view abstract to be extended into your application.</p>
 
-				<p>The Epoxy View provides elegant and extensible hooks for binding a model's attributes directly to DOM elements. When model attributes change, they will automatically trigger refresh of all bound view elements; seamlessly updating your UI without requiring a complete render pass.</p>
+				<p>The Epoxy View provides elegant and extensible hooks for binding a data source (<tt>Backbone.Model</tt> and/or <tt>Backbone.Collection</tt> instances) directly to DOM elements. When data attributes change, they will automatically trigger refresh of all bound view elements; seamlessly updating the view without requiring a complete render pass.</p>
 
-				<p>Note that an Epoxy View may bind directly to a native Backbone Model, or to an <tt>Epoxy.Model</tt> with specialized observable attributes. Because both model types operate through a common API, the Epoxy View does not depend on its <tt>Epoxy.Model</tt> counterpart to support model bindings (unless otherwise noted). Therefore, you're free to exclude <tt>Epoxy.Model</tt> resources from your project if you just want view binding features.</p>
+				<p>Also note that an Epoxy view may bind to a native <tt>Backbone.Model</tt> instance, or to an <tt>Epoxy.Model</tt> with specialized observable attributes. Because both model types operate with a common API, the Epoxy View does not depend on its <tt>Epoxy.Model</tt> counterpart to support model bindings. Therefore, you're free to exclude <tt>Epoxy.Model</tt> resources from your project if you just want view binding features.</p>
 			</div>
 			
 			<div class="section">
@@ -327,19 +327,20 @@ alert( model.get("wordsDict").hasOwnProperty("coconut") );</code>
 			</div>
 			
 			<div class="section">
-				<h3 id="view-context">binding context</h3>
+				<h3 id="view-binding-context">binding context</h3>
 				<code>{$model:model, $collection:collection, [*attributes]}</code>
-				<p>To establish bindings, an Epoxy view generates a <i>binding context</i> with routes pointing to all available <i>data sources</i> and their attributes. Data sources are instances of <tt>Backbone.Model</tt> and/or <tt>Backbone.Collection</tt> that provide themselves and their attributes to the view for binding. By default, an Epoxy view looks for two potential data sources: the view's <b>model</b> property, and its <b>collection</b> property. References to these data sources are automatically configured in the binding context as <tt>$model</tt> and <tt>$collection</tt>. Additionally, aliases to all <tt>$model</tt> attributes are created.</p>
+				<p>To establish bindings, an Epoxy view generates a <i>binding context</i> with routes pointing to all available <i>data sources</i> and their attributes. Data sources are instances of <tt>Backbone.Model</tt> and/or <tt>Backbone.Collection</tt> that provide themselves and their attributes to the view for binding. By default, an Epoxy view looks for two potential data sources: the view's <b>model</b> property, and its <b>collection</b> property. References to these data sources are automatically configured in the binding context as <tt>$model</tt> and <tt>$collection</tt>. Aliases to all <tt>$model</tt> attributes are also created.</p>
+				<p>Additional <tt>Model</tt> and <tt>Collection</tt> data sources may be added to the binding context using the <b><a href="#view-binding-sources">bindingSources</a></b> property.</p>
 			</div>
 			
 			<div class="section">
 				<h3 id="view-apply-bindings">applyBindings</h3>
 				<code>view.applyBindings()</code>
-				<p>Removes any existing view bindings, then applies all bindings defined within the view's <b>bindings</b> object. All bindings are established using the view's <b>$el</b> as the display target, and the view's <b>model</b> as the data target (<b>model</b> must reference a valid <tt>Backbone.Model</tt> instance). A view with invalid display or data targets will apply no bindings. If the <b>bindings</b> object is a string, that string will be used as an attribute selector query for extracting bindings from the view's <b>$el</b> container.</p>
+				<p>Removes any existing view bindings, then applies all bindings defined within the view's <b>bindings</b> object. All bindings are established using the view's <b>$el</b> as the display target, and the view's <b>model</b>, <b>collection</b>, and/or <b>bindingSources</b> properties as the data sources (see <b><a href="#view-binding-context">binding context</a></b> and <b><a href="#view-binding-sources">bindingSources</a></b> for more information). A view with invalid display or data targets will apply no bindings. If the <b>bindings</b> object is a string, that string will be used as an attribute selector query for extracting bindings from the view's <b>$el</b> container.</p>
 
-				<p>The <b>applyBindings</b> method is automatically called by the view constructor after the view's <b>initialize</b> method runs. This allows the <b>initialize</b> step to make adjustments within the view prior to bindings being applied. You generally shouldn't need to call <b>applyBindings</b> manually.</p>
+				<p>The <b>applyBindings</b> method is automatically called by the view constructor <i>after</i> the view's <b>initialize</b> method runs. This allows the <b>initialize</b> step to make adjustments within the view prior to bindings being applied. You generally shouldn't need to call <b>applyBindings</b> manually.</p>
 
-				<p>Also note that view bindings are baked at the time they are applied. All relationships between the model and the view are established during this binding step, and will NOT update automatically to new configurations. Dynamically adding and removing model attributes and/or view bindings will require the view to be completely unbound, and then rebound.</p>
+				<p>Also note that view bindings are baked at the time they are applied. All relationships between data sources and the view are established during this binding step and can only be reconfigured by unbinding and rebinding the view.</p>
 			</div>
 			
 			<div class="section">
@@ -431,7 +432,7 @@ var BindingView = Backbone.Epoxy.View.extend({
 			<div class="section">
 				<h3 id="view-binding-sources">bindingSources</h3>
 				<code>view.bindingSources</code>
-				<p class="draft">This API is a working draft. Implementation is subject to change.</p>
+				<p class="draft">This API is a working draft. Implementation may change.</p>
 				<p>A hash table defining additional binding sources to be added to the view's binding context. Binding sources are instances of <tt>Backbone.Model</tt> and/or <tt>Backbone.Collection</tt>. By default, an Epoxy view configures two potential binding sources: the view's <b>model</b> and <b>collection</b> properties are automatically added to the binding context under the aliases <tt>$model</tt> and <tt>$collection</tt>. Additional model and collection data sources may be specified within the <b>bindingSources</b> hash; these additional data sources will be added into the binding context under the alias <tt>$sourceName</tt>.</p>
 
 				<p>Additionally, model data sources provide aliases to all of their attributes within the binding context. In the case of the default <tt>$model</tt> data source, all model attributes are aliased within the binding context using their normal <tt>attribute</tt> name. For additional model sources added through the <b>bindingSources</b> hash, model attributes are added under the alias <tt>source_attributeName</tt>. This avoids attribute naming conflicts while binding multiple models of the same type.</p>
@@ -522,17 +523,42 @@ var BindingView = Backbone.Epoxy.View.extend({
 				<h3 id="handler-collection">collection</h3>
 				<span class="alias">read-only</span>
 				<code>data-bind="collection:$collectionSource"</code>
-				<p>Manages the display of a <tt>Backbone.Collection</tt>. The bound collection must specify a <tt>Backbone.View</tt> constructor for displaying its models, at which time the <b>collection</b> handler will manage adding, removing, resorting, and resetting a list of those views to synchronize display with the collection's contents. The <b>collection</b> binding performs discrete view management, where collection models will be assigned a single view instance for their lifespans, rather than re-rendering all collection views in response to changes. You may choose to use an <tt>Epoxy.View</tt> constructor for the display of individual collection items, allowing each collection view item to bind to its respective model.</p>
+				<p>Manages the display of a <tt>Backbone.Collection</tt>. The bound collection must specify a <tt>Backbone.View</tt> constructor for displaying its models, at which time the <b>collection</b> handler will manage adding, removing, resorting, and resetting a list of those views to synchronize the display of the collection's contents. The <b>collection</b> binding performs discrete view management, where collection models will be assigned a single view instance for their lifespans, rather than re-rendering all collection views in response to changes. You may choose to use an <tt>Epoxy.View</tt> constructor for the display of individual collection items, allowing each collection view item to bind to its respective model.</p>
 
 				<p>The <b>collection</b> binding requires the following setup:</p>
 
 				<ul>
-					<li>The binding must target a <tt>Backbone.Collection</tt> <a href="#view-binding-sources">data source</a> within the binding context. </li>
+					<li>The binding must target a <tt>Backbone.Collection</tt> data source available within the <b><a href="#view-binding-context">binding context</a></b>. </li>
 
 					<li>The bound collection must have a property called <b>view</b>, which defines a <tt>Backbone.View</tt> constructor for rendering collection items.</li>
 				</ul>
 
-				<p>For a working demonstration of setting up a <b>collection</b> binding, see the <a href="tutorial.html#epoxy-todos">Epoxy ToDos</a> demo.</p>
+<pre class="js"><code>// View for individual collection items:
+var ListItemView = Backbone.View.extend({
+    tagName: "li",
+    initialize: function() {
+        this.$el.text( this.model.get("label") );
+    }
+});
+
+// Collection defining a Model and View:
+var ListCollection = Backbone.Collection.extend({
+    model: Backbone.Model,
+    view: ListItemView
+});
+
+// Binding view for list of collection items:
+var ListView = Backbone.Epoxy.View.extend({
+    el: "&lt;ul data-bind='collection:$collection'&gt;&lt;/ul&gt;",
+    initialize: function() {
+        this.collection = new ListCollection();
+        this.collection.reset([{label: "Luke Skywalker"}, {label: "Han Solo"}]);
+    }
+});
+
+var view = new ListView();</code></pre>
+
+				<p>For a working demonstration of the <b>collection</b> binding, see the <a href="tutorials.html#epoxy-todos">Epoxy ToDos</a> demo.</p>
 			</div>
 			
 			<div class="section">

@@ -29,7 +29,7 @@ var ExampleView = Backbone.View.extend({
 		var run = new Function( js.text() );
 		this.$el.append( "<b class='result'>Result:</b>" );
 		this.$el.append( $(html.text()).addClass("app") );
-		this.$("code").height( Math.max(js.height(), html.height()) );
+		//this.$("code").height( Math.max(js.height(), html.height()) );
 		run();
 	},
 

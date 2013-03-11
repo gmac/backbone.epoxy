@@ -22,6 +22,16 @@
 	var bindingsMap;
 	
 	
+	// Type testing for Backbone Models and Collections:
+	function isModel( obj ) {
+		return obj instanceof Backbone.Model;
+	}
+	
+	function isCollection( obj ) {
+		return obj instanceof Backbone.Collection;
+	}
+	
+	
 	// Adds a data provider to a view:
 	// Data providers are Backbone.Model and Backbone.Collection instances.
 	// @param provider: a provider instance, or a function that returns a provider.
@@ -33,7 +43,7 @@
 		else if (_.isFunction(provider)) provider = provider();
 		
 		// Add Backbone.Model provider instance:
-		if ( provider instanceof Backbone.Model ) {
+		if ( isModel(provider) ) {
 			
 			// Establish provider prefix:
 			var prefix = name ? name+"_" : "";
@@ -71,7 +81,7 @@
 			
 		}
 		// Add Backbone.Collection provider instance:
-		else if ( provider instanceof Backbone.Collection ) {
+		else if ( isCollection(provider) ) {
 			
 			// Create special read-only collection accessor:
 			context[ "$"+(name||"collection") ] = function() {
@@ -282,10 +292,9 @@
 		// Collection: write-only. Manages a list of views bound to a Backbone.Collection.
 		collection: {
 			set: function( $element, collection, target ) {
-				var Collection = Backbone.Collection;
 				
 				// Requires a valid collection argument with an associated view:
-				if ( collection instanceof Collection && _.isFunction(collection.view) ) {
+				if ( isCollection(collection) && _.isFunction(collection.view) ) {
 					
 					var models = collection.models;
 					var views = this.v;
@@ -295,7 +304,7 @@
 					// during init (or failure), the binding will reset.
 					target = target || collection;
 
-					if ( target instanceof Backbone.Model ) {
+					if ( isModel(target) ) {
 						
 						// ADD/REMOVE Event (from a Model):
 						// test if view exists within the binding...
@@ -321,7 +330,7 @@
 							delete views[ target.cid ];
 						}
 						
-					} else if ( target instanceof Collection ) {
+					} else if ( isCollection(target) ) {
 						
 						// SORT/RESET Event (from a Collection):
 						// First test if we're sorting (all views are present):

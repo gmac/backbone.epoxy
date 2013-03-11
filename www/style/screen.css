@@ -346,8 +346,15 @@ pre button {
 	margin-left: 15px;
 }
 
-.example ul {
-	
+.example p,
+.example li {
+	margin: 5px 0;
+}
+
+.example .req {
+	font-size: 12px;
+	font-style: italic;
+	opacity: 0.85;
 }
 
 .draft {
