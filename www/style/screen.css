@@ -62,24 +62,24 @@ a:hover {
 	width: 660px;
 }
 
-.banner .title {
+.title {
 	float: left;
 	font-size: 20px;
 	font-weight: bold;
 	margin: 0;
 }
 
-.banner .title span {
+.title span {
 	color: #c5350c;
 	display: block;
 	font: 60px 'BebasRegular', 'Helvetica Neue', Helvetica, Arial;
 }
 
-.banner .title span b {
+.title b {
 	font-size: 100px;
 }
 
-.banner .download {
+.download {
 	float: left;
 	padding: 64px 0 0 60px;
 }
@@ -429,6 +429,13 @@ pre button {
 		width: auto;
 	}
 	
+	.download {
+		clear: both;
+		float: none;
+		margin: 0;
+		padding: 40px 0 0;
+	}
+	
 	.navigation {
 		border: none;
 		border-bottom: 1px solid #ccc;
@@ -470,6 +477,18 @@ pre button {
 @media only screen and (max-width: 600px) {
 	#page {
 		width: 350px;
+	}
+	
+	.title {
+		font-size: 15px;
+	}
+	
+	.title span {
+		font-size: 45px;
+	}
+	
+	.title b {
+		font-size: 75px;
 	}
 	
 	.nav-main a {

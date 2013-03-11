@@ -1,7 +1,7 @@
 // Backbone.Epoxy
 
 // (c) 2013 Greg MacWilliam
-// Epoxy may be freely distributed under the MIT license.
+// Freely distributed under the MIT license.
 // For usage and documentation:
 // http://epoxyjs.org
 
@@ -814,7 +814,7 @@
 				return $element.val();
 			},
 			set: function( $element, value ) {
-				$element.val( value );
+				if ( $element.val() != value ) $element.val( value );
 			}
 		}
 	};
