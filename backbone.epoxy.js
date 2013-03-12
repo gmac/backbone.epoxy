@@ -887,7 +887,8 @@
 			return function() {
 				var str = readAccessor(params[0]);
 				for ( var i=1, len=params.length; i < len; i++ ) {
-					str = str.replace( "$"+i, readAccessor(params[i]) );
+					// TODO: need to make something like this work: (?<!\\)\$1
+					str = str.replace( new RegExp("\\$"+i, "g"), readAccessor(params[i]) );
 				}
 				return str;
 			}
