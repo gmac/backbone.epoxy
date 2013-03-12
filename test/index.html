@@ -69,7 +69,7 @@
 				<input type="checkbox" class="test-checked-boolean" data-bind="checked:active">
 				<button class="test-enabled" data-bind="enabled:active">yes</button>
 				<button class="test-disabled" data-bind="disabled:active">no</button>
-				<!--span class="active-hidden" data-bind="hidden:active">ON</span-->
+				<p>Y/N : <input type="text" class="test-yes-no" data-bind="sayYesNo:active,events:['keyup']" style="width:15px;"></p>
 			</p>
 		</div>
 		<div class="section">
@@ -95,18 +95,23 @@
 	</div>
 	
 	<div id="mod-view" class="test-view">
-		<p class="test-toggle" data-bind="toggle:active">Toggled ON</p>
-		<p class="test-mod-not" data-bind="toggle:not(active)">Toggled OFF</p>
-		<p class="test-mod-all" data-bind="classes:{hilite:all(firstName,lastName)}">first AND last name.</p>
-		<p class="test-mod-none" data-bind="classes:{hilite:none(firstName,lastName)}">NOT first AND last name.</p>
-		<p class="test-mod-any" data-bind="classes:{hilite:any(firstName,lastName)}">first OR last name.</p>
-		<p class="test-mod-format" data-bind="text:format('Name: $1 $2',firstName,lastName)"></p>
-		
-		<!--div class="section test-collection">
+		<strong>Binding Operators</strong>
+		<div class="section">
+			<p class="test-toggle" data-bind="toggle:active">Toggled ON</p>
+			<p class="test-mod-not" data-bind="toggle:not(active)">Toggled OFF</p>
+			<p class="test-mod-all" data-bind="classes:{hilite:all(firstName,lastName)}">first AND last name.</p>
+			<p class="test-mod-none" data-bind="classes:{hilite:none(firstName,lastName)}">NOT first AND last name.</p>
+			<p class="test-mod-any" data-bind="classes:{hilite:any(firstName,lastName)}">first OR last name.</p>
+			<p class="test-mod-length" data-bind="classes:{hilite:length(checkList)}">Checklist Length</p>
+			<p class="test-mod-format" data-bind="text:format('Name: $1 $2',firstName,lastName)"></p>
+			<p class="test-mod-select" data-bind="text:select(active,firstName,lastName)"></p>
+		</div>
+		<div class="section">
+			<strong>Collection Management</strong>
 			<input class="name-input" type="text" value="">
 			<button class="name-add">Add</button>
-			<ul class="test-collection" data-bind="collection:testCollection"></ul>
-		</div-->
+			<ul class="test-collection" data-bind="collection:$collection"></ul>
+		</div>
 	</div>
 	
 	<script type="text/template-epoxy" id="tmpl-view-tmpl">
@@ -119,10 +124,7 @@
 	<script src="../www/js/jquery.js"></script>
 	<script src="../www/js/underscore.js"></script>
 	<script src="../www/js/backbone.js"></script>
-	<!--script src="../backbone.epoxy-model.js"></script>
-	<script src="../backbone.epoxy-view.js"></script-->
 	<script src="../backbone.epoxy.js"></script>
-	<!--script src="../backbone.epoxy.min.js"></script-->
 	<script src="epoxy-test.js"></script>
 	<script type="text/javascript">
 	$(function() {

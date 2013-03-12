@@ -1,7 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+	<meta charset="utf-8">
 	<title>Epoxy.js : Elegant Data Binding for Backbone : Documentation</title>
+
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="description" content="Epoxy is an elegant and extensible data binding library for Backbone.js designed to hook view elements directly to data models.">
+	<meta name="author" content="Greg MacWilliam">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="apple-mobile-web-app-title" content="Epoxy.js">
+	<meta name="application-name" content="Epoxy.js">
+	
+	<link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon">
+	<link rel="icon" href="images/favicon.ico" type="image/x-icon">
 	<link href="style/reset.css" rel="stylesheet">
 	<link href="style/screen.css" rel="stylesheet">
 </head>
@@ -75,6 +86,7 @@
 						<li><a href="#operator-all">all</a></li>
 						<li><a href="#operator-any">any</a></li>
 						<li><a href="#operator-format">format</a></li>
+						<li><a href="#operator-length">length</a></li>
 						<li><a href="#operator-none">none</a></li>
 						<li><a href="#operator-not">not</a></li>
 						<li><a href="#operator-select">select</a></li>
@@ -82,7 +94,7 @@
 				</div>
 			</div>
 		</div>
-		<div class="main">
+		<div class="main" role="main">
 			<h1>Documentation</h1>
 			
 			<div class="section">
@@ -619,37 +631,47 @@ var view = new ListView();</code></pre>
 			
 			<div class="section">
 				<h2 id="binding-operators">View Binding Operators</h2>
-				<p>Binding operators provide a layer of flexibility for formatting model attribute values directly within a binding declaration, while still conforming to a preset binding API. Binding operators work by wrapping one or more model attribute accessors, allowing their values to be formatted specifically for the context of the binding.</p>
+				<p>Binding operators provide a layer of flexibility for formatting data attributes directly within a binding declaration; they allow values to be formatted for binding-specific implementations:</p>
+
+<pre><code>&lt;span data-bind="toggle:not(firstName)"&gt;Please enter a first name.&lt;/span&gt;</code></pre>
+				
+				<p>Binding operators may be parameterized with any data attribute available in the <a href="#view-binding-context">binding context</a>, or with primitive values (<tt>String</tt>, <tt>Number</tt>, or <tt>Boolean</tt>). Be aware that you may <strong>NOT</strong> nest binding operators within one another &mdash; this is very deliberate, and a principle on which Epoxy is fairly opinionated: application logic does not belong within a binding declaration. If you need to perform multi-pass value transformations, that work should be done within your model or else in a custom binding handler.</p>
 			</div>
 			
 			<div class="section">
 				<h3 id="operator-all">all</h3>
-				<code>data-bind="toggle:all(modelAttribute,modelAttribute)"</code>
-				<p>Assesses one or more model attributes as <tt>true</tt> if <i>all</i> attributes are truthy.</p>
+				<code>data-bind="toggle:all(dataAttribute,[...])"</code>
+				<p>Assesses one or more data attributes as <tt>true</tt> if <i>all</i> attributes are truthy.</p>
 			</div>
 			
 			<div class="section">
 				<h3 id="operator-any">any</h3>
-				<code>data-bind="toggle:any(modelAttribute,modelAttribute)"</code>
-				<p>Assesses one or more model attributes as <tt>true</tt> if <i>any</i> of the attributes are truthy.</p>
+				<code>data-bind="toggle:any(dataAttribute,[...])"</code>
+				<p>Assesses one or more data attributes as <tt>true</tt> if <i>any</i> of the attributes are truthy.</p>
 			</div>
 			
 			<div class="section">
 				<h3 id="operator-format">format</h3>
-				<code>data-bind="text:format('$1 of $2',modelAttribute,modelAttribute)"</code>
-				<p>Formats a string with a series of model attribute replacements. Operates the same as string replacement for <tt>RegExp</tt> capture groups, where field insertions are denoted as <tt>"$1,&nbsp;$2,&nbsp;...&nbsp;$n"</tt>. Escape intentional "$n" patterns within the template string as "\$n". Note that the first value insertion index is 1, not 0.</p>
+				<code>data-bind="text:format('$1 of $2',dataAttribute,dataAttribute)"</code>
+				<p>Formats a string with a series of data attribute replacements. Operates the same as string replacement for <tt>RegExp</tt> capture groups, where field insertions are denoted as <tt>"$1,&nbsp;$2,&nbsp;...&nbsp;$n"</tt>. Escape intentional "$n" patterns within the template string as "\$n". Note that the first value insertion index is 1, not 0.</p>
+			</div>
+			
+			<div class="section">
+				<h3 id="operator-length">length</h3>
+				<code>data-bind="toggle:length(dataAttribute)"</code>
+				<p>Returns the length of an <tt>Array</tt> or <tt>Collection</tt> data attribute, or <tt>0</tt> by default. Useful for loosely-typed assessments of a collection's content status.</p>
 			</div>
 			
 			<div class="section">
 				<h3 id="operator-none">none</h3>
-				<code>data-bind="toggle:none(modelAttribute,modelAttribute)"</code>
-				<p>Assesses one or more model attributes as <tt>true</tt> if <i>none</i> of the attributes are truthy.</p>
+				<code>data-bind="toggle:none(dataAttribute,[...])"</code>
+				<p>Assesses one or more data attributes as <tt>true</tt> if <i>none</i> of the attributes are truthy.</p>
 			</div>
 			
 			<div class="section">
 				<h3 id="operator-not">not</h3>
-				<code>data-bind="toggle:not(modelAttribute)"</code>
-				<p>Inverts the loosely-typed boolean value of a model attribute.</p>
+				<code>data-bind="toggle:not(dataAttribute)"</code>
+				<p>Inverts the loosely-typed boolean value of a data attribute.</p>
 			</div>
 			
 			<div class="section">
@@ -658,7 +680,7 @@ var view = new ListView();</code></pre>
 				<p>Performs a ternary operation using JavaScript's <tt>?:</tt> operator. The <b>select</b> operation receives three arguments: the first argument is assessed as a loosely-typed conditional; if truthy, the second argument is returned; if falsey, the third argument is returned.</p>
 			</div>
 			
-			<div class="footer">
+			<div class="footer" role="contentinfo">
 				<p>Epoxy.js for Backbone is available on <a href="https://github.com/gmac/backbone.epoxy">GitHub</a>.<br>
 					&copy; 2013 Greg MacWilliam (<a href="https://twitter.com/gmacwilliam">@gmacwilliam</a>), a project of <a href="http://www.threespot.com">Threespot</a>.</p>
 			</div>

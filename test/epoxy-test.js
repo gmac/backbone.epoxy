@@ -335,26 +335,23 @@ describe("Backbone.Epoxy.Model", function() {
 // ----------
 describe("Backbone.Epoxy.View", function() {
 	
-	var CollectionModel = Backbone.Model.extend({
-		defaults: {
-			name: ""
-		}
-	});
+	// Collection test components:
 	
 	var CollectionView = Backbone.View.extend({
-		el: "<li><span class='name-dsp'></span><button class='name-remove'>[x]</button></li>",
+		el: "<li><span class='name-dsp'></span> <button class='name-remove'>x</button></li>",
 		initialize: function() {
 			this.$( ".name-dsp" ).text( this.model.get("name") );
 		}
 	});
 	
 	var TestCollection = Backbone.Collection.extend({
-		model: CollectionModel,
+		model: Backbone.Model,
 		view: CollectionView
 	});
 	
 	
-	// Model:
+	// Test model:
+	
 	window.bindingModel = new (Backbone.Epoxy.Model.extend({
 		defaults: {
 			firstName: "Luke",
@@ -385,7 +382,9 @@ describe("Backbone.Epoxy.View", function() {
 		}
 	}));
 	
+	
 	// Basic bindings test view:
+	
 	var domView = new (Backbone.Epoxy.View.extend({
 		el: "#dom-view",
 		model: bindingModel,
@@ -394,14 +393,25 @@ describe("Backbone.Epoxy.View", function() {
 		bindingHandlers: {
 			printArray: function( $element, value ) {
 				$element.text( value.slice().sort().join(", ") );
+			},
+			sayYesNo: {
+				get: function( $element ) {
+					return {active: $element.val().indexOf("Y") === 0 };
+				},
+				set: function( $element, value ) {
+					$element.val( value ? "Y" : "N" );
+				}
 			}
 		}
 	}));
 	
+	
 	// Modifiers / Collections testing view:
+	
 	var modView = new (Backbone.Epoxy.View.extend({
 		el: "#mod-view",
 		model: bindingModel,
+		collection: new TestCollection(),
 		bindings: "data-bind",
 
 		events: {
@@ -413,7 +423,7 @@ describe("Backbone.Epoxy.View", function() {
 			var input = this.$( ".name-input" );
 			
 			if ( input.val() ) {
-				this.model.get( "testCollection" ).add({
+				this.collection.add({
 					name: input.val()
 				});
 				input.val("");
@@ -422,10 +432,12 @@ describe("Backbone.Epoxy.View", function() {
 		
 		onRemoveName: function( evt ) {
 			var i = $( evt.target ).closest( "li" ).index();
-			var col = this.model.get( "testCollection" );
-			col.remove( col.at(i) );
+			this.collection.remove( this.collection.at(i) );
 		}
 	}));
+	
+	
+	// Bindings map declaration:
 	
 	var tmplView = new (Backbone.Epoxy.View.extend({
 		el: $("#tmpl-view-tmpl").html(),
@@ -451,6 +463,7 @@ describe("Backbone.Epoxy.View", function() {
 		bindingModel.observableDefaults.checkList = [ "b" ];
 		bindingModel.set( bindingModel.defaults );
 		bindingModel.set( bindingModel.observableDefaults );
+		modView.collection.reset();
 	});
 	
 	
@@ -499,6 +512,28 @@ describe("Backbone.Epoxy.View", function() {
 		}
 		
 		expect( testForError ).toThrow();
+	});
+	
+	
+	it("should allow custom bindings to set data into the view.", function() {
+		var $els = $(".test-custom-binding");
+		expect( $els.text() ).toBe( "b" );
+		bindingModel.set("checkList", ["c","a"]);
+		expect( $els.text() ).toBe( "a, c" );
+	});
+	
+	
+	it("should allow custom bindings to get data from the view.", function() {
+		var $el = $(".test-yes-no");
+		expect( $el.val() ).toBe( "Y" );
+		
+		// Change through model, look for view change:
+		bindingModel.set("active", false);
+		expect( $el.val() ).toBe( "N" );
+		
+		// Change through view, look for model change:
+		$el.val( "Y" ).trigger( "change" );
+		expect( bindingModel.get("active") ).toBe( true );
 	});
 	
 	
@@ -587,17 +622,64 @@ describe("Backbone.Epoxy.View", function() {
 		expect( $el.hasClass("active") ).toBe( false );
 	});
 	
-	/*
-	it("binding 'collection:' should establish a one-way binding that displays a Backbone.Collection.", function() {
-		//var $el = $(".test-css");
-		var collection = bindingModel.get( "testCollection" );
-		collection.reset([
-			{name: "Luke Skywalker"},
+	
+	it("binding 'collection:' should update display in response Backbone.Collection 'reset' events.", function() {
+		var $el = $(".test-collection");
+		
+		modView.collection.reset([
+			{name: "Luke Skywalker"}
+		]);
+		expect( $el.children().length ).toBe( 1 );
+		
+		modView.collection.reset([
 			{name: "Hans Solo"},
 			{name: "Chewy"}
 		]);
+		expect( $el.children().length ).toBe( 2 );
 	});
-	*/
+
+	
+	it("binding 'collection:' should update display in response Backbone.Collection 'add' events.", function() {
+		var $el = $(".test-collection");
+		
+		modView.collection.add({name: "Luke Skywalker"});
+		expect( $el.children().length ).toBe( 1 );
+		
+		modView.collection.add([
+			{name: "Hans Solo"},
+			{name: "Chewy"}
+		]);
+		expect( $el.children().length ).toBe( 3 );
+	});
+	
+	
+	it("binding 'collection:' should update display in response Backbone.Collection 'remove' events.", function() {
+		var $el = $(".test-collection");
+		
+		modView.collection.add({name: "Luke Skywalker"});
+		expect( $el.children().length ).toBe( 1 );
+		
+		modView.collection.remove( modView.collection.at(0) );
+		expect( $el.children().length ).toBe( 0 );
+	});
+	
+	
+	it("binding 'collection:' should update display in response Backbone.Collection 'sort' events.", function() {
+		var $el = $(".test-collection");
+		
+		modView.collection.reset([
+			{name: "B"},
+			{name: "A"}
+		]);
+		expect( $el.find(":first-child .name-dsp").text() ).toBe( "B" );
+		
+		modView.collection.comparator = function( model ) { return model.get("name"); };
+		modView.collection.sort();
+		modView.collection.comparator = null;
+		
+		expect( $el.find(":first-child .name-dsp").text() ).toBe( "A" );
+	});
+	
 	
 	it("binding 'css:' should establish a one-way binding with an element's css styles.", function() {
 		var $el = $(".test-css");
@@ -656,28 +738,20 @@ describe("Backbone.Epoxy.View", function() {
 	});
 	
 	
-	it("binding 'value:' should establish a two-way binding with an input field.", function() {
+	it("binding 'value:' should set a value from the model into the view.", function() {
 		var $el = $(".test-input-first");
 		expect( $el.val() ).toBe( "Luke" );
+	});
+	
+	
+	it("binding 'value:' should set a value from the view into the model.", function() {
+		var $el = $(".test-input-first");
 		$el.val( "Anakin" ).trigger("change");
 		expect( bindingModel.get("firstName") ).toBe( "Anakin" );
 	});
 	
 	
-	it("should allow custom bindings to set data into the view.", function() {
-		var $els = $(".test-custom-binding");
-		expect( $els.text() ).toBe( "b" );
-		bindingModel.set("checkList", ["c","a"]);
-		expect( $els.text() ).toBe( "a, c" );
-	});
-	
-	
-	it("should allow custom bindings to get data from the view.", function() {
-		
-	});
-	
-	
-	it("modifying with not() should negate a binding value.", function() {
+	it("operating with not() should negate a binding value.", function() {
 		var $el = $(".test-mod-not");
 		expect( $el.is(":visible") ).toBe( false );
 		bindingModel.set("active", false);
@@ -685,7 +759,7 @@ describe("Backbone.Epoxy.View", function() {
 	});
 	
 	
-	it("modifying with all() should bind true when all bound values are truthy.", function() {
+	it("operating with all() should bind true when all bound values are truthy.", function() {
 		var $el = $(".test-mod-all");
 		expect( $el.hasClass("hilite") ).toBe( true );
 		bindingModel.set("firstName", "");
@@ -693,7 +767,7 @@ describe("Backbone.Epoxy.View", function() {
 	});
 	
 	
-	it("modifying with none() should bind true when all bound values are falsy.", function() {
+	it("operating with none() should bind true when all bound values are falsy.", function() {
 		var $el = $(".test-mod-none");
 		expect( $el.hasClass("hilite") ).toBe( false );
 		bindingModel.set({
@@ -704,7 +778,7 @@ describe("Backbone.Epoxy.View", function() {
 	});
 	
 	
-	it("modifying with any() should bind true when any bound value is truthy.", function() {
+	it("operating with any() should bind true when any bound value is truthy.", function() {
 		var $el = $(".test-mod-any");
 		expect( $el.hasClass("hilite") ).toBe( true );
 		bindingModel.set("firstName", "");
@@ -714,12 +788,29 @@ describe("Backbone.Epoxy.View", function() {
 	});
 	
 
-	it("modifying with format() should bind true when any bound value is truthy.", function() {
+	it("operating with format() should bind true when any bound value is truthy.", function() {
 		var $el = $(".test-mod-format");
 		expect( $el.text() ).toBe( "Name: Luke Skywalker" );
-		bindingModel.set("firstName", "Charlie");
-		expect( $el.text() ).toBe( "Name: Charlie Skywalker" );
-		bindingModel.set("lastName", "Brown");
-		expect( $el.text() ).toBe( "Name: Charlie Brown" );
+		bindingModel.set({
+			firstName: "Han",
+			lastName: "Solo"
+		});
+		expect( $el.text() ).toBe( "Name: Han Solo" );
+	});
+	
+	
+	it("operating with select() should perform a ternary return from three values.", function() {
+		var $el = $(".test-mod-select");
+		expect( $el.text() ).toBe( "Luke" );
+		bindingModel.set("active", false);
+		expect( $el.text() ).toBe( "Skywalker" );
+	});
+	
+	
+	it("operating with length() should assess the length of an array/collection.", function() {
+		var $el = $(".test-mod-length");
+		expect( $el.hasClass("hilite") ).toBe( true );
+		bindingModel.set("checkList", []);
+		expect( $el.hasClass("hilite") ).toBe( false );
 	});
 });

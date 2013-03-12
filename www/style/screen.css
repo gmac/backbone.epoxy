@@ -45,6 +45,11 @@ a:hover {
 	color: #c5350c;
 }
 
+strong {
+	color: #c5350c;
+	font-weight: bold;
+}
+
 #page {
 	background-color: #fff;
 	font: 14px/1.5em 'Helvetica Neue', Helvetica, Arial;

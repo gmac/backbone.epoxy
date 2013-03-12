@@ -701,7 +701,7 @@
 					// Default target to the bound collection object:
 					// during init (or failure), the binding will reset.
 					target = target || collection;
-
+					
 					if ( isModel(target) ) {
 						
 						// ADD/REMOVE Event (from a Model):
@@ -731,8 +731,9 @@
 					} else if ( isCollection(target) ) {
 						
 						// SORT/RESET Event (from a Collection):
-						// First test if we're sorting (all views are present):
-						var sort = _.every(models, function( model ) {
+						// First test if we're sorting...
+						// (we have models and all their views are present)
+						var sort = models.length && _.every(models, function( model ) {
 							return views.hasOwnProperty(model.cid);
 						});
 						
@@ -851,7 +852,15 @@
 				return result;
 			}
 		},
-	
+		
+		// Reads the length of the accessed property:
+		// assumes accessor value to be an Array or Collection; defaults to 0.
+		length: function( accessor ) {
+			return function() {
+				return readAccessor( accessor ).length || 0;
+			}
+		},
+		
 		// Tests if none of the provided accessors are truthy (and not):
 		none: function() {
 			var params = arguments;
@@ -969,10 +978,10 @@
 	_.extend(EpoxyBinding.prototype, Backbone.Events, {
 		// Empties all stored sub-views from the binding:
 		empty: function() {
-			for (var view in this.v) {
-				if ( this.v.hasOwnProperty(view) ) {
-					view.remove();
-					delete this.v[ view ];
+			for (var cid in this.v) {
+				if ( this.v.hasOwnProperty(cid) ) {
+					this.v[ cid ].remove();
+					delete this.v[ cid ];
 				}
 			}
 		},
