@@ -116,8 +116,8 @@ var view = new BindingView({model: bindModel});</code></pre>
 &lt;/div&gt;</code></pre>
 </div>
 
-			<p>In this example, we create a new instance of <tt>Epoxy.View</tt>, provide it a native Backbone model, then uses the view's <b>bindings</b> hash to declare binds between view selectors and model attributes.</p>
-			<p>Binding declarations are formatted as <tt>"handler:dataSource"</tt>. Basically, that's a key/value pair where the <tt>key</tt> defines a <i>handler method</i> to perform the binding, and the <tt>value</tt> is a <i>data source</i> to populate the binding with. Epoxy provides a base set of <a href="#">binding handlers</a>, and you're welcome to <a href="#binding-handlers">add your own</a>. Data sources reference attributes on the view's <b>model</b> in most common binding implementations.</p>
+			<p>In this example, we create a new instance of <tt>Epoxy.View</tt>, provide it a native Backbone model, then use the view's <b>bindings</b> hash to declare bindings between view selectors and model attributes.</p>
+			<p>Binding declarations are formatted as <tt>"handler:dataSource"</tt>. Basically, that's a key/value pair where the <tt>key</tt> defines a <i>handler method</i> to perform the binding, and the <tt>value</tt> is a <i>data source</i> to populate the binding with. Epoxy provides a base set of <a href="documentation.html#binding-handlers">binding handlers</a>, and you're welcome to <a href="documentation.html#view-binding-handlers">add your own</a>. Data sources reference attributes on the view's <b>model</b> in most common binding implementations.</p>
 	
 			<p>In the above example, <tt>value:firstName</tt> establishes a two-way binding between the text input's <b>value</b> property and the bound model's <b>firstName</b> attribute. Likewise, <tt>text:firstName</tt> establishes a one-way binding that populates the bound element's <b>text</b> with the model's <b>firstName</b> attribute. Lastly, <tt>events:['keyup']</tt> is used to specify DOM events that the binding should respond to in addition to the default <tt>"change"</tt> event.</p>
 			
@@ -366,11 +366,11 @@ var view = new Backbone.Epoxy.View({
 			
 			<p>The only catch with binding operators is that they may <strong>NOT</strong> be nested. Binding operators only accept primitives and binding-context values. This is a deliberate point on which Epoxy is fairly opinionated: application logic does not belong in your binding declarations. If a value requires more than a simple formatting pass, then it should be pre-processed within a model, or else applied to the view using a custom handler.</p>
 			
-			<p>See a full list of available operators in the <a href="documentation.html#binding-operators">binding operators</a> documentation.</p>
+			<p>See a full list of available <a href="documentation.html#binding-operators">binding operators</a> in documentation.</p>
 
 			<h2 id="binding-handlers">Custom Binding Handlers</h2>
 
-			<p>Epoxy provides a collection of default binding handlers to cover many basic view operations. For everything else, developers are encouraged to write their own binding handlers for specific operations within the view. Custom bindings handlers are easy to define:</p>
+			<p>Epoxy provides a collection of default <a href="documentation.html#binding-handlers">binding handlers</a> to cover many basic view operations. For everything else, developers are encouraged to write their own binding handlers for specific operations within the view. Custom bindings handlers are easy to define:</p>
 
 <div class="example">
 <ul class="tabs">
@@ -405,7 +405,7 @@ var view = new BindingView({model: model});</code></pre>
 
 			<p>In the above example, we've set up a custom binding handler called <tt>listing</tt> to neatly print out an array of values. That custom handler may then be declared within the view's bindings, as seen in the <tt>"listing:shipsList"</tt> binding.</p>
 			
-			<p>A binding handler is just a function that accepts two arguments: the first is a jQuery object wrapping the bound element, and the second is the model value being provided to the binding. Within a custom binding handler, you simply specify a process by which the value is formatted and then applied to the element. Note, the above example demonstrates a simple <i>read-only</i> binding.</p>
+			<p>A binding handler is just a function that accepts two arguments: the first is a jQuery object wrapping the bound element, and the second is the data value being provided to the binding. Within a custom binding handler, you simply specify a process by which the value is formatted and then applied to the element. Note, the above example demonstrates a simple <i>read-only</i> binding.</p>
 			
 			<p>Learn more about custom handlers and setting up two-way bindings in the <b><a href="documentation.html#view-binding-handlers">View.bindingHandlers</a></b> documentation.</p>
 			
@@ -448,7 +448,9 @@ var view = new ListView();</code></pre>
 &lt;/div&gt;</code></pre>
 </div>
 			
-			<p>In the above example, we've used <tt>data-bind="collection:$collection"</tt> to bind an unordered list's contents to the view's <b>collection</b> data source. If our view defined a <b>model</b> property, then <tt>$model</tt> and all of its attributes would also be available within the binding context. Keep in mind that you can always pass direct references to a data source into a binding; this can be very handy when setting up custom data bindings... see the <a href="#epoxy-todos">Epoxy ToDos</a> demo for some ideas on this.</p>
+			<p>In the above example, we've used <tt>data-bind="collection:$collection"</tt> to bind an unordered list's contents to the view's <b>collection</b> data source. The underlying <tt>Backbone.Collection</tt> instance defines a <b>view</b> property for the binding to use while constructing model views.</p>
+			
+			<p>For more details on setting up a collection binding, see the <a href="documentation.html#handler-collection">collection handler</a> documentation. For more examples on using data source bindings, see the <a href="#epoxy-todos">Epoxy ToDos</a> demo below.</p>
 			
 			<h2 id="epoxy-todos">Epoxy ToDos</h2>
 
@@ -541,14 +543,14 @@ var app = new TodoAppView();</code></pre>
 			<ul>
 				<li><tt>TodoItemModel</tt> : this is a native Backbone model used to store the data required for each individual todo; in this example, each todo item has a <tt>todo</tt> caption, and a <tt>complete</tt> status.</li>
 				
-				<li><tt>TodoItemView</tt> : this is an Epoxy view used for the display of each individual todo list item. This view constructs a DOM fragment with a checkbox and text input, and then binds those elements' values to the view's model. In addition, the view adds a few extra binding handlers to help manage the view: the <tt>readonly:</tt> handler toggles the text input's <tt>"readonly"</tt> property, and the <tt>save:</tt> binding is used used to call <b>save</b> on the bound model after elements are changed.</li>
+				<li><tt>TodoItemView</tt> : this is an Epoxy view used for the display of each individual todo list item. This view constructs a DOM fragment with a checkbox and text input, and then binds those elements' values to the view's model. In addition, the view adds a few custom binding handlers to help manage the view: the <tt>readonly:</tt> handler toggles the text input's <tt>"readonly"</tt> property, and the <tt>save:</tt> binding is used used to call <b>save</b> on the bound model after elements are changed.</li>
 				
 				<li><tt>TodosCollection</tt> : this is a native Backbone collection used to manage our active list of todos. It cites <tt>TodoItemModel</tt> as its model constructor, and <tt>TodoItemView</tt> as its view constructor. Remember, a collection must specify a <b>view</b> constructor property in order to work with Epoxy's <tt>collection:</tt> binding.</li>
 				
 				<li><tt>TodoAppView</tt> : finally, this Epoxy view manages the main application container view. It uses native Backbone <tt>events</tt> to setup the application's primary controls used to add and remove items from the <tt>TodosCollection</tt> instance. It also applies an Epoxy <tt>collection:</tt> binding to the view's default collection source (referenced as <tt>$collection</tt>).</li>
 			</ul>
 			
-			<p>This application certainly did not require data binding to make it work. In fact, data binding is generally overkill for most common application scenarios. Keep that in mind while assessing the goals and objectives of your projects... Ironically, the author of this library is a very reserved advocate of data binding: while data binding is a great tool that can work wonders at the moments when you need it, it should NOT be considered an automatic choice approach for setting up an interface.</p>
+			<p>Mind you, this application certainly did not require data binding to make it work. In fact, data binding is overkill for many common application scenarios. Keep that in mind while assessing the goals and objectives of your projects. Ironically, the author of this library is a very reserved advocate of data binding: while data binding is a great tool at the moments when you need it, it should NOT be considered as an automatic choice approach when creating an interface; especially when using Backbone. However when a situation does lend itself to data binding... you'd like it to be done well.</p>
 			
 			<div class="footer" role="contentinfo">
 				<p>Epoxy.js for Backbone is available on <a href="https://github.com/gmac/backbone.epoxy">GitHub</a>.<br>

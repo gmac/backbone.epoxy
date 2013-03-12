@@ -63,7 +63,7 @@ strong {
 	left: 280px;
 	position: relative;
 	margin-bottom: 40px;
-	padding: 25px 0 40px;
+	padding: 15px 0 40px;
 	width: 660px;
 }
 
@@ -162,8 +162,14 @@ strong {
 	padding: 0;
 }
 
-.nav-main li.active {
+.nav-main li:hover {
+	text-decoration: underline;
+}
+
+.nav-main li.active,
+.nav-main li.active:hover {
 	background-color: #c5350c;
+	text-decoration: none;
 }
 
 .nav-main a {
