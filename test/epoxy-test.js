@@ -537,6 +537,52 @@ describe("Backbone.Epoxy.View", function() {
 	});
 	
 	
+	it("should allow multiple data sources and their namespaced attributes to be defined through 'bindingSources'.", function() {
+		var m1 = new Backbone.Model({name: "Luke"});
+		var m2 = new Backbone.Collection();
+		var m3 = new Backbone.Model({name: "Han"});
+		var m4 = new Backbone.Collection();
+		var v1, v2, v3, v4, v5, v6;
+		
+		var sourceView = new (Backbone.Epoxy.View.extend({
+			el: "<div data-bind='b1:$model, b2:$collection, b3:$mod2, b4:$col2, b5:name, b6:mod2_name'></div>",
+			model: m1,
+			collection: m2,
+			bindingSources: {
+				mod2: m3,
+				col2: m4
+			},
+			bindingHandlers: {
+				b1: function( $el, value ) {
+					v1 = value;
+				},
+				b2: function( $el, value ) {
+					v2 = value;
+				},
+				b3: function( $el, value ) {
+					v3 = value;
+				},
+				b4: function( $el, value ) {
+					v4 = value;
+				},
+				b5: function( $el, value ) {
+					v5 = value;
+				},
+				b6: function( $el, value ) {
+					v6 = value;
+				}
+			}
+		}));
+		
+		expect( v1 ).toBe( m1 );
+		expect( v2 ).toBe( m2 );
+		expect( v3 ).toBe( m3 );
+		expect( v4 ).toBe( m4 );
+		expect( v5 ).toBe( "Luke" );
+		expect( v6 ).toBe( "Han" );
+	});
+	
+	
 	it("binding 'attr:' should establish a one-way binding with an element's attribute definitions.", function() {
 		var $el = $(".test-attr-multi");
 		expect( $el.attr("href") ).toBe( "b" );
