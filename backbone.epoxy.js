@@ -42,56 +42,59 @@
 	
 	Epoxy.Model = Backbone.Model.extend({
 		
-		// Constructor function override:
-		// configures computed model around default Backbone model.
+		// Backbone.Model constructor override:
+		// configures observable model attributes around the underlying native Backbone model.
 		constructor: function() {
 			this.obs = {};
 			modelSuper( this, "constructor", arguments );
 			
-			// Flag "init" to delay observables from self-initializing:
+			// Flag "init" status to delay observables from self-initializing:
+			// we'll need to hold off initializing observables until all presets are constructed.
 			this._init = true;
 			
-			// Add all observable properties:
+			// Add all default observable attributes:
 			if ( this.observableDefaults ) {
 				_.each(this.observableDefaults, function( value, attribute ) {
 					this.addObservable( attribute, isFunction(value) ? value() : value );
 				}, this);
 			}
 			
-			// Add all observable computed properties:
+			// Add all computed observables:
 			if ( this.computeds ) {
-				_.each(this.computeds, function( param, attribute ) {
-					this.addComputed( attribute, param );
+				_.each(this.computeds, function( params, attribute ) {
+					this.addComputed( attribute, params );
 				}, this);
 			}
 			
-			// Initialize all observable properties:
-			_.each(this.obs, function( observable, property ) {
+			// Initialize all observable attributes:
+			// all presets have been constructed and may reference each other now.
+			_.each(this.obs, function( observable ) {
 				observable.init();
 			});
 			
-			// Unflag "init": observables will now self-initialize.
+			// Unflag "init"; observables will now self-initialize.
 			delete this._init;
 		},
 		
 		// Backbone.Model.get() override:
-		// accesses observable properties & maps computed dependency bindings.
+		// provides access to observable attributes,
+		// and maps computed dependency references while establishing bindings.
 		get: function( attribute ) {
 			
-			// Automatically register bindings while building a computed dependency graph:
+			// Automatically register bindings while building out computed dependency graphs:
 			modelMap && modelMap.push( [attribute, this] );
 			
-			// Return observable property value, if available:
+			// Return an observable property value, if available:
 			if ( this.hasObservable(attribute) ) {
 				return this.obs[ attribute ].get();
 			}
 			
-			// Default to normal Backbone.Model getter:
+			// Default to native Backbone.Model get operation:
 			return modelSuper( this, "get", arguments );
 		},
 		
 		// Gets a copy of a model attribute value:
-		// Arrays and Object values will return a shallow clone,
+		// Array and Object values will return a shallow copy,
 		// primitive values will be returned directly.
 		getCopy: function( attribute ) {
 			var value = this.get( attribute );
@@ -105,11 +108,12 @@
 		},
 		
 		// Backbone.Model.set() override:
-		// processes observableized properties, then passes result through to underlying model.
+		// will process any observable attribute setters,
+		// and then pass along all results to the underlying model.
 		set: function( key, value, options ) {
 			var params = key;
 			
-			// Convert params into object key/value format:
+			// Convert ["attribute"/value] arguments into {key:value} format:
 			if ( params && !isObject(params) ) {
 				params = {};
 				params[ key ] = value;
@@ -117,42 +121,44 @@
 				options = value;
 			}
 			
-			// Set valid options definition:
+			// Default options definition:
 			options = options || {};
 
-			// While not unsetting:
+			// Attempt to set observable attributes while not unsetting:
 			if ( !options.unset ) {
-				// {field0:"value0", field1:"value1"}
-				// Test all setting properties against observableized properties:
-				// replace all observableized fields with their mutated value(s).
+				// All param properties are tested against observable setters,
+				// properties set to observables will be removed from the params table.
+				// Optionally, an observable setter may return key/value pairs to be merged into the set.
 				params = modelDeepSet(this, params, {}, []);
 			}
 			
+			// Pass all resulting set params along to the underlying Backbone Model.
 			return modelSuper( this, "set", [params, options] );
 		},
 		
 		// Backbone.Model.destroy() override:
-		// clears all computed properties before destroying.
+		// clears all observable attributes before destroying.
 		destroy: function() {
 			this.clearObservables();
 			return modelSuper( this, "destroy", arguments );
 		},
 		
-		// Adds a observable property to the model:
-		// observable property values may contain any object type.
-		addObservable: function( property, value ) {
-			this.removeObservable( property );
-			this.obs[ property ] = new EpoxyObservable( this, property, {value: value} );
+		// Adds an observable attribute to the model:
+		// observable attribute values may store any object type.
+		addObservable: function( attribute, value ) {
+			this.removeObservable( attribute );
+			this.obs[ attribute ] = new EpoxyObservable( this, attribute, {value: value} );
+			return this;
 		},
 		
-		// Adds a observable computed property to the model:
-		// computed properties will construct customized values.
-		// @param property (string)
+		// Adds a computed observable attribute to the model:
+		// computed attribute will assemble and return customized values.
+		// @param attribute (string)
 		// @param getter (function) OR params (object)
 		// @param [setter (function)]
 		// @param [dependencies ...]
-		addComputed: function( property, getter, setter ) {
-			this.removeObservable( property );
+		addComputed: function( attribute, getter, setter ) {
+			this.removeObservable( attribute );
 			
 			var params = getter;
 			
@@ -174,33 +180,36 @@
 				params.deps = array.slice.call( arguments, depsIndex );
 			}
 			
-			// Create new computed property:
-			this.obs[ property ] = new EpoxyObservable( this, property, params );
+			// Create a new computed attribute:
+			this.obs[ attribute ] = new EpoxyObservable( this, attribute, params );
+			return this;
 		},
 		
-		// Tests the model for a observable property definition:
+		// Tests the model for a observable attribute definition:
 		hasObservable: function( attribute ) {
 			return this.obs.hasOwnProperty( attribute );
 		},
 		
-		// Removes a observable property from the model:
+		// Removes an observable attribute from the model:
 		removeObservable: function( attribute ) {
 			if ( this.hasObservable(attribute) ) {
 				this.obs[ attribute ].dispose();
 				delete this.obs[ attribute ];
 			}
+			return this;
 		},
 
-		// Unbinds all observable properties:
+		// Removes all observable attributes:
 		clearObservables: function() {
 			for ( var attribute in this.obs ) {
 				this.removeObservable( attribute );
 			}
+			return this;
 		},
 		
-		// Array attribute modifier method:
-		// performs array ops on an array attribute, then fires change.
-		// No action is taken if the attribute value isn't an array.
+		// Internal array value modifier:
+		// performs array ops on a stored array value, then fires change.
+		// No action is taken if the specified attribute value is not an array.
 		modifyArray: function( attribute, method ) {
 			var obj = this.get( attribute );
 			
@@ -213,14 +222,14 @@
 			return null;
 		},
 		
-		// Object attribute modifier method:
-		// sets new object property values, then fires change.
-		// No action is taken if the observable value isn't an object.
+		// Internal object value modifier:
+		// sets new property values on a stored object value, then fires change.
+		// No action is taken if the specified attribute value is not an object.
 		modifyObject: function( attribute, property, value ) {
 			var obj = this.get( attribute );
 			var change = false;
 			
-			// If property is an Object:
+			// If property is Object:
 			if ( isObject(obj) ) {
 				
 				// Delete existing property in response to undefined values:
@@ -252,31 +261,31 @@
 	// and allows observable attributes to set one another in the process.
 	// @param model: target Epoxy model on which to operate.
 	// @param toTest: an object of key/value pairs to scan through.
-	// @param toKeep: non-observable properties to keep and eventually pass along to the model.
+	// @param toKeep: non-observable attributes to keep and eventually pass along to the model.
 	// @param trace: property stack trace; prevents circular setter loops.
 	function modelDeepSet( model, toTest, toKeep, stack ) {
 		
 		// Loop through all test properties:
-		for ( var property in toTest ) {
-			if ( toTest.hasOwnProperty(property) ) {
+		for ( var attribute in toTest ) {
+			if ( toTest.hasOwnProperty(attribute) ) {
 				
 				// Pull each test value:
-				var value = toTest[ property ];
+				var value = toTest[ attribute ];
 				
-				if ( model.hasObservable(property) ) {
+				if ( model.hasObservable(attribute) ) {
 					
-					// Has a observable property:
-					// comfirm property does not already exist within the stack trace.
-					if ( !stack.length || _.indexOf(stack, property) < 0 ) {
+					// Has a observable attribute:
+					// comfirm attribute does not already exist within the stack trace.
+					if ( !stack.length || _.indexOf(stack, attribute) < 0 ) {
 						
 						// Non-recursive:
-						// set and collect value from observable property. 
-						value = model.obs[property].set(value);
+						// set and collect value from observable attribute. 
+						value = model.obs[attribute].set(value);
 						
 						// Recursively set new values for a returned params object:
 						// creates a new copy of the stack trace for each new search branch.
 						if ( value && isObject(value) ) {
-							toKeep = modelDeepSet( model, value, toKeep, stack.slice().concat([property]) );
+							toKeep = modelDeepSet( model, value, toKeep, stack.slice().concat([attribute]) );
 						}
 						
 					} else {
@@ -286,9 +295,9 @@
 					}
 					
 				} else {
-					// No observable property:
+					// No observable attribute:
 					// set the value to the keeper values.
-					toKeep[ property ] = value;
+					toKeep[ attribute ] = value;
 				}
 			}
 		}
@@ -346,26 +355,26 @@
 			
 				// Compile normalized bindings array:
 				// defines event types by name with their associated targets.
-				_.each(this.deps, function( property ) {
+				_.each(this.deps, function( attribute ) {
 					var target = this.model;
 				
-					// Unpack any provided array property as: [propName, target].
-					if ( isArray(property) ) {
-						target = property[1];
-						property = property[0];
+					// Unpack any provided array attribute as: [propName, target].
+					if ( isArray(attribute) ) {
+						target = attribute[1];
+						attribute = attribute[0];
 					}
 					
-					// Normalize property names to include a "change:" prefix:
-					if ( !!property.indexOf("change:") ) {
-						property = "change:"+property;
+					// Normalize attribute names to include a "change:" prefix:
+					if ( !!attribute.indexOf("change:") ) {
+						attribute = "change:"+attribute;
 					}
 
 					// Populate event target arrays:
-					if ( !bindings.hasOwnProperty(property) ) {
-						bindings[property] = [ target ];
+					if ( !bindings.hasOwnProperty(attribute) ) {
+						bindings[attribute] = [ target ];
 					
-					} else if ( !_.contains(bindings[property], target) ) {
-						bindings[property].push( target );
+					} else if ( !_.contains(bindings[attribute], target) ) {
+						bindings[attribute].push( target );
 					}
 				
 				}, this);
@@ -403,7 +412,7 @@
 			return null;
 		},
 		
-		// Fires a change event for the observable property on the parent model:
+		// Fires a change event for the observable attribute on the parent model:
 		fire: function() {
 			this.model.trigger( "change change:"+this.name );
 		},
@@ -567,7 +576,7 @@
 				// -> Direct view.model attributes use normal names.
 				// -> Attributes from additional sources are named as "source_attribute".
 				context[ prefix+attribute ] = function( value ) {
-					// Record property to binding map, when enabled:
+					// Record attribute to binding map, when enabled:
 					viewMap && viewMap.push([source, "change:"+attribute]);
 
 					// Get / Set value:
@@ -576,7 +585,7 @@
 							// Set Object (non-null, non-array) hashtable value:
 							return source.set( value );
 						}
-						// Set single property/value pair:
+						// Set single attribute/value pair:
 						return source.set( attribute, value );
 					}
 					return source.get( attribute );
