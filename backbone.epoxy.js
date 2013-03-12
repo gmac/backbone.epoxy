@@ -257,20 +257,22 @@
 
 	
 	// Model deep-setter:
-	// Used to collect returns from observable setters that will pass back model attributes,
-	// and allows observable attributes to set one another in the process.
+	// Attempts to set a collection of key/value attribute pairs to observable attributes.
+	// Observable setters may digest values, and then return mutated key/value pairs for inclusion into the set operation.
+	// Values returned from observable setters will be recursively deep-set, allowing observables to set other observables.
+	// The final collection of resolved key/value pairs (after setting all observables) will be returned to the native model.
 	// @param model: target Epoxy model on which to operate.
-	// @param toTest: an object of key/value pairs to scan through.
-	// @param toKeep: non-observable attributes to keep and eventually pass along to the model.
-	// @param trace: property stack trace; prevents circular setter loops.
-	function modelDeepSet( model, toTest, toKeep, stack ) {
+	// @param toSet: an object of key/value pairs to attempt to set within the observable model.
+	// @param toReturn: resolved non-ovservable attribute values to be returned back to the native model.
+	// @param trace: property stack trace (prevents circular setter loops).
+	function modelDeepSet( model, toSet, toReturn, stack ) {
 		
-		// Loop through all test properties:
-		for ( var attribute in toTest ) {
-			if ( toTest.hasOwnProperty(attribute) ) {
+		// Loop through all setter properties:
+		for ( var attribute in toSet ) {
+			if ( toSet.hasOwnProperty(attribute) ) {
 				
-				// Pull each test value:
-				var value = toTest[ attribute ];
+				// Pull each setter value:
+				var value = toSet[ attribute ];
 				
 				if ( model.hasObservable(attribute) ) {
 					
@@ -285,7 +287,7 @@
 						// Recursively set new values for a returned params object:
 						// creates a new copy of the stack trace for each new search branch.
 						if ( value && isObject(value) ) {
-							toKeep = modelDeepSet( model, value, toKeep, stack.slice().concat([attribute]) );
+							toReturn = modelDeepSet( model, value, toReturn, stack.slice().concat([attribute]) );
 						}
 						
 					} else {
@@ -297,17 +299,19 @@
 				} else {
 					// No observable attribute:
 					// set the value to the keeper values.
-					toKeep[ attribute ] = value;
+					toReturn[ attribute ] = value;
 				}
 			}
 		}
 		
-		return toKeep;
+		return toReturn;
 	}
 	
 	
 	// Epoxy.Model -> Observable
 	// -------------------------
+	// Observable objects store model values independently from the model's attributes table.
+	// Observables may store flat values, or define custom getter/setter functions to manage their value.
 	var EpoxyObservable = function( model, name, params ) {
 		params = params || {};
 		
@@ -333,28 +337,36 @@
 		
 		// Skip init while parent model is initializing:
 		// Model will initialize in two passes...
-		// the first pass sets up all binding definitions,
-		// the second pass will initialize all bindings.
+		// the first pass sets up all observable attributes,
+		// then the second pass initializes all bindings.
 		if ( !model._init ) this.init();
 	};
 	
 	_.extend(EpoxyObservable.prototype, Backbone.Events, {
-		// Initializes the observable bindings:
-		// this is called independently from the constructor so that the parent model
-		// may perform a secondary init pass after constructing all observables.
+		
+		// Initializes the observable's value and bindings:
+		// this method is called independently from the object constructor,
+		// allowing observables to build and initialize in two passes by the parent model.
 		init: function() {
-			// Configure event capturing, then update and bind observable:
+			
+			// Configure dependency map, then update the observable's value:
+			// All Epoxy.Model attributes accessed while getting the initial value
+			// will automatically register themselves within the model bindings map.
 			modelMap = this.deps;
 			this.get( true );
 			modelMap = null;
 			
+			// If the observable has dependencies, then proceed to binding it:
 			if ( this.deps.length ) {
-				// Has dependencies:
-				// proceed to binding...
+				
+				// Compile normalized bindings table:
+				// Ultimately, we want a table of event types, each with an array of their associated targets:
+				// {"change:name":[<model1>], "change:status":[<model1>,<model2>]}
+				
+				// Create a bindings table:
 				var bindings = {};
 			
-				// Compile normalized bindings array:
-				// defines event types by name with their associated targets.
+				// Compile normalized bindings map:
 				_.each(this.deps, function( attribute ) {
 					var target = this.model;
 				
