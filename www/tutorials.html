@@ -349,7 +349,9 @@ var view = new Backbone.Epoxy.View({
 &lt;/div&gt;</code></pre>
 </div>
 
-			<p>In the above example, operational wrappers are used to format some binding data for specific implementations. The <tt>not()</tt> operator is used to negate a value's truthiness, and the <tt>format()</tt> operator is used to combine multiple values into a display string using a familiar RegEx backreference format.</p>
+			<p>In the above example, operational wrappers are used to format some binding data for specific implementations. The <tt>not()</tt> operator is used to negate a value's truthiness, and the <tt>format()</tt> operator is used to combine multiple values into a display string through a familiar RegEx backreference format.</p>
+			
+			<p>The only catch with binding operators is that they may <strong>NOT</strong> be nested. Binding operators only accept primitives and binding-context values. This is a deliberate point on which Epoxy is fairly opinionated: application logic does not belong in your binding declarations. If a value requires more than a simple formatting pass, then it should be pre-processed within a model, or else applied to the view using a custom handler.</p>
 			
 			<p>See a full list of available operators in the <a href="documentation.html#binding-operators">binding operators</a> documentation.</p>
 
