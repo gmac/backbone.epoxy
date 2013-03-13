@@ -19,8 +19,8 @@
 			setHeight();
 		}
 	});
-
-
+	
+	// Example view controller:
 	if (this.Backbone) {
 		// Scenario mini-application views:
 		var ExampleView = this.Backbone.View.extend({
@@ -28,15 +28,14 @@
 				this.setTab("js");
 				this.$(".tabs").show();
 		
-				var js = this.$(".js code");
-				var html = this.$(".html code");
+				var js = this.$("code.js");
+				var html = this.$("code.html");
 				var run = new Function( js.text() );
 				this.$el.append( "<b class='result'>Result:</b>" );
 				this.$el.append( $(html.text()).addClass("app") );
-				//this.$("code").height( Math.max(js.height(), html.height()) );
 				run();
 			},
-
+			
 			setTab: function( id ) {
 				// Set tab selection state:
 				this.$(".tabs li")
@@ -45,7 +44,8 @@
 					.addClass("active");
 		
 				// Set visible panel:
-				this.$("pre").hide().filter("."+id).show();
+				this.$("pre").hide();
+				this.$("code."+id).parent().show();
 			},
 	
 			events: {
@@ -64,7 +64,7 @@
 			var view = new ExampleView({el: this});
 		});
 	}
-
+	
 	// "Run" button behaviors:
 	$(document).on("click", "button.run", function(evt) {
 		var js = $(evt.target).parent().find("code").text();
@@ -73,3 +73,45 @@
 	});
 	
 }).call( this );
+
+
+// Syntax highlight (lazy render):
+(function() {
+	var elements = $("code.js, code.html");
+	var i = 0;
+	
+	// Request Animation Frame method:
+	var requestAnimFrame = window.requestAnimationFrame ||
+		window.webkitRequestAnimationFrame ||
+		window.mozRequestAnimationFrame ||
+		function( callback ) {
+			window.setTimeout(callback, 1000 / 60);
+		};
+
+	function syntaxJs( code ) {
+		return code
+			.replace(/(".*?")/g, "<span class='str'>$1</span>") // << strings
+			.replace(/(^|\s)(\/\/.+)/g, "$1<span class='cmt'>$2</span>") // << comments
+			.replace(/(^|[\(\){}:\s\.])(var|function|new|if|true|false|this)([\(\){}:\s\.])/g, "$1<span class='kwd'>$2</span>$3"); // << keywords
+	}
+
+	function syntaxHtml( code ) {
+		return code
+			.replace(/(&lt;.*?&gt;)/g, "<span class='tag'>$1</span>") // << tags
+			.replace(/(".*?")/g, "<span class='str'>$1</span>"); // << strings
+	}
+	
+	function renderSyntax() {
+		var el = elements.eq(i++);
+		var highlight = el.hasClass("js") ? syntaxJs : syntaxHtml;
+		el.html( highlight(el.html()) );
+		
+		if ( i < elements.length ) {
+			requestAnimFrame( renderSyntax );
+		}
+	}
+	
+	if ( elements.length ) {
+		requestAnimFrame( renderSyntax );
+	}
+}());

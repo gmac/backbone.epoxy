@@ -67,7 +67,7 @@
 
 			<p>Epoxy requires <a href="http://jquery.com/">jQuery</a> 1.7.0+, <a href="http://underscorejs.org/">Underscore</a> 1.4.3+, and <a href="http://backbonejs.org/">Backbone</a> 0.9.9+. To install Epoxy, download the <a href="https://github.com/gmac/backbone.epoxy/blob/master/backbone.epoxy.min.js">Epoxy library</a> (8k min, 3k gzip) and include its script tag in your document after all dependencies:</p>
 
-<pre><code>&lt;script src="js/jquery-min.js"&gt;&lt;/script&gt;
+<pre><code class="html">&lt;script src="js/jquery-min.js"&gt;&lt;/script&gt;
 &lt;script src="js/underscore-min.js"&gt;&lt;/script&gt;
 &lt;script src="js/backbone-min.js"&gt;&lt;/script&gt;
 &lt;script src="js/backbone.epoxy.min.js"&gt;&lt;/script&gt;</code></pre>
@@ -86,7 +86,7 @@
 	<li data-tab="html">HTML</li>
 </ul>
 
-<pre class="js"><code>var bindModel = new Backbone.Model({
+<pre><code class="js">var bindModel = new Backbone.Model({
     firstName: "Luke",
     lastName: "Skywalker"
 });
@@ -103,7 +103,7 @@ var BindingView = Backbone.Epoxy.View.extend({
 
 var view = new BindingView({model: bindModel});</code></pre>
 
-<pre class="html"><code>&lt;div id="app-luke" class="demo"&gt;
+<pre><code class="html">&lt;div id="app-luke" class="demo"&gt;
 	&lt;label>First:&lt;/label&gt;
 	&lt;input type="text" class="first-name"&gt;
 	
@@ -131,7 +131,7 @@ var view = new BindingView({model: bindModel});</code></pre>
 	<li data-tab="html">HTML</li>
 </ul>
 		
-<pre class="js"><code>var bindModel = new Backbone.Model({
+<pre><code class="js">var bindModel = new Backbone.Model({
     firstName: "Han",
     lastName: "Solo"
 });
@@ -143,7 +143,7 @@ var BindingView = Backbone.Epoxy.View.extend({
 
 var view = new BindingView({model: bindModel});</code></pre>
 
-<pre class="html"><code>&lt;div id="app-han" class="demo"&gt;
+<pre><code class="html">&lt;div id="app-han" class="demo"&gt;
     &lt;label>First:&lt;/label&gt;
     &lt;input type="text" data-bind="value:firstName,events:['keyup']"&gt;
 	
@@ -158,7 +158,7 @@ var view = new BindingView({model: bindModel});</code></pre>
 
 			<p>Here, the exact same binding scheme has been applied directly to the DOM using element attributes, and the view's <b>bindings</b> property simply defines the attribute name to query for  (note that <tt>"data-bind"</tt> is Epoxy's default selector, so you don't need to specifically declare that within your view).</p>
 
-			<p>The two above examples are functionally identical, therefore the location of your binding declarations (view or DOM) is entirely a matter of preference&mdash;provided that they're all in one place. Note that you may NOT mix bindings between the view and the DOM. To obviate element-to-binding maps, the proceeding tutorial topics will use the inline form of binding in their examples. Please don't interpret this as bias: there are a lot of advantages to declaring your bindings within the view (such as keeping functional behavior within your view, and maintaining DOM cleanliness).</p>
+			<p>The two above examples are functionally identical, therefore the location of your binding declarations (view or DOM) is entirely a matter of preference&mdash;provided that they're all in one place. The proceeding tutorial examples will use the inline binding form to obviate element-to-binding relationships. However, don't interpret this as a bias: there are many advantages to declaring your bindings within the view (such as keeping all functional definition within the view, and maintaining DOM cleanliness).</p>
 			
 			<p>Learn more about setting up view bindings in the <b><a href="documentation.html#view">Epoxy.View</a></b> documentation.</p>
 			
@@ -174,7 +174,7 @@ var view = new BindingView({model: bindModel});</code></pre>
 	<li data-tab="html">HTML</li>
 </ul>
 
-<pre class="js"><code>var BindingModel = Backbone.Epoxy.Model.extend({
+<pre><code class="js">var BindingModel = Backbone.Epoxy.Model.extend({
     defaults: {
         firstName: "Obi-Wan",
         lastName: "Kenobi"
@@ -191,7 +191,7 @@ var view = new Backbone.Epoxy.View({
     model: new BindingModel()
 });</code></pre>
 
-<pre class="html"><code>&lt;div id="app-computed"&gt;
+<pre><code class="html">&lt;div id="app-computed"&gt;
     &lt;label&gt;First:&lt;/label&gt;
     &lt;input type="text" data-bind="value:firstName,events:['keyup']"&gt;
 
@@ -215,7 +215,7 @@ var view = new Backbone.Epoxy.View({
 
 			<p>However, there's one big "gotcha" here... consider the following BROKEN example:</p>
 
-<pre><code>// BROKEN:
+<pre><code class="js">// BROKEN:
 var BrokenModel = Backbone.Epoxy.Model.extend({
     defaults: {
         userName: "tatooine_luke",
@@ -233,7 +233,7 @@ var BrokenModel = Backbone.Epoxy.Model.extend({
 			
 			<p>The first solution is to move all <b>get</b> calls outside of the conditional statement, and then let automatic mapping safely take its course. The following will work:</p>
 
-<pre><code>// FIXED by pre-collecting references:
+<pre><code class="js">// FIXED by pre-collecting references:
 var FixedModel = Backbone.Epoxy.Model.extend({
     defaults: {
         userName: "tatooine_luke",
@@ -253,7 +253,7 @@ var FixedModel = Backbone.Epoxy.Model.extend({
 
 			<p>Alternatively, you may also declare computed dependencies manually, like so:</p>
 
-<pre><code>// FIXED by manual declarations:
+<pre><code class="js">// FIXED by manual declarations:
 var FixedModel = Backbone.Epoxy.Model.extend({
     defaults: {
         userName: "tatooine_luke",
@@ -285,7 +285,7 @@ var FixedModel = Backbone.Epoxy.Model.extend({
 	<li data-tab="html">HTML</li>
 </ul>
 
-<pre class="js"><code>var PriceModel = Backbone.Epoxy.Model.extend({
+<pre><code class="js">var PriceModel = Backbone.Epoxy.Model.extend({
     defaults: {
         productName: "Light Saber",
         price: 5000
@@ -307,7 +307,7 @@ var view = new Backbone.Epoxy.View({
     model: new PriceModel()
 });</code></pre>
 
-<pre class="html"><code>&lt;div id="app-readwrite"&gt;
+<pre><code class="html">&lt;div id="app-readwrite"&gt;
     &lt;label&gt;Price (updates on blur):&lt;/label&gt;
     &lt;input type="text" data-bind="value:displayPrice"&gt;
 
@@ -337,7 +337,7 @@ var view = new Backbone.Epoxy.View({
 	<li data-tab="html">HTML</li>
 </ul>
 
-<pre class="js"><code>var view = new Backbone.Epoxy.View({
+<pre><code class="js">var view = new Backbone.Epoxy.View({
     el: "#app-operators",
     model: new Backbone.Model({
         firstName: "Luke",
@@ -346,7 +346,7 @@ var view = new Backbone.Epoxy.View({
 });
 </code></pre>
 
-<pre class="html"><code>&lt;div id="app-operators"&gt;
+<pre><code class="html">&lt;div id="app-operators"&gt;
   &lt;p&gt;
       &lt;label&gt;First name*&lt;/label&gt;
       &lt;input type="text" data-bind="value:firstName,events:['keyup']"&gt;
@@ -378,7 +378,7 @@ var view = new Backbone.Epoxy.View({
 	<li data-tab="html">HTML</li>
 </ul>
 
-<pre class="js"><code>var model = new Backbone.Model({shipsList: []});
+<pre><code class="js">var model = new Backbone.Model({shipsList: []});
 
 var BindingView = Backbone.Epoxy.View.extend({
     el: "#app-custom",
@@ -391,7 +391,7 @@ var BindingView = Backbone.Epoxy.View.extend({
 
 var view = new BindingView({model: model});</code></pre>
 
-<pre class="html"><code>&lt;div id="app-custom"&gt;
+<pre><code class="html">&lt;div id="app-custom"&gt;
     &lt;label&gt;Millennium Falcon:&lt;/label&gt;
     &lt;input type="checkbox" value="Millennium Falcon" data-bind="checked:shipsList"&gt;
 
@@ -421,7 +421,7 @@ var view = new BindingView({model: model});</code></pre>
 	<li data-tab="html">HTML</li>
 </ul>
 
-<pre class="js"><code>var ListItemView = Backbone.View.extend({
+<pre><code class="js">var ListItemView = Backbone.View.extend({
     tagName: "li",
     initialize: function() {
         this.$el.text( this.model.get("label") );
@@ -443,7 +443,7 @@ var ListView = Backbone.Epoxy.View.extend({
 
 var view = new ListView();</code></pre>
 
-<pre class="html"><code>&lt;div id="bind-collection"&gt;
+<pre><code class="html">&lt;div id="bind-collection"&gt;
     &lt;ul data-bind="collection:$collection"&gt;&lt;/ul&gt;
 &lt;/div&gt;</code></pre>
 </div>
@@ -462,7 +462,7 @@ var view = new ListView();</code></pre>
 	<li data-tab="html">HTML</li>
 </ul>
 
-<pre class="js"><code>// Model for each ToDo item:
+<pre><code class="js">// Model for each ToDo item:
 var TodoItemModel = Backbone.Model.extend({
     defaults: {
         todo: "",
@@ -526,13 +526,13 @@ var TodoAppView = Backbone.Epoxy.View.extend({
     },
 
     onCleanup: function() {
-        _.invoke(this.collection.where({complete:true}), 'destroy');
+        _.invoke(this.collection.where({complete:true}), "destroy");
     }
 });
 
 var app = new TodoAppView();</code></pre>
 
-<pre class="html"><code>&lt;div id="epoxy-todo-app"&gt;
+<pre><code class="html">&lt;div id="epoxy-todo-app"&gt;
     &lt;b&gt;What do you need to do?&lt;/b&gt;
     &lt;p&gt;
         &lt;input type="text" class="todo-add"&gt;

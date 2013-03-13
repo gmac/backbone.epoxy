@@ -140,7 +140,7 @@
 				
 				<p>Observable attributes storing object values (<tt>Object</tt> or <tt>Array</tt>) will trigger <tt>"change"</tt> events in response to changes in object composition, rather than object identity (this differs from the base Backbone Model, which will only trigger <tt>"change"</tt> events when a unique object instance replaces another within the model). Object comparison checks are performed using Underscore's <b>isEqual</b> method, which will compare the composition of objects and the contents of arrays. Performance should be considered when managing large objects.</p>
 				
-<pre><button class="run">Run</button><code>var model = new Backbone.Epoxy.Model();
+<pre><button class="run">Run</button><code class="js">var model = new Backbone.Epoxy.Model();
 model.addObservable("isSelected", false);
 alert( model.get("isSelected") );</code>	
 </pre>
@@ -165,7 +165,7 @@ alert( model.get("isSelected") );</code>
 				
 				<p>Note that the <b>get</b> and <b>set</b> functions are invoked in the context of their parent model, so referencing <tt>this</tt> within their scopes refers to the model.</p>
 				
-<pre><button class="run">Run</button><code>var model = new Backbone.Epoxy.Model({price:100});
+<pre><button class="run">Run</button><code class="js">var model = new Backbone.Epoxy.Model({price:100});
 model.addComputed("formattedPrice", {
     deps: ["price"],
     get: function() {
@@ -176,7 +176,7 @@ model.addComputed("formattedPrice", {
     }
 });
 
-alert( model.get("formattedPrice") ); // "$100"
+alert( model.get("formattedPrice") ); // '$100'
 model.set("formattedPrice", "$150");
 alert( model.get("price") ); // 150</code>	
 </pre>
@@ -195,7 +195,7 @@ alert( model.get("price") ); // 150</code>
 				<p>Regarding conditional <b>get</b> calls: this situation may create unreachable getters that cannot be automatically mapped. Consider the following BROKEN example:</p>
 				
 <pre>
-<code>var model = new Backbone.Epoxy.Model({
+<code class="js">var model = new Backbone.Epoxy.Model({
     shortName: "Luke",
     fullName: "Luke Skywalker",
     active: false
@@ -209,7 +209,7 @@ model.addComputed("displayName", function() {
 				<p>See the error in the above example? The <tt>"fullName"</tt> and <tt>"shortName"</tt> attributes are accessed conditionally, therefore one will be unreachable while mapping dependencies. To fix this, we could either manually declare dependencies, or else <b>get</b> all dependencies as local variables prior to conditional logic, like so:</p>
 				
 <pre>
-<code>// FIXED:
+<code class="js">// FIXED:
 model.addComputed("displayName", function() {
     var fullName = this.get("fullName");
     var shortName = this.get("shortName");
@@ -230,7 +230,7 @@ model.addComputed("displayName", function() {
 				<code>model.computeds</code>
 				<p>A hash table declaring computed observable attributes to be automatically added to a model instance by the constructor. Uses <b><a href="#model-add-computed">addComputed</a></b> to create observable attributes. Computed observables may be declared with a <a href="#model-computed-params">computed params</a> object, or as a getter function (uses <a href="#model-computed-deps">automatic dependency mapping</a>).</p>	
 <pre>
-<code>var ComputedModel = Backbone.Epoxy.Model.extend({
+<code class="js">var ComputedModel = Backbone.Epoxy.Model.extend({
     defaults: {
         firstName: "Luke",
         lastName: "Skywalker"
@@ -285,7 +285,7 @@ model.addComputed("displayName", function() {
 				<code>model.modifyArray(attribute, arrayMethod, [*args])</code>
 				<p>Performs an internal update on a stored <tt>Array</tt> model attribute (native or observable) using a standard JavaScript array modifier (<tt>pop</tt>, <tt>push</tt>, <tt>reverse</tt>, <tt>shift</tt>, <tt>slice</tt>, <tt>sort</tt>, <tt>splice</tt>, and <tt>unshift</tt>), then triggers a change event for the modified model attribute. Invoke with the model attribute name to modify, a string of the array method name to call, and any additional arguments to be passed into the array method. Returns any results from the array method. Calling <b>modifyArray</b> on a non-array attribute will take no action.</p>
 				
-<pre><button class="run">Run</button><code>var model = new Backbone.Epoxy.Model({wordList:[]});
+<pre><button class="run">Run</button><code class="js">var model = new Backbone.Epoxy.Model({wordList:[]});
 model.modifyArray("wordList", "push", "deathstar");
 alert( model.get("wordList").length );</code>	
 </pre>
@@ -296,7 +296,7 @@ alert( model.get("wordList").length );</code>
 				<code>model.modifyObject(attribute, objectProperty, value)</code>
 				<p>Performs an internal update on a stored <tt>Object</tt> model attribute (native or observable), then triggers a change event for the modified model attribute. Invoke with the model attribute name to modify, a property name to set on the object, and a value to set as the object property. Setting <tt>undefined</tt> to a property will delete it from the object. Returns the modified object. Calling <b>modifyObject</b> will only take action on model attributes with an assessed type of <tt>"object"</tt>.</p>
 				
-<pre><button class="run">Run</button><code>var model = new Backbone.Epoxy.Model({ wordsDict:{} });
+<pre><button class="run">Run</button><code class="js">var model = new Backbone.Epoxy.Model({ wordsDict:{} });
 model.modifyObject("wordsDict", "deathstar", true);
 alert( model.get("wordsDict").hasOwnProperty("deathstar") );</code>	
 </pre>
@@ -307,7 +307,7 @@ alert( model.get("wordsDict").hasOwnProperty("deathstar") );</code>
 				<code>model.observableDefaults</code>
 				<p>A hash table declaring observable attributes to be automatically added to a model instance by the constructor. Uses <b><a href="#model-add-observable">addObservable</a></b> to create the specified observable attributes. After a model instance has been constructed, observable values are managed through the model's <b>get</b> and <b>set</b> methods. Any observable values declared as a function will be invoked while getting added to the model; this is useful for creating unique Object/Array values for each model instance.</p>
 <pre>
-<code>var ComputedModel = Backbone.Epoxy.Model.extend({
+<code class="js">var ComputedModel = Backbone.Epoxy.Model.extend({
     observableDefaults: {
         isSelected: false,
         keysList: function() { return ["a", "b"]; }
@@ -376,7 +376,7 @@ alert( model.get("wordsDict").hasOwnProperty("deathstar") );</code>
 				<p>To declare binding handlers, define a new property on the <b>bindingHandlers</b> hash with a params object defining <b>set</b> and <b>get</b> function properties:</p>
 
 <pre>
-<code>var BindingView = Backbone.Epoxy.View.extend({
+<code class="js">var BindingView = Backbone.Epoxy.View.extend({
     bindingHandlers: {
         printList: {
             set: function( $element, value ) {
@@ -399,7 +399,7 @@ alert( model.get("wordsDict").hasOwnProperty("deathstar") );</code>
 				<p>While declaring a display-only binding handler (one-way binding), you may declare its setter function directly on the <b>bindingHandlers</b> hash:</p>
 
 <pre>
-<code>var BindingView = Backbone.Epoxy.View.extend({
+<code class="js">var BindingView = Backbone.Epoxy.View.extend({
     bindingHandlers: {
         printList: function( $element, value ) {
             $element.text( value.join(",") );
@@ -416,7 +416,7 @@ alert( model.get("wordsDict").hasOwnProperty("deathstar") );</code>
 				
 				<p>The bindings hash syntax keeps all binding declarations within the view. The <b>bindings</b> object declares a set of key/value pairs, where the key defines an element query, and the value defines the element's model bindings:</p>
 <pre>
-<code>var BindingModel = Backbone.Model.extend({
+<code class="js">var BindingModel = Backbone.Model.extend({
     defaults: {
         firstName: "Luke",
         lastName: "Skywalker"
@@ -434,7 +434,7 @@ var BindingView = Backbone.Epoxy.View.extend({
 				<p>Alternatively, you may choose to follow the popular convention of declaring bindings directly within the DOM using element attributes, at which time the <b>bindings</b> property should define the attribute name to query for. Epoxy specifies <tt>"data-bind"</tt> by default. All philosophical opinions aside, this technique works just as well as view-based declarations. Getting into philosophy, this method creates a bizarre (albeit handy) relationship between JavaScript mechanics and raw display. Ultimately, the choice is yours as to which method works best for your purposes.</p>
 
 <pre>
-<code>var BindingModel = Backbone.Model.extend({
+<code class="js">var BindingModel = Backbone.Model.extend({
     defaults: {
         firstName: "Luke",
         lastName: "Skywalker"
@@ -463,7 +463,7 @@ var BindingView = Backbone.Epoxy.View.extend({
 				<p>Additionally, model data sources provide aliases to all of their attributes within the binding context. In the case of the default <tt>$model</tt> data source, all model attributes are aliased within the binding context using their normal <tt>attribute</tt> name. For additional model sources added through the <b>bindingSources</b> hash, model attributes are added under the alias <tt>source_attributeName</tt>. This avoids attribute naming conflicts while binding multiple models of the same type.</p>
 
 <pre>
-<code>// Epoxy view specifying five data sources:
+<code class="js">// Epoxy view specifying five data sources:
 var BindingView = Backbone.Epoxy.View.extend({
     model: new Backbone.Model({name: "Luke Skywalker"}),
     collection: new Backbone.Collection(),
@@ -508,7 +508,7 @@ var BindingView = Backbone.Epoxy.View.extend({
 				<p>One or more binding handlers may be applied to an element as a comma-separated properties list (here shown using DOM attribute bindings):</p>
 
 <pre>
-<code>&lt;a data-bind="text:linkText,attr:{href:linkUrl,title:linkText}"&gt;&lt;/a&gt;</code>
+<code class="html">&lt;a data-bind="text:linkText,attr:{href:linkUrl,title:linkText}"&gt;&lt;/a&gt;</code>
 </pre>
 				<p>In the above example, <tt>"text:"</tt> and <tt>"attr:"</tt> are binding handlers, while <tt>"linkText"</tt> and <tt>"linkUrl"</tt> are the bound model attributes assigned to them. In the case of the <tt>"attr"</tt> handler, its value is a hash of attribute names, each with an associated model value.</p>
 				
@@ -558,7 +558,7 @@ var BindingView = Backbone.Epoxy.View.extend({
 					<li>The bound collection must have a property called <b>view</b>, which defines a <tt>Backbone.View</tt> constructor for rendering collection items.</li>
 				</ul>
 
-<pre class="js"><code>// View for individual collection items:
+<pre class="js"><code class="js">// View for individual collection items:
 var ListItemView = Backbone.View.extend({
     tagName: "li",
     initialize: function() {
@@ -646,7 +646,7 @@ var view = new ListView();</code></pre>
 				<h2 id="binding-operators">View Binding Operators</h2>
 				<p>Binding operators provide a layer of flexibility for formatting data attributes directly within a binding declaration; they allow values to be formatted for binding-specific implementations:</p>
 
-<pre><code>&lt;span data-bind="toggle:not(firstName)"&gt;Please enter a first name.&lt;/span&gt;</code></pre>
+<pre><code class="html">&lt;span data-bind="toggle:not(firstName)"&gt;Please enter a first name.&lt;/span&gt;</code></pre>
 				
 				<p>Binding operators may be parameterized with any data attribute available in the <a href="#view-binding-context">binding context</a>, or with primitive values (<tt>String</tt>, <tt>Number</tt>, or <tt>Boolean</tt>). Be aware that you may <strong>NOT</strong> nest binding operators within one another &mdash; this is very deliberate, and a principle on which Epoxy is fairly opinionated: application logic does not belong within a binding declaration. If you need to perform multi-pass value transformations, that work should be done within your model or else in a custom binding handler.</p>
 			</div>

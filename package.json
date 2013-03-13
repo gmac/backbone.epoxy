@@ -1,15 +1,23 @@
 {
-	"name": "backbone.epoxy",
-	"description": "Elegant data binding for Backbone.js",
-	"url": "http://epoxyjs.org",
-	"keywords": ["model", "view", "data binding"],
-	"author": "Greg MacWilliam <greg.macwilliam@threespot.com>",
-	"license": "MIT",
-	"dependencies": {
-		"jquery": ">=1.7.0",
-		"underscore": ">=1.4.3",
-		"backbone": ">=0.9.9"
-	},
-	"main": "backbone.epoxy.min.js",
-	"version": "0.9.0"
+  "name": "backbone.epoxy",
+  "description": "Elegant data binding for Backbone.js",
+  "url": "http://epoxyjs.org",
+  "keywords": [
+    "model",
+    "view",
+    "data binding"
+  ],
+  "author": "Greg MacWilliam <greg.macwilliam@threespot.com>",
+  "license": "MIT",
+  "dependencies": {
+    "jquery": ">=1.7.0",
+    "underscore": ">=1.4.3",
+    "backbone": ">=0.9.9"
+  },
+  "main": "backbone.epoxy.min.js",
+  "version": "0.9.0",
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-contrib-uglify": "~0.1.2"
+  }
 }

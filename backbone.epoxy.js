@@ -1,7 +1,7 @@
-// Backbone.Epoxy 0.9.0
+// Backbone.Epoxy
 
 // (c) 2013 Greg MacWilliam
-// Freely distributed under the MIT license.
+// Freely distributed under the MIT license
 // For usage and documentation:
 // http://epoxyjs.org
 

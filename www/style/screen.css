@@ -289,6 +289,24 @@ pre button {
 	top: 10px;
 }
 
+code.js,
+code.html {
+	text-shadow: 1px 1px #fff;
+}
+
+code .cmt {
+	color: #999;
+}
+
+code .str {
+	color: #c5350c;
+}
+
+code .kwd,
+code .tag {
+	color: #2A4391;
+}
+
 .example {
 	margin: 25px 0;
 }
