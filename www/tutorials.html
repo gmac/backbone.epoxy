@@ -249,7 +249,7 @@ var FixedModel = Backbone.Epoxy.Model.extend({
     }
 });</code></pre>
 
-			<p>In the above solution, we've elevated all <b>get</b> calls to above the conditional block so that they'll all be reached. This is <i>always</i> a good practice to follow when using automatic mapping.</p>
+			<p>In the above solution, we've elevated all <b>get</b> calls to above the conditional block where they'll all be reached. This is <i>always</i> a good practice to follow when using automatic mapping.</p>
 
 			<p>Alternatively, you may also declare computed dependencies manually, like so:</p>
 
@@ -271,7 +271,7 @@ var FixedModel = Backbone.Epoxy.Model.extend({
 });
 </code></pre>
 
-			<p>In the above solution, we've defined the computed attribute using a params object with a <tt>deps</tt> array. This array declares attribute names that the computed getter depends on. Manually declaring dependencies will alleviate automation errors, yet introduce the margin for human errors. It's your call as to which direction seems safer to you.</p>
+			<p>In the above solution, we've defined the computed attribute using a params object with a <tt>deps</tt> array. This array declares attribute names that the computed getter depends on. Manually declaring dependencies will alleviate automation errors, yet introduce the margin for human errors. It's your call on which direction seems safer.</p>
 			
 			<p>Learn more about computed dependencies and automatic dependency mapping in the <b><a href="documentation.html#model-add-computed">Model.addComputed</a></b> documentation.</p>
 			
@@ -319,9 +319,9 @@ var view = new Backbone.Epoxy.View({
 &lt;/div&gt;</code></pre>
 </div>
 
-			<p>Here, we've defined our computed property using a params object with both a <b>get</b> and <b>set</b> function. The <b>get</b> function will access our assembled model value, and <b>set</b> will mutate a raw value into formatted model data. In the above example, the <tt>displayPrice</tt> computed attribute formats a currency string using its <b>get</b> method, and then reformats input as a valid number within its <b>set</b> method before submitting it back to the model.</p>
+			<p>Here, we've defined our computed attribute using a params object with both a <b>get</b> and <b>set</b> function. The <b>get</b> function will access our assembled model value, and the <b>set</b> function will mutate a raw value back into formatted model data. In the above example, the <tt>displayPrice</tt> computed attribute formats a currency string using its <b>get</b> method, and then reformats input as a valid number within its <b>set</b> method before submitting it back to the model.</p>
 
-			<p>Note that the setter function returns an <i>attributes hash</i> rather than calling <b>set</b> on its model directly. Attribute hashes returned by a computed setter will be merged into the model's running <b>set</b> operation. This allows a computed setter to define multiple attribute modifications, all of which are performed synchronously with other queued model changes.</p>
+			<p>Note that the setter function returns an <i>attributes hash</i> rather than calling <b>set</b> on its model directly. Attributes returned by a computed setter will get merged into the model's running <b>set</b> operation. This allows a computed setter to define multiple attribute modifications, all of which are performed synchronously with other queued model changes.</p>
 			
 			<p>Learn more about computed getters and setters in the <b><a href="documentation.html#model-add-computed">Model.addComputed</a></b> documentation.</p>
 			
@@ -362,15 +362,15 @@ var view = new Backbone.Epoxy.View({
 &lt;/div&gt;</code></pre>
 </div>
 
-			<p>In the above example, operational wrappers are used to format some binding data for specific implementations. The <tt>not()</tt> operator is used to negate a value's truthiness, and the <tt>format()</tt> operator is used to combine multiple values into a display string through a familiar RegEx backreference format.</p>
+			<p>In the above example, operational wrappers are used to format binding data for specific implementations. The <tt>not()</tt> operator is used to negate a value's truthiness, and the <tt>format()</tt> operator is used to combine multiple values into a display string through a familiar RegEx backreference format.</p>
 			
-			<p>The only catch with binding operators is that they may <strong>NOT</strong> be nested. Binding operators only accept primitives and binding-context values. This is a deliberate point on which Epoxy is fairly opinionated: application logic does not belong in your binding declarations. If a value requires more than a simple formatting pass, then it should be pre-processed within a model, or else applied to the view using a custom handler.</p>
+			<p>The only catch with binding operators is that they may <strong>NOT</strong> be nested. Binding operators only accept primitive values and data within the binding context. This is a deliberate limitation about which Epoxy is fairly opinionated: application logic does not belong in your binding declarations. If a value requires more than a simple formatting pass, then it should be pre-processed within a model, or else applied to the view using a custom handler.</p>
 			
 			<p>See a full list of available <a href="documentation.html#binding-operators">binding operators</a> in documentation.</p>
 
 			<h2 id="binding-handlers">Custom Binding Handlers</h2>
 
-			<p>Epoxy provides a collection of default <a href="documentation.html#binding-handlers">binding handlers</a> to cover many basic view operations. For everything else, developers are encouraged to write their own binding handlers for specific operations within the view. Custom bindings handlers are easy to define:</p>
+			<p>Epoxy provides a collection of default <a href="documentation.html#binding-handlers">binding handlers</a> that cover many basic view operations. For everything else, developers are encouraged to write their own binding handlers for specific operations within the view. Custom bindings handlers are easy to define:</p>
 
 <div class="example">
 <ul class="tabs">
@@ -398,7 +398,7 @@ var view = new BindingView({model: model});</code></pre>
     &lt;label&gt;Death Star:&lt;/label&gt;
     &lt;input type="checkbox" value="Death Star" data-bind="checked:shipsList"&gt;
 
-    &lt;b&gt;Shopping Cart:&lt;/b&gt;
+    &lt;b&gt;Ships:&lt;/b&gt;
     &lt;span data-bind="listing:shipsList">&lt;/span&gt;
 &lt;/div&gt;</code></pre>
 </div>
@@ -407,13 +407,15 @@ var view = new BindingView({model: model});</code></pre>
 			
 			<p>A binding handler is just a function that accepts two arguments: the first is a jQuery object wrapping the bound element, and the second is the data value being provided to the binding. Within a custom binding handler, you simply specify a process by which the value is formatted and then applied to the element. Note, the above example demonstrates a simple <i>read-only</i> binding.</p>
 			
-			<p>Learn more about custom handlers and setting up two-way bindings in the <b><a href="documentation.html#view-binding-handlers">View.bindingHandlers</a></b> documentation.</p>
+			<p>Learn more about custom handlers and how to configure a two-way binding in the <b><a href="documentation.html#view-binding-handlers">View.bindingHandlers</a></b> documentation.</p>
 			
-			<h2 id="binding-sources">Binding Collections &amp; Other Data Sources</h2>
+			<h2 id="binding-sources">Binding Collections &amp; Multiple Sources</h2>
 
-			<p>So far we've been focusing on the basic use case of binding an <tt>Epoxy.View</tt> to attributes of its <b>model</b> property. Now let's look at using <tt>Model</tt> and <tt>Collection</tt> data sources within view bindings.</p>
+			<p>So far we've only discussed the basic use case of binding a view to attributes of its <b>model</b> property. Now let's explore adding additional data sources, including <tt>Backbone.Collection</tt> instances.</p>
 			
-			<p>To establish bindings, an Epoxy view generates a <i>binding context</i> with routes pointing to all available <i>data sources</i> and their attributes. Data sources are instances of <tt>Backbone.Model</tt> and/or <tt>Backbone.Collection</tt> that provide themselves and their attributes to the view for binding. By default, an Epoxy view looks for two potential data sources: the view's <b>model</b> property, and its <b>collection</b> property. References to these data sources are automatically configured in the binding context as <tt>$model</tt> and <tt>$collection</tt>. Additionally, aliases to all <tt>$model</tt> attributes are created. You're welcome to pass aliases to the data providers themselves into view bindings, such as in the <tt>collection:</tt> binding:</p>
+			<p>First off, what is a data source? A data source provides itself and its attributes to the <i>binding context</i> &mdash; which is a compiled list of all data available in the view. Data sources may be instances of <tt>Backbone.Model</tt> or <tt>Backbone.Collection</tt>. By default, an Epoxy view's  <b>model</b> and <b>collection</b> properties are automatically configured as data sources (you may also <a href="documentation.html#view-binding-sources">add additional sources</a> if you need them).</p>
+			
+			<p>Sources are included in the binding context under the alias <tt>"$sourceName"</tt>. Therefore, the view's <b>model</b> and <b>collection</b> properties may be referenced within bindings as <tt>$model</tt> and <tt>$collection</tt>. These direct source references are used in cases such as the <b>collection</b> binding:</p>
 
 <div class="example">
 <ul class="tabs">
@@ -448,7 +450,7 @@ var view = new ListView();</code></pre>
 &lt;/div&gt;</code></pre>
 </div>
 			
-			<p>In the above example, we've used <tt>data-bind="collection:$collection"</tt> to bind an unordered list's contents to the view's <b>collection</b> data source. The underlying <tt>Backbone.Collection</tt> instance defines a <b>view</b> property for the binding to use while constructing model views.</p>
+			<p>In the above example, <tt>data-bind="collection:$collection"</tt> binds an unordered list's contents to the view's <b>collection</b> data source. However, what renders individual collection items? Note how a <b>view</b> property is assigned to the <tt>Backbone.Collection</tt> object... That <b>view</b> property defines an item renderer for the collection; this is Epoxy's one and only assertion on the native <tt>Backbone.Collection</tt> object.</p>
 			
 			<p>For more details on setting up a collection binding, see the <a href="documentation.html#handler-collection">collection handler</a> documentation. For more examples on using data source bindings, see the <a href="#epoxy-todos">Epoxy ToDos</a> demo below.</p>
 			
