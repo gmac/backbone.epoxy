@@ -158,7 +158,7 @@ var view = new BindingView({model: bindModel});</code></pre>
 
 			<p>Here, the exact same binding scheme has been applied directly to the DOM using element attributes, and the view's <b>bindings</b> property simply defines the attribute name to query for  (note that <tt>"data-bind"</tt> is Epoxy's default selector, so you don't need to specifically declare that within your view).</p>
 
-			<p>The two above examples are functionally identical, therefore the location of your binding declarations (view or DOM) is entirely a matter of preference&mdash;provided that they're all in one place. Note that you may NOT mix bindings between the view and the DOM; it's either/or.</p>
+			<p>The two above examples are functionally identical, therefore the location of your binding declarations (view or DOM) is entirely a matter of preference&mdash;provided that they're all in one place. Note that you may NOT mix bindings between the view and the DOM. To obviate element-to-binding maps, the proceeding tutorial topics will use the inline form of binding in their examples. Please don't interpret this as bias: there are a lot of advantages to declaring your bindings within the view (such as keeping functional behavior within your view, and maintaining DOM cleanliness).</p>
 			
 			<p>Learn more about setting up view bindings in the <b><a href="documentation.html#view">Epoxy.View</a></b> documentation.</p>
 			
@@ -473,10 +473,12 @@ var TodoItemModel = Backbone.Model.extend({
 // Epoxy View for each ToDo item:
 var TodoItemView = Backbone.Epoxy.View.extend({
     el:"&lt;li&gt;&lt;input type='checkbox'&gt; &lt;input type='text' class='todo'&gt;&lt;/li&gt;",
+
     bindings: {
         "input[type='text']": "value:todo,readonly:complete,save:$model",
         "input[type='checkbox']": "checked:complete,save:$model"
     },
+
     bindingHandlers: {
         readonly: function( $element, value ) {
             $element.prop( "readonly", !!value );
@@ -497,21 +499,23 @@ var TodosCollection = Backbone.Collection.extend({
 // Epoxy View for main ToDos app:
 var TodoAppView = Backbone.Epoxy.View.extend({
     el: "#epoxy-todo-app",
+
     collection: new TodosCollection(),
+
     initialize: function() {
         this.collection.fetch();
     },
-    bindings: {
-        ".todos": "collection:$collection"
-    },
+
     events: {
         "click .add": "onAdd",
         "click .cleanup": "onCleanup",
         "keydown .todo-add": "onEnter"
     },
+
     onEnter: function( evt ) {
         if ( evt.which == 13 ) this.onAdd();
     },
+
     onAdd: function() {
         var input = this.$(".todo-add");
 		
@@ -520,6 +524,7 @@ var TodoAppView = Backbone.Epoxy.View.extend({
             input.val("");
         }
     },
+
     onCleanup: function() {
         _.invoke(this.collection.where({complete:true}), 'destroy');
     }
@@ -533,7 +538,7 @@ var app = new TodoAppView();</code></pre>
         &lt;input type="text" class="todo-add"&gt;
         &lt;button class="add"&gt;Add&lt;/button&gt;
     &lt;/p&gt;
-    &lt;ul class="todos"&gt;&lt;/ul&gt;
+    &lt;ul class="todos" data-bind="collection:$collection"&gt;&lt;/ul&gt;
     &lt;button class="cleanup"&gt;Clear complete&lt;/button&gt;
 &lt;/div&gt;</code></pre>
 </div>
