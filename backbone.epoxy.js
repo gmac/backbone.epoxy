@@ -851,11 +851,18 @@
 					var html = "";
 					
 					// Loop through all item object/models:
-					_.each(value, function( model ) {
-						// Extract a label and value from each object:
-						// a model's "get" method is used to access potential observable values.
-						var label = isModel( model ) ? model.get( "label" ) : model.label;
-						var val = isModel( model ) ? model.get( "value" ) : model.value;
+					_.each(value, function( option ) {
+						// Set both label and value as the raw option by default:
+						var label = option;
+						var val = option;
+						
+						// Dig deeper into label/value settings for non-primitive values:
+						if ( isObject( option ) ) {
+							// Extract a label and value from each object:
+							// a model's "get" method is used to access potential observable values.
+							label = isModel( option ) ? option.get( "label" ) : option.label;
+							val = isModel( option ) ? option.get( "value" ) : option.value;
+						}
 						html += "<option value='"+ val +"'>"+ label +"</option>";
 					});
 					
