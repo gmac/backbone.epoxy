@@ -804,7 +804,7 @@
 					
 				} else {
 					// Throw error for invalid binding params:
-					throw( "Binding 'collection:' requires a Collection with a 'view' constructor." );
+					throw( "Binding 'collection' requires a Collection with a 'view' constructor." );
 				}
 			}
 		},
@@ -837,13 +837,39 @@
 			}
 		},
 		
-		// Options: write-only. Sets option items to a select menu, then updates the select value.
+		// Options: write-only. Sets option items to a <select> element, then updates the value.
 		options: {
 			set: function( $element, value ) {
-				var option = "<option value=''></option>";
-				var html = "";
 				
-				$element.html( html );
+				// Pull a collection value's models list:
+				value = isCollection( value ) ? value.models : value;
+				
+				// If value is a valid array:
+				if ( isArray(value) ) {
+					
+					// Compile new markup:
+					var html = "";
+					
+					// Loop through all item object/models:
+					_.each(value, function( model ) {
+						// Extract a label and value from each object:
+						// a model's "get" method is used to access potential observable values.
+						var label = isModel( model ) ? model.get( "label" ) : model.label;
+						var val = isModel( model ) ? model.get( "value" ) : model.value;
+						html += "<option value='"+ val +"'>"+ label +"</option>";
+					});
+					
+					// Set new HTML to the element:
+					$element.html( html );
+					
+					// Reset the "value" handler, if defined:
+					// this makes sure a bound value is applied within the new options scheme.
+					this.reset( "value" );
+					
+				} else {
+					// Invalid array value:
+					throw( "Binding 'options' requires a list value." );
+				}
 			}
 		},
 		
@@ -967,7 +993,8 @@
 		
 		// Store the element, and create namespace for managed subviews:
 		this.$el = $element;
-		this.v = {};
+		this.h = {}; // << Handlers namespace for managed handlers.
+		this.v = {}; // << Views namespace for managed subview.
 		
 		// Determine bound element type and its support for two-way bindings:
 		var self = this;
@@ -1010,11 +1037,18 @@
 				var handler = handlers[ handlerName ];
 				var triggers = [];
 				
+				// Create reset function for setting the binding's value to the display:
+				// this method is stored in the binding's handlers table,
+				// where the binding may call upon specific handlers to reset as needed.
+				var reset = self.h[ handlerName ] = function( target ) {
+					handler.set.call(self, self.$el, readAccessor(accessor), target);
+				};
+				
 				// Set default binding, then initialize & map bindings:
 				// each binding handler is invoked to populate its initial value.
 				// While running a handler, all accessed attributes will be added to the handler's dependency map.
 				viewMap = triggers;
-				handler.set.call(self, self.$el, readAccessor(accessor));
+				reset();
 				viewMap = null;
 				
 				// Configure READ/GET-able binding. Requires:
@@ -1030,12 +1064,8 @@
 				// Configure WRITE/SET-able binding. Requires:
 				// => One or more events triggers.
 				if ( triggers.length ) {
-					var onUpdate = function(target) {
-						handler.set.call(self, self.$el, readAccessor(accessor), target);
-					};
-					
 					for (var i=0, len=triggers.length; i < len; i++) {
-						self.listenTo(triggers[i][0], triggers[i][1], onUpdate);
+						self.listenTo(triggers[i][0], triggers[i][1], reset);
 					}
 				}
 				
@@ -1049,6 +1079,7 @@
 	};
 
 	_.extend(EpoxyBinding.prototype, Backbone.Events, {
+		
 		// Empties all stored sub-views from the binding:
 		empty: function() {
 			for (var cid in this.v) {
@@ -1059,13 +1090,22 @@
 			}
 		},
 		
+		// Resets the value of a handler configured within the binding:
+		// manually triggers a managed handler to reset its value into the display;
+		// this is useful when bound handlers need to trigger changes among one another.
+		reset: function( handler ) {
+			if ( this.h.hasOwnProperty(handler) ) {
+				this.h[ handler ]();
+			}
+		},
+		
 		// Destroys the binding:
 		// all events and managed sub-views are killed.
 		dispose: function() {
 			this.empty();
 			this.stopListening();
 			this.$el.off( this.events );
-			this.$el = null;
+			this.$el = this.h = this.v = null;
 		}
 	});
 	

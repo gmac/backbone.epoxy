@@ -361,7 +361,13 @@ describe("Backbone.Epoxy.View", function() {
 		},
 		
 		observableDefaults: {
-			checkList: ["b"]
+			checkList: ["b"],
+			selected: "1",
+			selectOpts: [
+				{value: "0", label: "Luke Skywalker"},
+				{value: "1", label: "Han Solo"},
+				{value: "2", label: "Obi-Wan Kenobi"}
+			]
 		},
 		
 		computeds: {
