@@ -89,6 +89,7 @@
 						<li><a href="#handler-enabled">enabled</a></li>
 						<li><a href="#handler-events">events</a></li>
 						<li><a href="#handler-html">html</a></li>
+						<li><a href="#handler-options">options</a></li>
 						<li><a href="#handler-text">text</a></li>
 						<li><a href="#handler-toggle">toggle</a></li>
 						<li><a href="#handler-value">value</a></li>
@@ -619,6 +620,53 @@ var view = new ListView();</code></pre>
 				<span class="alias">read-only</span>
 				<code>data-bind="html:modelAttribute"</code>
 				<p>Sets the element's HTML content to the bound model attribute value. Uses the jQuery <b>html</b> method.</p>
+			</div>
+			
+			<div class="section">
+				<h3 id="handler-options">options</h3>
+				<span class="alias">read-only</span>
+				<code>data-bind="options:arraySource"</code>
+				<p>Binds a <tt>&lt;select&gt;</tt> element's options to an array data source. The bound data source may be an <tt>Array</tt> object, or a <tt>Backbone.Collection</tt> instance from which the <b>models</b> array will be used. Array contents may be formatted using one of the following methods:</p>
+				
+				<ul>
+					<li><tt>["Luke", "Han", "Leia"]</tt> : Primitives list. Given an array of primitives, options will be created using the array values as both the <b>text</b> and <b>value</b> for each option; ex: <tt>"Luke"</tt> produces <tt>&lt;option&nbsp;value="Luke"&gt;Luke&lt;/option&gt;</tt>.</li>
+					
+					<li><tt>[{label:"Luke", value:"1"}, {label:"Leia", value:"2"}]</tt> : Label/value pairs. Given an array of objects, options will be created using each object's <b>label</b> and <b>value</b> properties as the text and value of each option; ex: <tt>{label:"Luke",&nbsp;value:"1"}</tt> produces <tt>&lt;option&nbsp;value="1"&gt;Luke&lt;/option&gt;</tt>.</li>
+					
+					<li><tt>Backbone.Collection</tt> : Models list. The collection's <b>models</b> array will be used as the array source. Options will be created using each model's <b>label</b> and <b>value</b> attributes as the text and value of each option. An <tt>Epoxy.Model</tt> may be used to virtualize these values as observable/computed attributes if needed. Example: <tt>new Backbone.Model({label:"Luke", value:"1"})</tt> produces <tt>&lt;option&nbsp;value="1"&gt;Luke&lt;/option&gt;</tt>.</li>
+				</ul>
+				
+				<p>To manage a <tt>&lt;select&gt;</tt> element's default first option and/or empty state, you may choose to also include the <b>optionsDefault</b> and/or <b>optionsEmpty</b> helper bindings.</p>
+			</div>
+			
+			<div class="section">
+				<h3 id="handler-options-default">optionsDefault</h3>
+				<span class="alias">read-only</span>
+				<code>data-bind="optionsDefault:modelAttribute"</code>
+				<p>Manages the default (first) option within a <tt>&lt;select&gt;</tt> element. This must be used in tandem with the <b>options</b> binding: <b>optionsDefault</b> will manage a single default option at the top of the select, then the <b>options</b> handler will fill in additional options below it. The default option may be formatted using one of the following methods:</p>
+				
+				<ul>
+					<li><tt>"Default Value"</tt> : Given a primitive value (string, number, or boolean), the default option will be created using the primitive as both <b>text</b> and <b>value</b>; ex: <tt>"Choose..."</tt> produces <tt>&lt;option&nbsp;value="Choose..."&gt;Choose...&lt;/option&gt;</tt>.</li>
+					
+					<li><tt>{label:"Default", value:""}</tt> : Given an object, the default option will be created using the object's <b>label</b> and <b>value</b> properties; ex: <tt>{label:"Choose...",&nbsp;value:""}</tt> produces <tt>&lt;option&nbsp;value=""&gt;Choose...&lt;/option&gt;</tt>.</li>
+					
+					<li><tt>Backbone.Model</tt> : Given a Backbone Model, the default option will be created using the model's <b>label</b> and <b>value</b> attributes. An <tt>Epoxy.Model</tt> may be used to virtualize these as observable/computed attributes if needed. Example: <tt>new Backbone.Model({label:"Choose...", value:""})</tt> produces <tt>&lt;option&nbsp;value=""&gt;Choose...&lt;/option&gt;</tt>.</li>
+				</ul>
+			</div>
+			
+			<div class="section">
+				<h3 id="handler-options-default">optionsEmpty</h3>
+				<span class="alias">read-only</span>
+				<code>data-bind="optionsEmpty:modelAttribute"</code>
+				<p>Defines a placeholder option to apply to an empty <tt>&lt;select&gt;</tt> element, and automatically disables the select element while displaying this placeholder. This must be used in tandem with the <b>options</b> binding. The <b>optionsEmpty</b> handler fills in its placeholder value while the <b>options</b> list is empty; if <b>optionsDefault</b> is also defined, the default will be omitted from this empty state. The empty placeholder option may be formatted using one of the following methods:</p>
+				
+				<ul>
+					<li><tt>"Placeholder Value"</tt> : Given a primitive value (string, number, or boolean), the placeholder option will be created using the primitive as both <b>text</b> and <b>value</b>; ex: <tt>"None"</tt> produces <tt>&lt;option&nbsp;value="None"&gt;None&lt;/option&gt;</tt>.</li>
+					
+					<li><tt>{label:"None", value:""}</tt> : Given an object, the placeholder option will be created using the object's <b>label</b> and <b>value</b> properties; ex: <tt>{label:"None",&nbsp;value:""}</tt> produces <tt>&lt;option&nbsp;value=""&gt;None&lt;/option&gt;</tt>.</li>
+					
+					<li><tt>Backbone.Model</tt> : Given a Backbone Model, the placeholder option will be created using the model's <b>label</b> and <b>value</b> attributes. An <tt>Epoxy.Model</tt> may be used to virtualize these as observable/computed attributes if needed. Example: <tt>new Backbone.Model({label:"None", value:""})</tt> produces <tt>&lt;option&nbsp;value=""&gt;None&lt;/option&gt;</tt>.</li>
+				</ul>
 			</div>
 			
 			<div class="section">

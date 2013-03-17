@@ -992,6 +992,13 @@
 		}
 	};
 	
+	
+	// Defines special handler params made available to the binding:
+	// these params are used by handler functions, but are not actually handlers themselves.
+	// Params will be extracted from the binding context and stored directly on the binding.
+	var handlerParams = ["events", "optionsDefault", "optionsEmpty"];
+	
+	
 	// Epoxy.View -> Binding
 	// ---------------------
 	// The binding object connects an element to its binding declarations,
@@ -1007,7 +1014,6 @@
 		var self = this;
 		var tag = ($element[0].tagName).toLowerCase();
 		var changable = (tag == "input" || tag == "select" || tag == "textarea");
-		var events = ["change"];
 		
 		// Construct and invoke parser function:
 		// provided declarations string is constructed into a new function body.
@@ -1020,16 +1026,20 @@
 		// Resulting binding now looks like this after parsing:
 		// {text: accessorFunct, classes: {active: accessorFunct}}
 		
-		// Check for additional "events" binding param provided in the parsed bindings:
-		// An "events" declaration provides additional triggers to be bound on the DOM element.
-		if ( bindings.events ) {
-			events = isArray(bindings.events) ? _.union(events, bindings.events) : events;
-			delete bindings.events;
-		}
+		// Copy all handler params onto the binding while omitting them from the binding context.
+		_.each(handlerParams, function( paramName ) {
+			self[ paramName ] = bindings[ paramName ];
+			delete bindings[ paramName ];
+		});
 		
-		// Define event triggers list:
-		// namespace all DOM events as "eventName.epoxy"
-		this.events = _.map(events, function(name){ return name+".epoxy"; }).join(" ");
+		// Format the binding's "events" param:
+		// an events array may have been provided in the binding declaration;
+		// use all declared DOM events, and merge in a default "change" event trigger.
+		// After establishing the events array, format all event names with a ".epoxy" namespace,
+		// and then merge all events into a space-separated string for binding with jQuery.
+		this.events = _.map( _.union(this.events || [], ["change"]), function(name) {
+			return name+".epoxy";
+		}).join(" ");
 		
 		// Apply bindings from native context:
 		// this will loop through all binding handlers defined for the object.
