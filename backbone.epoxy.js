@@ -837,6 +837,16 @@
 			}
 		},
 		
+		// Options: write-only. Sets option items to a select menu, then updates the select value.
+		options: {
+			set: function( $element, value ) {
+				var option = "<option value=''></option>";
+				var html = "";
+				
+				$element.html( html );
+			}
+		},
+		
 		// Text: write-only. Sets the text value of an element.
 		text: {
 			set: function( $element, value ) {
