@@ -667,6 +667,26 @@
 	}
 	
 	
+	// Creates a new HTML string for a <select> menu option:
+	// used to generate elements for the "options" binding.
+	function createSelectOption( option ) {
+		
+		// Set both label and value as the raw option object by default:
+		var label = option;
+		var value = option;
+		
+		// Dig deeper into label/value settings for non-primitive values:
+		if ( isObject( option ) ) {
+			// Extract a label and value from each object:
+			// a model's "get" method is used to access potential observable values.
+			label = isModel( option ) ? option.get( "label" ) : option.label;
+			value = isModel( option ) ? option.get( "value" ) : option.value;
+		}
+		
+		return "<option value='"+ value +"'>"+ label +"</option>";
+	}
+	
+	
 	// binding handlers
 	// ----------------
 	var bindingHandlers = {
@@ -848,26 +868,33 @@
 				if ( isArray(value) ) {
 					
 					// Compile new markup:
+					var optionsEmpty = this.optionsEmpty;
+					var optionsDefault = this.optionsDefault;
+					var enabled = true;
 					var html = "";
 					
-					// Loop through all item object/models:
-					_.each(value, function( option ) {
-						// Set both label and value as the raw option by default:
-						var label = option;
-						var val = option;
+					// No options or default, and has an empty options placeholder:
+					// display placeholder and disable select menu.
+					if ( !value.length && !optionsDefault && optionsEmpty ) {
+						html += createSelectOption( readAccessor(optionsEmpty) );
+						enabled = false;
+					}
+					// Try to populate default option and options list:
+					else {
 						
-						// Dig deeper into label/value settings for non-primitive values:
-						if ( isObject( option ) ) {
-							// Extract a label and value from each object:
-							// a model's "get" method is used to access potential observable values.
-							label = isModel( option ) ? option.get( "label" ) : option.label;
-							val = isModel( option ) ? option.get( "value" ) : option.value;
+						// Create the default option, if defined:
+						if ( optionsDefault ) {
+							html += createSelectOption( readAccessor(optionsDefault) );
 						}
-						html += "<option value='"+ val +"'>"+ label +"</option>";
-					});
+						
+						// Create all option items:
+						_.each(value, function( option ) {
+							html += createSelectOption( option );
+						});
+					}
 					
-					// Set new HTML to the element:
-					$element.html( html );
+					// Set new HTML to the element and toggle disabled status:
+					$element.html( html ).prop( "disabled", !enabled );
 					
 					// Reset the "value" handler, if defined:
 					// this makes sure a bound value is applied within the new options scheme.
@@ -996,7 +1023,7 @@
 	// Defines special handler params made available to the binding:
 	// these params are used by handler functions, but are not actually handlers themselves.
 	// Params will be extracted from the binding context and stored directly on the binding.
-	var handlerParams = ["events", "optionsDefault", "optionsEmpty"];
+	var handlerParams = [ "events", "optionsDefault", "optionsEmpty" ];
 	
 	
 	// Epoxy.View -> Binding
@@ -1099,10 +1126,10 @@
 		
 		// Empties all stored sub-views from the binding:
 		empty: function() {
-			for (var cid in this.v) {
-				if ( this.v.hasOwnProperty(cid) ) {
-					this.v[ cid ].remove();
-					delete this.v[ cid ];
+			for (var id in this.v) {
+				if ( this.v.hasOwnProperty(id) ) {
+					this.v[ id ].remove();
+					delete this.v[ id ];
 				}
 			}
 		},

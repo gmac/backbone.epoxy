@@ -82,7 +82,7 @@
 					<ul>
 						<li><a href="#handler-attr">attr</a></li>
 						<li><a href="#handler-checked">checked</a></li>
-						<li><a href="#handler-class-name">className</a></li>
+						<li><a href="#handler-classes">classes</a></li>
 						<li><a href="#handler-collection">collection</a></li>
 						<li><a href="#handler-css">css</a></li>
 						<li><a href="#handler-disabled">disabled</a></li>
@@ -90,6 +90,8 @@
 						<li><a href="#handler-events">events</a></li>
 						<li><a href="#handler-html">html</a></li>
 						<li><a href="#handler-options">options</a></li>
+						<li><a href="#handler-options-default">optionsDefault</a></li>
+						<li><a href="#handler-options-empty">optionsEmpty</a></li>
 						<li><a href="#handler-text">text</a></li>
 						<li><a href="#handler-toggle">toggle</a></li>
 						<li><a href="#handler-value">value</a></li>
@@ -539,7 +541,7 @@ var BindingView = Backbone.Epoxy.View.extend({
 			</div>
 			
 			<div class="section">
-				<h3 id="handler-class-name">classes</h3>
+				<h3 id="handler-classes">classes</h3>
 				<span class="alias">read-only</span>
 				<code>data-bind="classes:{active:modelAttr,'is-active':modelAttr}"</code>
 				<p>Toggles a list of element class names based on the truthiness of their bound model attributes. Class bindings are defined as a hash of key/value pairs, where each key defines a class name and is value references a model attribute that will be loosely-type checked for truthiness; truthy attributes will enable their class, while falsey attributes will disable their class. Class name keys may be defined as strings.</p>
@@ -643,7 +645,7 @@ var view = new ListView();</code></pre>
 				<h3 id="handler-options-default">optionsDefault</h3>
 				<span class="alias">read-only</span>
 				<code>data-bind="optionsDefault:modelAttribute"</code>
-				<p>Manages the default (first) option within a <tt>&lt;select&gt;</tt> element. This must be used in tandem with the <b>options</b> binding: <b>optionsDefault</b> will manage a single default option at the top of the select, then the <b>options</b> handler will fill in additional options below it. The default option may be formatted using one of the following methods:</p>
+				<p>Defines a default option made available at the top of a <tt>&lt;select&gt;</tt> element in addition to the <b>options</b> list. This binding must be used in tandem with the <b>options</b> binding. The <b>optionsDefault</b> value will appear as the first and/or only item in the select, regardless if the <b>options</b> list has content. The <b>optionsDefault</b> value may be formatted using one of the following methods:</p>
 				
 				<ul>
 					<li><tt>"Default Value"</tt> : Given a primitive value (string, number, or boolean), the default option will be created using the primitive as both <b>text</b> and <b>value</b>; ex: <tt>"Choose..."</tt> produces <tt>&lt;option&nbsp;value="Choose..."&gt;Choose...&lt;/option&gt;</tt>.</li>
@@ -652,13 +654,15 @@ var view = new ListView();</code></pre>
 					
 					<li><tt>Backbone.Model</tt> : Given a Backbone Model, the default option will be created using the model's <b>label</b> and <b>value</b> attributes. An <tt>Epoxy.Model</tt> may be used to virtualize these as observable/computed attributes if needed. Example: <tt>new Backbone.Model({label:"Choose...", value:""})</tt> produces <tt>&lt;option&nbsp;value=""&gt;Choose...&lt;/option&gt;</tt>.</li>
 				</ul>
+				
+				<p>Note that a select menu defining a default value should never be empty, therefore you shouldn't ever need to define both <b>optionsDefault</b> and <b>optionsEmpty</b> bindings together.</p>
 			</div>
 			
 			<div class="section">
-				<h3 id="handler-options-default">optionsEmpty</h3>
+				<h3 id="handler-options-empty">optionsEmpty</h3>
 				<span class="alias">read-only</span>
 				<code>data-bind="optionsEmpty:modelAttribute"</code>
-				<p>Defines a placeholder option to apply to an empty <tt>&lt;select&gt;</tt> element, and automatically disables the select element while displaying this placeholder. This must be used in tandem with the <b>options</b> binding. The <b>optionsEmpty</b> handler fills in its placeholder value while the <b>options</b> list is empty; if <b>optionsDefault</b> is also defined, the default will be omitted from this empty state. The empty placeholder option may be formatted using one of the following methods:</p>
+				<p>Defines a placeholder option to apply to an empty <tt>&lt;select&gt;</tt> element, and automatically disables the select element while displaying this placeholder. This must be used in tandem with the <b>options</b> binding. The empty placeholder option may be formatted using one of the following methods:</p>
 				
 				<ul>
 					<li><tt>"Placeholder Value"</tt> : Given a primitive value (string, number, or boolean), the placeholder option will be created using the primitive as both <b>text</b> and <b>value</b>; ex: <tt>"None"</tt> produces <tt>&lt;option&nbsp;value="None"&gt;None&lt;/option&gt;</tt>.</li>
@@ -667,6 +671,8 @@ var view = new ListView();</code></pre>
 					
 					<li><tt>Backbone.Model</tt> : Given a Backbone Model, the placeholder option will be created using the model's <b>label</b> and <b>value</b> attributes. An <tt>Epoxy.Model</tt> may be used to virtualize these as observable/computed attributes if needed. Example: <tt>new Backbone.Model({label:"None", value:""})</tt> produces <tt>&lt;option&nbsp;value=""&gt;None&lt;/option&gt;</tt>.</li>
 				</ul>
+				
+				<p>Note that a select menu defining a default value should never be empty, therefore you shouldn't ever need to define both <b>optionsDefault</b> and <b>optionsEmpty</b> bindings together.</p>
 			</div>
 			
 			<div class="section">
