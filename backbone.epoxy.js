@@ -27,6 +27,16 @@
 	var isCollection = function(obj) { return obj instanceof Backbone.Collection; };
 	
 	
+	function copy( value ) {
+		if ( isArray(value) ) {
+			return value.slice();
+		} else if ( isObject(value) ) {
+			return _.clone(value);
+		}
+		return value;
+	}
+	
+	
 	// Partial application for calling method implementations of a super-class object:
 	function superClass( sup ) {
 		return function( instance, method, args ) {
@@ -55,7 +65,7 @@
 			// Add all default observable attributes:
 			if ( this.observableDefaults ) {
 				_.each(this.observableDefaults, function( value, attribute ) {
-					this.addObservable( attribute, isFunction(value) ? value() : value );
+					this.addObservable( attribute, isFunction(value) ? value() : copy(value) );
 				}, this);
 			}
 			
@@ -97,14 +107,7 @@
 		// Array and Object values will return a shallow copy,
 		// primitive values will be returned directly.
 		getCopy: function( attribute ) {
-			var value = this.get( attribute );
-			
-			if ( isArray(value) ) {
-				return value.slice();
-			} else if ( isObject(value) ) {
-				return _.clone(value);
-			}
-			return value;
+			return copy( this.get(attribute) );
 		},
 		
 		// Backbone.Model.set() override:
@@ -685,7 +688,7 @@
 		
 		return "<option value='"+ value +"'>"+ label +"</option>";
 	}
-	
+
 	
 	// binding handlers
 	// ----------------
@@ -906,7 +909,7 @@
 				}
 			}
 		},
-		
+
 		// Text: write-only. Sets the text value of an element.
 		text: {
 			set: function( $element, value ) {
@@ -932,91 +935,86 @@
 		}
 	};
 	
+	
 	// binding operators
 	// -----------------
 	// Operators are special binding handlers that may be invoked while binding;
 	// they will return a wrapper function used to modify how accessors are read.
-	// **IMPORTANT:
+	
+	// Partial application wrapper for creating binding operators:
+	var makeOperator = function( handler ) {
+		return function() {
+			var params = arguments;
+			return function() {
+				return handler( params );
+			};
+		};
+	};
+	
+	// IMPORTANT:
 	// Binding operators must access ALL of their dependent params while running,
 	// otherwise accessor params become unreachable and will not provide binding hooks.
 	// Therefore, assessment loops must NOT exit early... so do not optimize!
+	
 	var bindingOperators = {
 		// Tests if all of the provided accessors are truthy (and):
-		all: function() {
-			var params = arguments;
-			return function() {
-				var result = true;
-				for ( var i=0, len=params.length; i < len; i++ ) {
-					if ( !readAccessor(params[i]) ) result = false;
-				}
-				return result;
+		all: makeOperator(function( params ) {
+			var result = true;
+			for ( var i=0, len=params.length; i < len; i++ ) {
+				if ( !readAccessor(params[i]) ) result = false;
 			}
-		},
+			return result;
+		}),
 	
 		// Tests if any of the provided accessors are truthy (or):
-		any: function() {
-			var params = arguments;
-			return function() {
-				var result = false;
-				for ( var i=0, len=params.length; i < len; i++ ) {
-					if ( readAccessor(params[i]) ) result = true;
-				}
-				return result;
+		any: makeOperator(function( params ) {
+			var result = false;
+			for ( var i=0, len=params.length; i < len; i++ ) {
+				if ( readAccessor(params[i]) ) result = true;
 			}
-		},
+			return result;
+		}),
 		
 		// Reads the length of the accessed property:
 		// assumes accessor value to be an Array or Collection; defaults to 0.
-		length: function( accessor ) {
-			return function() {
-				return readAccessor( accessor ).length || 0;
-			}
-		},
+		length: makeOperator(function( params ) {
+			return readAccessor( params[0] ).length || 0;
+		}),
 		
 		// Tests if none of the provided accessors are truthy (and not):
-		none: function() {
-			var params = arguments;
-			return function() {
-				var result = true;
-				for ( var i=0, len=params.length; i < len; i++ ) {
-					if ( readAccessor(params[i]) ) result = false;
-				}
-				return result;
+		none: makeOperator(function( params ) {
+			var result = true;
+			for ( var i=0, len=params.length; i < len; i++ ) {
+				if ( readAccessor(params[i]) ) result = false;
 			}
-		},
+			return result;
+		}),
 	
 		// Negates an accessor's value:
-		not: function( accessor ) {
-			return function() {
-				return !readAccessor( accessor );
-			}
-		},
+		not: makeOperator(function( params ) {
+			return !readAccessor( params[0] );
+		}),
 	
 		// Formats one or more accessors into a text string:
 		// ("$1 $2 did $3", firstName, lastName, action)
-		format: function() {
-			var params = arguments;
-			return function() {
-				var str = readAccessor(params[0]);
-				for ( var i=1, len=params.length; i < len; i++ ) {
-					// TODO: need to make something like this work: (?<!\\)\$1
-					str = str.replace( new RegExp("\\$"+i, "g"), readAccessor(params[i]) );
-				}
-				return str;
+		format: makeOperator(function( params ) {
+			var str = readAccessor(params[0]);
+			
+			for ( var i=1, len=params.length; i < len; i++ ) {
+				// TODO: need to make something like this work: (?<!\\)\$1
+				str = str.replace( new RegExp("\\$"+i, "g"), readAccessor(params[i]) );
 			}
-		},
+			return str;
+		}),
 		
 		// Provides one of two values based on a ternary condition:
-		// uses first param (a) as condition, and returns either b (true) or c (false).
-		select: function() {
-			var params = arguments;
-			return function() {
-				var a = readAccessor(params[0]);
-				var b = readAccessor(params[1]);
-				var c = readAccessor(params[2]);
-				return a ? b : c;
-			}
-		}
+		// uses first param (a) as condition, and returns either b (truthy) or c (falsey).
+		select: makeOperator(function( params ) {
+			var a = readAccessor(params[0]);
+			var b = readAccessor(params[1]);
+			var c = readAccessor(params[2]);
+			return a ? b : c;
+		})
 	};
 	
 	

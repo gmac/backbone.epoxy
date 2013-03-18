@@ -362,12 +362,14 @@ describe("Backbone.Epoxy.View", function() {
 		
 		observableDefaults: {
 			checkList: ["b"],
-			selected: "1",
-			selectOpts: [
+			optionsList: [
 				{value: "0", label: "Luke Skywalker"},
 				{value: "1", label: "Han Solo"},
 				{value: "2", label: "Obi-Wan Kenobi"}
-			]
+			],
+			optVal: "1",
+			optDefault: "default",
+			optEmpty: "empty"
 		},
 		
 		computeds: {
@@ -466,9 +468,12 @@ describe("Backbone.Epoxy.View", function() {
 	
 	// Teardown
 	afterEach(function() {
-		bindingModel.observableDefaults.checkList = [ "b" ];
+		var defaults = _.clone( bindingModel.observableDefaults );
+		defaults.checkList = _.clone( defaults.checkList );
+		defaults.optionsList = _.clone( defaults.optionsList );
+		
 		bindingModel.set( bindingModel.defaults );
-		bindingModel.set( bindingModel.observableDefaults );
+		bindingModel.set( defaults );
 		modView.collection.reset();
 	});
 	
@@ -771,6 +776,76 @@ describe("Backbone.Epoxy.View", function() {
 		expect( $el.html() ).toMatch( /<strong>Skywalker<\/strong>, Luke/i );
 		bindingModel.set("firstName", "Anakin");
 		expect( $el.html() ).toMatch( /<strong>Skywalker<\/strong>, Anakin/i );
+	});
+	
+	
+	it("binding 'options:' should bind an array of strings to a select element's options.", function() {
+		var $el = $(".test-select");
+		bindingModel.set("optionsList", ["Luke", "Leia"]);
+		expect( $el.children().length ).toBe( 2 );
+		expect( $el.find(":first-child").attr("value") ).toBe( "Luke" );
+		expect( $el.find(":first-child").text() ).toBe( "Luke" );
+	});
+	
+	
+	it("binding 'options:' should bind an array of label/value pairs to a select element's options.", function() {
+		var $el = $(".test-select");
+		bindingModel.set("optionsList", [
+			{label:"Luke", value:"a"},
+			{label:"Leia", value:"b"}
+		]);
+		
+		expect( $el.children().length ).toBe( 2 );
+		expect( $el.find(":first-child").attr("value") ).toBe( "a" );
+		expect( $el.find(":first-child").text() ).toBe( "Luke" );
+	});
+	
+	
+	it("binding 'options:' should bind a collection of model label/value attributes to a select element's options.", function() {
+
+	});
+	
+	
+	it("binding 'options:' should update selection when additional items are added/removed.", function() {
+		var $el = $(".test-select");
+		bindingModel.modifyArray("optionsList", "push", {label:"Leia", value:"3"});
+		
+		expect( $el.children().length ).toBe( 4 );
+		expect( $el.find(":last-child").attr("value") ).toBe( "3" );
+		expect( $el.find(":last-child").text() ).toBe( "Leia" );
+	});
+	
+	
+	it("binding 'options:' should preserve previous selection state after binding.", function() {
+		var $el = $(".test-select");
+		bindingModel.modifyArray("optionsList", "push", {label:"Leia", value:"3"});
+		expect( $el.children().length ).toBe( 4 );
+		expect( $el.val() ).toBe( "1" );
+	});
+	
+	
+	it("binding 'options:' should update the bound model value when the previous selection is no longer available.", function() {
+
+	});
+	
+	
+	it("binding 'optionsDefault:' should include a default first option in a select menu.", function() {
+
+	});
+	
+	
+	it("binding 'optionsEmpty:' should provide a placeholder option value for an empty select.", function() {
+
+	});
+	
+	
+	it("binding 'optionsEmpty:' should disable an empty select menu.", function() {
+
+	});
+	
+	
+	it("binding 'optionsDefault:' should supersede 'optionsEmpty:' by providing a default item.", function() {
+
 	});
 	
 	

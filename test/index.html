@@ -107,8 +107,10 @@
 			<p class="test-mod-select" data-bind="text:select(active,firstName,lastName)"></p>
 		</div>
 		<div class="section">
-			<select class="test-select-primitive" data-bind="value:preference,options:checkList,optionsDefault:'none',optionsEmpty:'---'"></select>
-			<select class="test-select" data-bind="value:selected,options:selectOpts"></select>
+			<p><select class="test-select" data-bind="value:optVal,options:optionsList"></select></p>
+			<p><select class="test-select-default" data-bind="value:optVal,options:optionsList,optionsDefault:optDefault"></select></p>
+			<p><select class="test-select-empty" data-bind="value:optVal,options:optionsList,optionsEmpty:optEmpty"></select></p>
+			<p><select class="test-select-both" data-bind="value:optVal,options:optionsList,optionsDefault:optDefault,optionsEmpty:optEmpty"></select></p>
 		</div>
 		<div class="section">
 			<strong>Collection Management</strong>
