@@ -633,7 +633,7 @@
 			
 			// Create a read-only accessor for the collection instance:
 			context[ "$"+(name||"collection") ] = function() {
-				viewMap && viewMap.push([source, "reset add remove sort"]);
+				viewMap && viewMap.push([source, "reset add remove sort update"]);
 				return source;
 			};
 		}

@@ -373,7 +373,8 @@ describe("Backbone.Epoxy.View", function() {
 			valDefault: "1",
 			valEmpty: "1",
 			valBoth: "1",
-			valMulti: "1"
+			valMulti: "1",
+			valCollect: ""
 		},
 		
 		computeds: {
@@ -806,7 +807,14 @@ describe("Backbone.Epoxy.View", function() {
 	
 	
 	it("binding 'options:' should bind a collection of model label/value attributes to a select element's options.", function() {
+		var $el = $(".test-select-collect");
+		modView.collection.reset([
+			{label:"Luke Skywalker", value:"Luke"},
+			{label:"Han Solo", value:"Han"}
+		]);
 		
+		expect( $el.children().length ).toBe( 2 );
+		expect( bindingModel.get("valCollect") ).toBe( "Luke" );
 	});
 	
 	

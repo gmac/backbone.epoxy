@@ -21,9 +21,9 @@
 	});
 	
 	// Example view controller:
-	if (this.Backbone) {
+	if (Backbone) {
 		// Scenario mini-application views:
-		var ExampleView = this.Backbone.View.extend({
+		var ExampleView = Backbone.View.extend({
 			initialize: function() {
 				this.setTab("js");
 				this.$(".tabs").show();
@@ -72,7 +72,7 @@
 		run();
 	});
 	
-}).call( this );
+}());
 
 
 // Syntax highlight (lazy render):
@@ -92,7 +92,7 @@
 		return code
 			.replace(/(".*?")/g, "<span class='str'>$1</span>") // << strings
 			.replace(/(^|\s)(\/\/.+)/g, "$1<span class='cmt'>$2</span>") // << comments
-			.replace(/(^|[\(\){}:\s\.])(var|function|new|if|true|false|this)([\(\){}:\s\.])/g, "$1<span class='kwd'>$2</span>$3"); // << keywords
+			.replace(/(^|[\(\){}:\s\.])(var|function|this|new|return|true|false|if)([\(\){}:\s\.])/g, "$1<span class='kwd'>$2</span>$3"); // << keywords
 	}
 
 	function syntaxHtml( code ) {
