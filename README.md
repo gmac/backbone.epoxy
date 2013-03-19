@@ -1,6 +1,6 @@
 # Epoxy.js : Elegant Data Binding for Backbone
 
-[Epoxyjs.org](http://epoxyjs.org "Epoxy.js") is an elegant and extensible data binding library for [Backbone.js](http://backbonejs.org "Backbone.js"); it provides feature-rich extensions of Backbone's `Model` and `View` components designed to hook view elements directly to data models. Epoxy captures some great aspects of [Knockout.js](http://knockoutjs.com "Knockout.js") and [Ember.js](http://emberjs.com "Ember.js") in a familiar API that feels tastefully like Backbone, with minimal additional file size (8k min, 2k gzip). Some key features in Epoxy include:</p>
+[Epoxy.js](http://epoxyjs.org "Epoxy.js") is an elegant and extensible data binding library for [Backbone.js](http://backbonejs.org "Backbone.js"); it provides feature-rich extensions of Backbone's `Model` and `View` components designed to hook view elements directly to data models. Epoxy captures some great aspects of [Knockout.js](http://knockoutjs.com "Knockout.js") and [Ember.js](http://emberjs.com "Ember.js") in a familiar API that feels tastefully like Backbone, with minimal additional file size (8k min, 2k gzip). Some key features in Epoxy include:</p>
 
  - Computed Model Attributes
  - Declarative View Bindings
@@ -25,7 +25,7 @@ For all complete information and documentation, visit the project's website at [
 
 ## Change Log
 
-**0.10.0** – *March 19, 2013*
+**0.10.0** – *March 19, 2013* – [Diff](https://github.com/gmac/backbone.epoxy/compare/v0.9.0...v0.10.0 "Diff: v0.9.0/v0.10.0")
 
 Adds additional binding features to stage for a 1.0 release.
 
