@@ -21,3 +21,24 @@ Epoxy requires [jQuery](http://jquery.com "jQuery.js") 1.7.0+, [Underscore](http
 ## Help & Documentation
 
 For all complete information and documentation, visit the project's website at [epoxyjs.org](http://epoxyjs.org "Epoxy.js").
+
+
+## Change Log
+
+'''0.10.0''' – March 19, 2013
+
+Adds additional binding features to stage for a 1.0 release.
+
+ - Adds select menu options binding suite and supporting tests; includes:
+ 	- `options` : Binds the contents of an Array or Collection to select menu options.
+	- `optionsDefault` : Provides a default option to include above `options` items.
+	- `optionsEmpty` : Provides an empty placeholder option to display when `options` is empty.
+ - Registers `"update"` event on collection sources for manually triggering binding updates.
+ - Adds return values to all model methods.
+ - Upgrades to Uglify2 for better gzip compression.
+ - General refactoring and additional code comments.
+ - Documentation updates and corrections.
+
+'''0.9.0''' – March 12, 2013
+
+Initial release of Epoxy core features.
