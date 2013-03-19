@@ -367,9 +367,13 @@ describe("Backbone.Epoxy.View", function() {
 				{value: "1", label: "Han Solo"},
 				{value: "2", label: "Obi-Wan Kenobi"}
 			],
-			optVal: "1",
 			optDefault: "default",
-			optEmpty: "empty"
+			optEmpty: "empty",
+			valOptions: "1",
+			valDefault: "1",
+			valEmpty: "1",
+			valBoth: "1",
+			valMulti: "1"
 		},
 		
 		computeds: {
@@ -802,7 +806,7 @@ describe("Backbone.Epoxy.View", function() {
 	
 	
 	it("binding 'options:' should bind a collection of model label/value attributes to a select element's options.", function() {
-
+		
 	});
 	
 	
@@ -825,27 +829,74 @@ describe("Backbone.Epoxy.View", function() {
 	
 	
 	it("binding 'options:' should update the bound model value when the previous selection is no longer available.", function() {
-
+		var $el = $(".test-select-default");
+		expect( bindingModel.get("valDefault") ).toBe( "1" );
+		bindingModel.set("optionsList", []);
+		expect( bindingModel.get("valDefault") ).toBe( "default" );
+	});
+	
+	
+	it("binding 'options:' should update a bound multiselect value when the previous selection is no longer available.", function() {
+		var $el = $(".test-select-multi");
+		
+		// Set two options as selected, and confirm they appear within the view:
+		bindingModel.set("valMulti", ["1", "2"]);
+		expect( $el.val().join(",") ).toBe( "1,2" );
+		
+		// Remove one option from the list, then confirm the model captures the revised selection:
+		bindingModel.modifyArray("optionsList", "splice", 1, 1);
+		expect( bindingModel.get("valMulti").join(",") ).toBe( "2" );
 	});
 	
 	
 	it("binding 'optionsDefault:' should include a default first option in a select menu.", function() {
-
+		var $el = $(".test-select-default");
+		expect( $el.children().length ).toBe( 4 );
+		expect( $el.find(":first-child").text() ).toBe( "default" );
+	});
+	
+	
+	it("binding 'optionsDefault:' should bind the default option value to a model.", function() {
+		var $el = $(".test-select-default");
+		bindingModel.set("optDefault", {label:"choose...", value:""});
+		expect( $el.find(":first-child").text() ).toBe( "choose..." );
 	});
 	
 	
 	it("binding 'optionsEmpty:' should provide a placeholder option value for an empty select.", function() {
-
+		var $el = $(".test-select-empty");
+		expect( $el.children().length ).toBe( 3 );
+		bindingModel.set("optionsList", []);
+		expect( $el.children().length ).toBe( 1 );
+		expect( $el.find(":first-child").text() ).toBe( "empty" );
+	});
+	
+	
+	it("binding 'optionsEmpty:' should bind the empty placeholder option value to a model.", function() {
+		var $el = $(".test-select-empty");
+		bindingModel.set("optionsList", []);
+		bindingModel.set("optEmpty", {label:"---", value:""});
+		expect( $el.find(":first-child").text() ).toBe( "---" );
 	});
 	
 	
 	it("binding 'optionsEmpty:' should disable an empty select menu.", function() {
-
+		var $el = $(".test-select-empty");
+		bindingModel.set("optionsList", []);
+		expect( $el.prop("disabled") ).toBe( true );
 	});
 	
 	
 	it("binding 'optionsDefault:' should supersede 'optionsEmpty:' by providing a default item.", function() {
-
+		var $el = $(".test-select-both");
+		
+		// Empty the list, expect first option to still be the default:
+		bindingModel.set("optionsList", []);
+		expect( $el.find(":first-child").text() ).toBe( "default" );
+		
+		// Empty the default, now expect the first option to be the empty placeholder.
+		bindingModel.set("optDefault", "");
+		expect( $el.find(":first-child").text() ).toBe( "empty" );
 	});
 	
 	
@@ -868,6 +919,15 @@ describe("Backbone.Epoxy.View", function() {
 	it("binding 'value:' should set a value from the model into the view.", function() {
 		var $el = $(".test-input-first");
 		expect( $el.val() ).toBe( "Luke" );
+	});
+	
+	
+	it("binding 'value:' should set an array value from the model to a multiselect list.", function() {
+		var $el = $(".test-select-multi");
+		expect( $el.val().length ).toBe( 1 );
+		bindingModel.set("valMulti", ["1", "2"]);
+		expect( $el.val().length ).toBe( 2 );
+		expect( $el.val().join(",") ).toBe( "1,2" );
 	});
 	
 	

@@ -864,22 +864,25 @@
 		options: {
 			set: function( $element, value ) {
 				
-				// Pull a collection value's models list:
-				value = isCollection( value ) ? value.models : value;
+				// Pre-compile empty and default option values:
+				// both values MUST be accessed, for two reasons:
+				// 1) we need to need to guarentee that both values are reached for mapping purposes.
+				// 2) we'll need their values anyway to determine their defined/undefined status.
+				var optionsEmpty = readAccessor( this.optionsEmpty );
+				var optionsDefault = readAccessor( this.optionsDefault );
+				var options = isCollection( value ) ? value.models : value;
 				
 				// If value is a valid array:
-				if ( isArray(value) ) {
+				if ( isArray(options) ) {
 					
-					// Compile new markup:
-					var optionsEmpty = this.optionsEmpty;
-					var optionsDefault = this.optionsDefault;
+					var selection = $element.val();
 					var enabled = true;
 					var html = "";
 					
 					// No options or default, and has an empty options placeholder:
 					// display placeholder and disable select menu.
-					if ( !value.length && !optionsDefault && optionsEmpty ) {
-						html += createSelectOption( readAccessor(optionsEmpty) );
+					if ( !options.length && !optionsDefault && optionsEmpty ) {
+						html += createSelectOption( optionsEmpty );
 						enabled = false;
 					}
 					// Try to populate default option and options list:
@@ -887,22 +890,27 @@
 						
 						// Create the default option, if defined:
 						if ( optionsDefault ) {
-							html += createSelectOption( readAccessor(optionsDefault) );
+							html += createSelectOption( optionsDefault );
 						}
 						
 						// Create all option items:
-						_.each(value, function( option ) {
+						_.each(options, function( option ) {
 							html += createSelectOption( option );
 						});
 					}
 					
-					// Set new HTML to the element and toggle disabled status:
-					$element.html( html ).prop( "disabled", !enabled );
+					// Set new HTML to the element, toggle disabled status, and apply selection:
+					$element
+						.html( html )
+						.prop( "disabled", !enabled )
+						.val( selection );
 					
-					// Reset the "value" handler, if defined:
-					// this makes sure a bound value is applied within the new options scheme.
-					this.reset( "value" );
-					
+					// Test if previous selection state was successfully applied to the new options:
+					// if not, then flash the element's "change" event to trigger view-capture bindings. 
+					if ( !_.isEqual($element.val(), selection) ) {
+						$element.trigger( "change" );
+					}
+
 				} else {
 					// Invalid array value:
 					throw( "Binding 'options' requires a list value." );
@@ -1032,9 +1040,9 @@
 		
 		// Store the element, and create namespace for managed subviews:
 		this.$el = $element;
-		this.h = {}; // << Handlers namespace for managed handlers.
 		this.v = {}; // << Views namespace for managed subview.
-		
+		//this.h = {}; // << Handlers namespace for managed handlers.
+				
 		// Determine bound element type and its support for two-way bindings:
 		var self = this;
 		var tag = ($element[0].tagName).toLowerCase();
@@ -1080,9 +1088,7 @@
 				var triggers = [];
 				
 				// Create reset function for setting the binding's value to the display:
-				// this method is stored in the binding's handlers table,
-				// where the binding may call upon specific handlers to reset as needed.
-				var reset = self.h[ handlerName ] = function( target ) {
+				var reset = function( target ) {
 					handler.set.call(self, self.$el, readAccessor(accessor), target);
 				};
 				
@@ -1132,22 +1138,13 @@
 			}
 		},
 		
-		// Resets the value of a handler configured within the binding:
-		// manually triggers a managed handler to reset its value into the display;
-		// this is useful when bound handlers need to trigger changes among one another.
-		reset: function( handler ) {
-			if ( this.h.hasOwnProperty(handler) ) {
-				this.h[ handler ]();
-			}
-		},
-		
 		// Destroys the binding:
 		// all events and managed sub-views are killed.
 		dispose: function() {
 			this.empty();
 			this.stopListening();
 			this.$el.off( this.events );
-			this.$el = this.h = this.v = null;
+			this.$el = null;
 		}
 	});
 	

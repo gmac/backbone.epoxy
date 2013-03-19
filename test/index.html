@@ -107,10 +107,11 @@
 			<p class="test-mod-select" data-bind="text:select(active,firstName,lastName)"></p>
 		</div>
 		<div class="section">
-			<p><select class="test-select" data-bind="value:optVal,options:optionsList"></select></p>
-			<p><select class="test-select-default" data-bind="value:optVal,options:optionsList,optionsDefault:optDefault"></select></p>
-			<p><select class="test-select-empty" data-bind="value:optVal,options:optionsList,optionsEmpty:optEmpty"></select></p>
-			<p><select class="test-select-both" data-bind="value:optVal,options:optionsList,optionsDefault:optDefault,optionsEmpty:optEmpty"></select></p>
+			<p><select class="test-select" data-bind="value:valOptions,options:optionsList"></select></p>
+			<p><select class="test-select-default" data-bind="value:valDefault,options:optionsList,optionsDefault:optDefault"></select></p>
+			<p><select class="test-select-empty" data-bind="value:valEmpty,options:optionsList,optionsEmpty:optEmpty"></select></p>
+			<p><select class="test-select-both" data-bind="value:valBoth,options:optionsList,optionsDefault:optDefault,optionsEmpty:optEmpty"></select></p>
+			<p><select class="test-select-multi" multiple="multiple" data-bind="value:valMulti,options:optionsList"></select></p>
 		</div>
 		<div class="section">
 			<strong>Collection Management</strong>
