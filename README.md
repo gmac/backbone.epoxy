@@ -25,7 +25,7 @@ For all complete information and documentation, visit the project's website at [
 
 ## Change Log
 
-'''0.10.0''' – March 19, 2013
+**0.10.0** – *March 19, 2013*
 
 Adds additional binding features to stage for a 1.0 release.
 
@@ -39,6 +39,6 @@ Adds additional binding features to stage for a 1.0 release.
  - General refactoring and additional code comments.
  - Documentation updates and corrections.
 
-'''0.9.0''' – March 12, 2013
+**0.9.0** – *March 12, 2013*
 
 Initial release of Epoxy core features.
