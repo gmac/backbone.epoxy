@@ -27,6 +27,7 @@
 	var isCollection = function(obj) { return obj instanceof Backbone.Collection; };
 	
 	
+	// Utility function for shallow-copying object values:
 	function copy( value ) {
 		if ( isArray(value) ) {
 			return value.slice();
@@ -315,7 +316,7 @@
 	// -------------------------
 	// Observable objects store model values independently from the model's attributes table.
 	// Observables may store flat values, or define custom getter/setter functions to manage their value.
-	var EpoxyObservable = function( model, name, params ) {
+	function EpoxyObservable( model, name, params ) {
 		params = params || {};
 		
 		// Rewrite getter param:
@@ -496,12 +497,12 @@
 			});
 			
 			// Add native "model" and "collection" data sources:
-			self.model = addSourceToContext( self.model, context );
-			self.collection = addSourceToContext( self.collection, context );
+			self.model = addSourceToViewContext( self.model, context );
+			self.collection = addSourceToViewContext( self.collection, context );
 			
 			// Add all additional data sources:
 			_.each(sources, function( source, sourceName ) {
-				sources[ sourceName ] = addSourceToContext( source, context, sourceName );
+				sources[ sourceName ] = addSourceToViewContext( source, context, sourceName );
 			});
 			
 			// Creates a single element binding:
@@ -578,7 +579,7 @@
 	// Data sources are Backbone.Model and Backbone.Collection instances.
 	// @param source: a source instance, or a function that returns a source.
 	// @param context: the working binding context. All bindings in a view share a context.
-	function addSourceToContext( source, context, name ) {
+	function addSourceToViewContext( source, context, name ) {
 		
 		// Ignore missing sources, and invoke non-instances:
 		if (!source) return;
@@ -668,30 +669,12 @@
 		// return formatted value, or pass through primitives:
 		return accessor;
 	}
-	
-	
-	// Creates a new HTML string for a <select> menu option:
-	// used to generate elements for the "options" binding.
-	function createSelectOption( option ) {
-		
-		// Set both label and value as the raw option object by default:
-		var label = option;
-		var value = option;
-		
-		// Dig deeper into label/value settings for non-primitive values:
-		if ( isObject( option ) ) {
-			// Extract a label and value from each object:
-			// a model's "get" method is used to access potential observable values.
-			label = isModel( option ) ? option.get( "label" ) : option.label;
-			value = isModel( option ) ? option.get( "value" ) : option.value;
-		}
-		
-		return "<option value='"+ value +"'>"+ label +"</option>";
-	}
 
 	
 	// binding handlers
 	// ----------------
+	// Handlers define set/get methods for exchanging data with the DOM.
+	
 	var bindingHandlers = {
 		// Attribute: write-only. Sets element attributes.
 		attr: {
@@ -944,21 +927,36 @@
 	};
 	
 	
+	// Defines special handler params made available to the binding:
+	// these params are used by handler functions, but are not actually handlers themselves.
+	// Params will be extracted from the binding context and stored directly on the binding.
+	var handlerParams = [ "events", "optionsDefault", "optionsEmpty" ];
+	
+	
+	// Creates a new HTML string for a <select> menu option:
+	// used to generate elements for the "options" binding.
+	function createSelectOption( option ) {
+		
+		// Set both label and value as the raw option object by default:
+		var label = option;
+		var value = option;
+		
+		// Dig deeper into label/value settings for non-primitive values:
+		if ( isObject( option ) ) {
+			// Extract a label and value from each object:
+			// a model's "get" method is used to access potential observable values.
+			label = isModel( option ) ? option.get( "label" ) : option.label;
+			value = isModel( option ) ? option.get( "value" ) : option.value;
+		}
+		
+		return "<option value='"+ value +"'>"+ label +"</option>";
+	}
+	
+	
 	// binding operators
 	// -----------------
 	// Operators are special binding handlers that may be invoked while binding;
 	// they will return a wrapper function used to modify how accessors are read.
-	
-	// Partial application wrapper for creating binding operators:
-	var makeOperator = function( handler ) {
-		return function() {
-			var params = arguments;
-			return function() {
-				return handler( params );
-			};
-		};
-	};
-	
 	// IMPORTANT:
 	// Binding operators must access ALL of their dependent params while running,
 	// otherwise accessor params become unreachable and will not provide binding hooks.
@@ -1025,17 +1023,22 @@
 		})
 	};
 	
-	
-	// Defines special handler params made available to the binding:
-	// these params are used by handler functions, but are not actually handlers themselves.
-	// Params will be extracted from the binding context and stored directly on the binding.
-	var handlerParams = [ "events", "optionsDefault", "optionsEmpty" ];
+	// Partial application wrapper for creating binding operators:
+	function makeOperator( handler ) {
+		return function() {
+			var params = arguments;
+			return function() {
+				return handler( params );
+			};
+		};
+	}
 	
 	
 	// Epoxy.View -> Binding
 	// ---------------------
 	// The binding object connects an element to its binding declarations,
 	// as applied to the view's compiled binding context and its handler methods.
+	
 	var EpoxyBinding = function( $element, bindings, context, handlers ) {
 		
 		// Store the element, and create namespace for managed subviews:
