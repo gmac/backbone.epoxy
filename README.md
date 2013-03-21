@@ -27,6 +27,13 @@ For all complete information and documentation, visit the project's website at [
 
 ## Change Log
 
+**0.10.1** – *March 21, 2013* – [Diff](https://github.com/gmac/backbone.epoxy/compare/v0.10.0...v0.10.1 "Diff: v0.10.0/v0.10.1")
+
+Large codebase refactoring.
+
+ - Shifts bindings from element level down to the handler level.
+ - Opens default binding handlers, operators, and options to a public API.
+
 **0.10.0** – *March 19, 2013* – [Diff](https://github.com/gmac/backbone.epoxy/compare/v0.9.0...v0.10.0 "Diff: v0.9.0/v0.10.0")
 
 Adds additional binding features to stage for a 1.0 release.

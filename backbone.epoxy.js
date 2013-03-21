@@ -56,7 +56,7 @@
 			// Add all default observable attributes:
 			if ( this.observableDefaults ) {
 				_.each(this.observableDefaults, function( value, attribute ) {
-					this.addObservable( attribute, isFunction(value) ? value() : copyValue(value) );
+					this.addObservable( attribute, isFunction(value) ? value() : model_copyValue(value) );
 				}, this);
 			}
 			
@@ -98,7 +98,7 @@
 		// Array and Object values will return a shallow copy,
 		// primitive values will be returned directly.
 		getCopy: function( attribute ) {
-			return copyValue( this.get(attribute) );
+			return model_copyValue( this.get(attribute) );
 		},
 		
 		// Backbone.Model.set() override:
@@ -123,11 +123,25 @@
 				// All param properties are tested against observable setters,
 				// properties set to observables will be removed from the params table.
 				// Optionally, an observable setter may return key/value pairs to be merged into the set.
-				params = modelDeepSet(this, params, {}, []);
+				params = model_deepSet(this, params, {}, []);
 			}
 			
 			// Pass all resulting set params along to the underlying Backbone Model.
 			return modelSuper( this, "set", [params, options] );
+		},
+		
+		// Backbone.Model.toJSON() override:
+		// adds an "obs" option, specifying to include observable attributes.
+		toJSON: function( options ) {
+			var json = modelSuper( this, "toJSON", options );
+			
+			if ( options && options.obs ) {
+				_.each(this.obs, function( observable, attribute ) {
+					json[ attribute ] = observable.value;
+				});
+			}
+			
+			return json;
 		},
 		
 		// Backbone.Model.destroy() override:
@@ -249,6 +263,8 @@
 		}
 	});
 
+	// Epoxy.Model -> Private
+	// ----------------------
 
 	// Model deep-setter:
 	// Attempts to set a collection of key/value attribute pairs to observable attributes.
@@ -259,7 +275,7 @@
 	// @param toSet: an object of key/value pairs to attempt to set within the observable model.
 	// @param toReturn: resolved non-ovservable attribute values to be returned back to the native model.
 	// @param trace: property stack trace (prevents circular setter loops).	
-	function modelDeepSet( model, toSet, toReturn, stack ) {
+	function model_deepSet( model, toSet, toReturn, stack ) {
 		
 		// Loop through all setter properties:
 		for ( var attribute in toSet ) {
@@ -281,7 +297,7 @@
 						// Recursively set new values for a returned params object:
 						// creates a new copy of the stack trace for each new search branch.
 						if ( value && isObject(value) ) {
-							toReturn = modelDeepSet( model, value, toReturn, stack.slice().concat([attribute]) );
+							toReturn = model_deepSet( model, value, toReturn, stack.slice().concat([attribute]) );
 						}
 						
 					} else {
@@ -303,7 +319,7 @@
 	
 	// Creates a shallow-copy of object values:
 	// Array values are sliced, objects are cloned, primitives are returned.
-	function copyValue( value ) {
+	function model_copyValue( value ) {
 		if ( isArray(value) ) {
 			return value.slice();
 		} else if ( isObject(value) ) {
@@ -346,7 +362,7 @@
 		// the first pass sets up all observable attributes,
 		// then the second pass initializes all bindings.
 		if ( !model._init ) this.init();
-	};
+	}
 	
 	_.extend(EpoxyObservable.prototype, Backbone.Events, {
 		
@@ -454,8 +470,9 @@
 	});
 	
 	
-	// Read Accessor
-	// -------------
+	// Epoxy.View -> Binding API
+	// -------------------------
+	
 	// Reads value from an accessor:
 	// Accessors come in three potential forms:
 	// => A function to call for the requested value.
@@ -728,7 +745,37 @@
 				return "<option value='"+ value +"'>"+ label +"</option>";
 			}
 		},
-
+		
+		// Template: write-only. Renders the bound element into an Underscore template.
+		template: {
+			init: function() {
+				this.t = {};
+			},
+			set: function( $element, value ) {
+				// Extract data and template references:
+				var data = value.data;
+				var tmpl = value.tmpl;
+				
+				// Pull model data, if applicable:
+				data = isModel(data) ? data.toJSON({obs:true}) : data;
+				
+				// Create and cache template definitions:
+				if ( !isFunction(tmpl) ) {
+					tmpl = this.t[ tmpl ] = this.t[ tmpl ] ? this.t[ tmpl ] : _.template($(tmpl).html());
+				}
+				
+				// Render template into element:
+				try {
+					$element.html( tmpl(data) );
+				} catch( error ) {
+					// do nothing in response to errors...
+					// this may occur if model/template definitions are swapped.
+					// New model/template will register one at a time, and may not mesh.
+					// No good way around this, other than to suggest against hot template swaps.
+				}
+			}
+		},
+		
 		// Text: write-only. Sets the text value of an element.
 		text: {
 			set: function( $element, value ) {
@@ -768,6 +815,17 @@
 	// -----------------
 	// Operators are special binding handlers that may be invoked while binding;
 	// they will return a wrapper function used to modify how accessors are read.
+	
+	// Partial application wrapper for creating binding operators:
+	function makeOperator( handler ) {
+		return function() {
+			var params = arguments;
+			return function() {
+				return handler( params );
+			};
+		};
+	}
+	
 	// IMPORTANT: binding operators must access ALL of their dependent params while running,
 	// otherwise accessor params become unreachable and will not provide binding hooks.
 	// Therefore, assessment loops must NOT exit early... so do not optimize!
@@ -834,17 +892,6 @@
 	};
 	
 	
-	// Partial application wrapper for creating binding operators:
-	function makeOperator( handler ) {
-		return function() {
-			var params = arguments;
-			return function() {
-				return handler( params );
-			};
-		};
-	}
-	
-	
 	// Epoxy.View
 	// ----------
 	var viewMap;
@@ -890,12 +937,12 @@
 			});
 			
 			// Add native "model" and "collection" data sources:
-			self.model = addSourceToViewContext( self.model, context );
-			self.collection = addSourceToViewContext( self.collection, context );
+			self.model = view_addSourceToContext( self.model, context );
+			self.collection = view_addSourceToContext( self.collection, context );
 			
 			// Add all additional data sources:
 			_.each(sources, function( source, sourceName ) {
-				sources[ sourceName ] = addSourceToViewContext( source, context, sourceName );
+				sources[ sourceName ] = view_addSourceToContext( source, context, sourceName );
 			});
 			
 			// Create all bindings:
@@ -906,18 +953,13 @@
 				// Object declaration method:
 				// {"span.my-element": "text:attribute"}
 				
-				_.each(declarations, function( bindings, selector ) {
+				_.each(declarations, function( elementDecs, selector ) {
 					// Get DOM jQuery reference:
-					var $elements = self.$( selector );
+					var $element = view_queryForSelector( self, selector );
 
-					// Include top-level view in bindings search:
-					if ( self.$el.is(selector) ) {
-						$elements = $elements.add( self.$el );
-					}
-					
 					// Ignore empty DOM queries (without errors):
-					if ( $elements.length ) {
-						bindElementToView( self, $elements, bindings, context, handlers );
+					if ( $element.length ) {
+						view_bindElement( self, $element, elementDecs, context, handlers );
 					}
 				});
 				
@@ -926,18 +968,10 @@
 				// DOM attributes declaration method:
 				// <span data-bind="text:attribute"></span>
 				
-				var selector = "["+ declarations +"]";
-				var $elements = self.$( selector );
-
-				// Include top-level view in bindings search:
-				if ( self.$el.is(selector) ) {
-					$elements = $elements.add( self.$el );
-				}
-				
 				// Create bindings for each matched element:
-				$elements.each(function() {
+				view_queryForSelector( self, "["+declarations+"]" ).each(function() {
 					var $element = $(this);
-					bindElementToView( self, $element, $element.attr(declarations), context, handlers );
+					view_bindElement( self, $element, $element.attr(declarations), context, handlers );
 				});
 			}
 		},
@@ -959,19 +993,21 @@
 	}, {
 		// Define core components as static properties of the view:
 		// these components are available through the "Epoxy.View" namespace for extension.
-		defaultHandlers: bindingHandlers,
-		defaultOperators: bindingOperators,
-		defaultOptions: bindingOptions,
+		bindingHandlers: bindingHandlers,
+		bindingOperators: bindingOperators,
+		bindingOptions: bindingOptions,
 		makeOperator: makeOperator,
 		readAccessor: readAccessor
 	});
 	
+	// Epoxy.View -> Private
+	// ---------------------
 	
 	// Adds a data source to a view:
 	// Data sources are Backbone.Model and Backbone.Collection instances.
 	// @param source: a source instance, or a function that returns a source.
 	// @param context: the working binding context. All bindings in a view share a context.
-	function addSourceToViewContext( source, context, name ) {
+	function view_addSourceToContext( source, context, name ) {
 		
 		// Ignore missing sources, and invoke non-instances:
 		if (!source) return;
@@ -1035,6 +1071,18 @@
 		return source;
 	}
 	
+	// Queries element selectors within a view:
+	// matches elements within the view, and the view's container element.
+	function view_queryForSelector( view, selector ) {
+		var $elements = view.$( selector );
+		
+		// Include top-level view in bindings search:
+		if ( view.$el.is(selector) ) {
+			$elements = $elements.add( view.$el );
+		}
+		
+		return $elements;
+	}
 	
 	// Binds an element into a view:
 	// The element's declarations are parsed, then a binding is created for each declared handler.
@@ -1043,7 +1091,7 @@
 	// @param declarations: the string of binding declarations provided for the element.
 	// @param context: a compiled binding context with all availabe view data.
 	// @param handlers: a compiled handlers table with all native/custom handlers.
-	function bindElementToView( view, $element, declarations, context, handlers ) {
+	function view_bindElement( view, $element, declarations, context, handlers ) {
 		
 		// Parse localized binding context:
 		// parsing function is invoked with "operators" and "context" properties made available,

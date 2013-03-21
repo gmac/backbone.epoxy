@@ -115,6 +115,9 @@
 			<p><select class="test-select-multi" multiple="multiple" data-bind="value:valMulti,options:optionsList"></select></p>
 		</div>
 		<div class="section">
+			<div class="test-template"></div>
+		</div>
+		<div class="section">
 			<strong>Collection Management</strong>
 			<input class="name-input" type="text" value="">
 			<button class="name-add">Add</button>
@@ -129,10 +132,15 @@
 		</div>
 	</script>
 	
+	<script type="text/template-epoxy" id="test-template-tmpl">
+		
+	</script>
+	
 	<script src="../www/js/jquery.js"></script>
 	<script src="../www/js/lodash.js"></script>
 	<script src="../www/js/backbone.js"></script>
 	<script src="../backbone.epoxy.js"></script>
+	<script src="../backbone.epoxy-extras.js"></script>
 	<script src="epoxy-test.js"></script>
 	<script type="text/javascript">
 	$(function() {

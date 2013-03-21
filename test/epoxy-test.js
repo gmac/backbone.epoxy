@@ -96,6 +96,19 @@ describe("Backbone.Epoxy.Model", function() {
 	});
 	
 	
+	it("should get native model attributes using '.toJSON()'.", function() {
+		var json = model.toJSON();
+		expect( _.size(json) ).toBe( 3 );
+	});
+	
+	
+	it("should get native and observable model attributes using '.toJSON({obs:true})'.", function() {
+		var json = model.toJSON({obs:true});
+		expect( _.size(json) ).toBe( 9 );
+		expect( json.fullName ).toBe( "Charlie Brown" );
+	});
+	
+	
 	// Deprecating this feature within the published API...
 	it("should allow direct access to observable property values using their own getters and setters.", function() {
 		var sel = model.obs[ "isSelected" ];
@@ -905,6 +918,18 @@ describe("Backbone.Epoxy.View", function() {
 		// Empty the default, now expect the first option to be the empty placeholder.
 		bindingModel.set("optDefault", "");
 		expect( $el.find(":first-child").text() ).toBe( "empty" );
+	});
+	
+	
+	it("binding 'template:' should render a bound Model with a provided template reference.", function() {
+		var $el = $(".test-template");
+		
+	});
+	
+	
+	it("binding 'template:' should render a bound Object with a provided template reference.", function() {
+		var $el = $(".test-template");
+		
 	});
 	
 	
