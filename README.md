@@ -18,7 +18,7 @@ Epoxy requires [jQuery](http://jquery.com "jQuery.js") 1.7.0+, [Underscore](http
 	<script src="backbone-min.js"></script>
 	<script src="backbone.epoxy.min.js"></script>
 
-You may choose to replace Underscore with the [Lo-Dash](http://lodash.com "Lodash.js") alternative (Epoxy's test suite runs slightly faster using Lo-Dash, although the difference is not drastic).
+You may choose to replace Underscore with the [Lo-Dash](http://lodash.com "Lodash.js") alternative (Epoxy's test suite runs slightly faster using Lo-Dash, although the difference is not drastic). Also note, the [json2](https://github.com/douglascrockford/JSON-js "JSON2") library should be included when targeting IE6/7.
 
 ## Help & Documentation
 
