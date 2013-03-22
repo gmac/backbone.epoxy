@@ -115,8 +115,8 @@
 			<p><select class="test-select-multi" multiple="multiple" data-bind="value:valMulti,options:optionsList"></select></p>
 		</div>
 		<div class="section">
-			<div class="test-template" data-bind="template:{first:firstName,last:lastName}">
-				<script type="text/tmpl"><p>{{ first }} {{ last }}</p></script>
+			<div class="test-template" data-bind="template:['firstName','lastName']">
+				<script type="text/tmpl"><p>{{ firstName }} {{ lastName }}</p></script>
 			</div>
 		</div>
 		<div class="section">

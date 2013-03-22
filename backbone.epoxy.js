@@ -679,6 +679,11 @@
 		
 		// Options: write-only. Sets option items to a <select> element, then updates the value.
 		options: {
+			init: function( $element, value, context, bindings ) {
+				this.e = bindings.optionsEmpty;
+				this.d = bindings.optionsDefault;
+				this.v = bindings.value;
+			},
 			set: function( $element, value ) {
 				
 				// Pre-compile empty and default option values:
@@ -686,10 +691,10 @@
 				// 1) we need to need to guarentee that both values are reached for mapping purposes.
 				// 2) we'll need their values anyway to determine their defined/undefined status.
 				var self = this;
-				var optionsEmpty = readAccessor( self.optionsEmpty );
-				var optionsDefault = readAccessor( self.optionsDefault );
+				var optionsEmpty = readAccessor( self.e );
+				var optionsDefault = readAccessor( self.d );
+				var selection = readAccessor( self.v );
 				var options = isCollection( value ) ? value.models : value;
-				var selection = $element.val();
 				var enabled = true;
 				var html = "";
 				
@@ -740,14 +745,23 @@
 				}
 
 				return "<option value='"+ value +"'>"+ label +"</option>";
+			},
+			clean: function() {
+				this.d = this.e = this.v = null;
 			}
 		},
 		
 		// Template: write-only. Renders the bound element with an Underscore template.
 		template: {
-			init: function( $element, value ) {
+			init: function( $element, value, context ) {
 				var raw = $element.find("script,template");
 				this.tmpl = _.template( raw.length ? raw.html() : $element.html() );
+				
+				// If an array of template attributes was provided,
+				// then replace array with a compiled hash of attribute accessors:
+				if ( isArray(value) ) {
+					return _.pick(context, value);
+				}
 			},
 			set: function( $element, value ) {
 				value = isModel(value) ? value.toJSON({obs:true}) : value;
@@ -783,15 +797,6 @@
 		}
 	};
 
-
-	// Binding Options
-	// ---------------
-	// Defines special binding options made available to handlers:
-	// these optional params are used by handler functions, but are not actually handlers themselves.
-	// Options will be removed from the binding context and copied directly onto the binding.
-	
-	var bindingOptions = [ "events", "optionsDefault", "optionsEmpty" ];
-	
 	
 	// Binding Operators
 	// -----------------
@@ -878,7 +883,6 @@
 	Epoxy.binding = {
 		handlers: bindingHandlers,
 		operators: bindingOperators,
-		options: bindingOptions,
 		makeOperator: makeOperator,
 		readAccessor: readAccessor
 	};
@@ -1081,39 +1085,25 @@
 		// parsing function is invoked with "operators" and "context" properties made available,
 		// yeilds a native context object with element-specific bindings defined.
 		try {
-		 	var localContext = new Function("$o","$c","with($o){with($c){return{"+ declarations +"}}}")(bindingOperators, context);
+		 	var bindings = new Function("$o","$c","with($o){with($c){return{"+ declarations +"}}}")(bindingOperators, context);
 		} catch ( error ) {
 			throw( "Error parsing bindings: "+declarations );
 		}
 
-		// Pick out special binding options from the main context:
-		var options = _.pick(localContext, bindingOptions);
-
 		// Format the "events" option:
 		// include events from the binding declaration along with a default "change" trigger,
 		// then format all event names with a ".epoxy" namespace.
-		options.events = _.map( _.union(options.events || [], ["change"]), function(name) {
+		var events = _.map( _.union(bindings.events || [], ["change"]), function(name) {
 			return name+".epoxy";
 		}).join(" ");
 		
-		
-		// If an array of template attributes was provided,
-		// pick specified accessors out of the main context for use in a template binding:
-		if ( localContext.template && isArray(localContext.template) ) {
-			localContext.template = _.pick(context, localContext.template);
-		}
-		
 		// Apply bindings from native context:
-		_.each(_.omit(localContext, bindingOptions), function( accessor, handlerName ) {
+		_.each(bindings, function( accessor, handlerName ) {
 			
 			// Validate that each defined handler method exists before binding:
 			if ( handlers.hasOwnProperty(handlerName) ) {
 				// Create and add binding to the view's list of handlers:
-				view._bind.push( new EpoxyBinding($element, handlers[handlerName], accessor, options) );
-			} else {
-				// Invalid/undefined handler was declared:
-				// <data-bind="sfoo:attribute"> -- "sfoo" does not exist.
-				throw( "Invalid binding: "+handlerName );
+				view._bind.push( new EpoxyBinding($element, handlers[handlerName], accessor, events, context, bindings) );
 			}
 		});
 	}
@@ -1126,7 +1116,7 @@
 	// @param handler: the handler object to apply (include all handler methods).
 	// @param accessor: an accessor method from the binding context that exchanges data with the model.
 	// @param options: a compiled set of binding options that was pulled from the declaration.
-	function EpoxyBinding( $element, handler, accessor, options ) {
+	function EpoxyBinding( $element, handler, accessor, events, context, bindings ) {
 		
 		var self = this;
 		var tag = ($element[0].tagName).toLowerCase();
@@ -1137,10 +1127,12 @@
 		};
 		
 		self.$el = $element;
-		_.extend(self, handler, options);
+		self.evt = events;
+		_.extend( self, handler );
 
 		// Initialize the binding:
-		self.init(self.$el, readAccessor(accessor));
+		// allow the initializer to redefine/modify the attribute accessor if needed.
+		accessor = self.init( self.$el, readAccessor(accessor), context, bindings ) || accessor;
 		
 		// Set default binding, then initialize & map bindings:
 		// each binding handler is invoked to populate its initial value.
@@ -1154,7 +1146,7 @@
 		// => Binding handler has a getter method.
 		// => Value accessor is a function.
 		if ( changable && handler.get && isFunction(accessor) ) {
-			self.$el.on(self.events, function() {
+			self.$el.on(events, function() {
 				accessor( self.get(self.$el, readAccessor(accessor)) );
 			});
 		}
@@ -1182,7 +1174,7 @@
 		dispose: function() {
 			this.clean();
 			this.stopListening();
-			this.$el.off( this.events );
+			this.$el.off( this.evt );
 			this.$el = null;
 		}
 	});

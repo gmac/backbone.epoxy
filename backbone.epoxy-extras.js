@@ -15,7 +15,6 @@
 	
 	if (!Epoxy) throw( "Backbone.Epoxy not found." );
 	
-	var bindingOptions = Epoxy.binding.options;
 	var readAccessor = Epoxy.binding.readAccessor;
 	var makeOperator = Epoxy.binding.makeOperator;
 
