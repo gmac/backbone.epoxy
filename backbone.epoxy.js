@@ -470,8 +470,8 @@
 	});
 	
 	
-	// Epoxy.View -> Binding API
-	// -------------------------
+	// Epoxy.binding -> Binding API
+	// ----------------------------
 	
 	// Reads value from an accessor:
 	// Accessors come in three potential forms:
@@ -627,7 +627,7 @@
 						
 					} else {
 						// Reset with new views:
-						this.wipe();
+						this.clean();
 						
 						collection.each(function( model ) {
 							views[ model.cid ] = view = new collection.view({model: model});
@@ -639,7 +639,7 @@
 					$element.show();
 				}
 			},
-			wipe: function() {
+			clean: function() {
 				for (var id in this.v) {
 					if ( this.v.hasOwnProperty( id ) ) {
 						this.v[ id ].remove();
@@ -746,33 +746,18 @@
 			}
 		},
 		
-		// Template: write-only. Renders the bound element into an Underscore template.
+		// Template: write-only. Renders the bound element with an Underscore template.
 		template: {
-			init: function() {
-				this.t = {};
+			init: function( $element, value ) {
+				var raw = $element.find("script,template");
+				this.tmpl = _.template( raw.length ? raw.html() : $element.html() );
 			},
 			set: function( $element, value ) {
-				// Extract data and template references:
-				var data = value.data;
-				var tmpl = value.tmpl;
-				
-				// Pull model data, if applicable:
-				data = isModel(data) ? data.toJSON({obs:true}) : data;
-				
-				// Create and cache template definitions:
-				if ( !isFunction(tmpl) ) {
-					tmpl = this.t[ tmpl ] = this.t[ tmpl ] ? this.t[ tmpl ] : _.template($(tmpl).html());
-				}
-				
-				// Render template into element:
-				try {
-					$element.html( tmpl(data) );
-				} catch( error ) {
-					// do nothing in response to errors...
-					// this may occur if model/template definitions are swapped.
-					// New model/template will register one at a time, and may not mesh.
-					// No good way around this, other than to suggest against hot template swaps.
-				}
+				value = isModel(value) ? value.toJSON({obs:true}) : value;
+				$element.html( this.tmpl(value) );
+			},
+			clean: function() {
+				this.tmpl = null;
 			}
 		},
 		
@@ -892,6 +877,16 @@
 	};
 	
 	
+	// Define binding API:
+	Epoxy.binding = {
+		handlers: bindingHandlers,
+		operators: bindingOperators,
+		options: bindingOptions,
+		makeOperator: makeOperator,
+		readAccessor: readAccessor
+	};
+	
+	
 	// Epoxy.View
 	// ----------
 	var viewMap;
@@ -937,12 +932,12 @@
 			});
 			
 			// Add native "model" and "collection" data sources:
-			self.model = view_addSourceToContext( self.model, context );
-			self.collection = view_addSourceToContext( self.collection, context );
+			self.model = addSourceToViewContext( self.model, context );
+			self.collection = addSourceToViewContext( self.collection, context );
 			
 			// Add all additional data sources:
 			_.each(sources, function( source, sourceName ) {
-				sources[ sourceName ] = view_addSourceToContext( source, context, sourceName );
+				sources[ sourceName ] = addSourceToViewContext( source, context, sourceName );
 			});
 			
 			// Create all bindings:
@@ -955,11 +950,11 @@
 				
 				_.each(declarations, function( elementDecs, selector ) {
 					// Get DOM jQuery reference:
-					var $element = view_queryForSelector( self, selector );
+					var $element = queryViewForSelector( self, selector );
 
 					// Ignore empty DOM queries (without errors):
 					if ( $element.length ) {
-						view_bindElement( self, $element, elementDecs, context, handlers );
+						bindElementToView( self, $element, elementDecs, context, handlers );
 					}
 				});
 				
@@ -969,9 +964,9 @@
 				// <span data-bind="text:attribute"></span>
 				
 				// Create bindings for each matched element:
-				view_queryForSelector( self, "["+declarations+"]" ).each(function() {
+				queryViewForSelector( self, "["+declarations+"]" ).each(function() {
 					var $element = $(this);
-					view_bindElement( self, $element, $element.attr(declarations), context, handlers );
+					bindElementToView( self, $element, $element.attr(declarations), context, handlers );
 				});
 			}
 		},
@@ -990,14 +985,6 @@
 			viewSuper( this, "remove" );
 		}
 		
-	}, {
-		// Define core components as static properties of the view:
-		// these components are available through the "Epoxy.View" namespace for extension.
-		bindingHandlers: bindingHandlers,
-		bindingOperators: bindingOperators,
-		bindingOptions: bindingOptions,
-		makeOperator: makeOperator,
-		readAccessor: readAccessor
 	});
 	
 	// Epoxy.View -> Private
@@ -1007,7 +994,7 @@
 	// Data sources are Backbone.Model and Backbone.Collection instances.
 	// @param source: a source instance, or a function that returns a source.
 	// @param context: the working binding context. All bindings in a view share a context.
-	function view_addSourceToContext( source, context, name ) {
+	function addSourceToViewContext( source, context, name ) {
 		
 		// Ignore missing sources, and invoke non-instances:
 		if (!source) return;
@@ -1073,7 +1060,7 @@
 	
 	// Queries element selectors within a view:
 	// matches elements within the view, and the view's container element.
-	function view_queryForSelector( view, selector ) {
+	function queryViewForSelector( view, selector ) {
 		var $elements = view.$( selector );
 		
 		// Include top-level view in bindings search:
@@ -1091,19 +1078,19 @@
 	// @param declarations: the string of binding declarations provided for the element.
 	// @param context: a compiled binding context with all availabe view data.
 	// @param handlers: a compiled handlers table with all native/custom handlers.
-	function view_bindElement( view, $element, declarations, context, handlers ) {
+	function bindElementToView( view, $element, declarations, context, handlers ) {
 		
 		// Parse localized binding context:
 		// parsing function is invoked with "operators" and "context" properties made available,
 		// yeilds a native context object with element-specific bindings defined.
 		try {
-		 	context = new Function("$o","$c","with($o){with($c){return{"+ declarations +"}}}")(bindingOperators, context);
+		 	var localContext = new Function("$o","$c","with($o){with($c){return{"+ declarations +"}}}")(bindingOperators, context);
 		} catch ( error ) {
 			throw( "Error parsing bindings: "+declarations );
 		}
 
 		// Pick out special binding options from the main context:
-		var options = _.pick(context, bindingOptions);
+		var options = _.pick(localContext, bindingOptions);
 
 		// Format the "events" option:
 		// include events from the binding declaration along with a default "change" trigger,
@@ -1112,8 +1099,15 @@
 			return name+".epoxy";
 		}).join(" ");
 		
+		
+		// If an array of template attributes was provided,
+		// pick specified accessors out of the main context for use in a template binding:
+		if ( localContext.template && isArray(localContext.template) ) {
+			localContext.template = _.pick(context, localContext.template);
+		}
+		
 		// Apply bindings from native context:
-		_.each(_.omit(context, bindingOptions), function( accessor, handlerName ) {
+		_.each(_.omit(localContext, bindingOptions), function( accessor, handlerName ) {
 			
 			// Validate that each defined handler method exists before binding:
 			if ( handlers.hasOwnProperty(handlerName) ) {
@@ -1184,12 +1178,12 @@
 		init: blankMethod,
 		get: blankMethod,
 		set: blankMethod,
-		wipe: blankMethod,
+		clean: blankMethod,
 		
 		// Destroys the binding:
 		// all events and managed sub-views are killed.
 		dispose: function() {
-			this.wipe();
+			this.clean();
 			this.stopListening();
 			this.$el.off( this.events );
 			this.$el = null;

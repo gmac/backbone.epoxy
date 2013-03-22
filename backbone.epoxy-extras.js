@@ -1,4 +1,4 @@
-// Backbone.Epoxy -- Extras
+// Backbone.Epoxy -- Extras v0.0.0
 // Additional Epoxy handlers and operators for mixing into core.
 
 // (c) 2013 Greg MacWilliam
@@ -15,14 +15,13 @@
 	
 	if (!Epoxy) throw( "Backbone.Epoxy not found." );
 	
-	var bindingOptions = Epoxy.View.bindingOptions;
-	var readAccessor = Epoxy.View.readAccessor;
-	var makeOperator = Epoxy.View.makeOperator;
-	
-	
+	var bindingOptions = Epoxy.binding.options;
+	var readAccessor = Epoxy.binding.readAccessor;
+	var makeOperator = Epoxy.binding.makeOperator;
+
 	// Binding Handlers
 	// ----------------
-	_.extend(Epoxy.View.bindingHandlers, {
+	_.extend(Epoxy.binding.handlers, {
 		
 		readonly: {
 			set: function( $element, value ) {
@@ -40,9 +39,8 @@
 	
 	// Binding Operators
 	// -----------------
-	_.extend(Epoxy.View.bindingOperators, {
+	_.extend(Epoxy.binding.operators, {
 		
 	});
-	
 	
 }).call( this );

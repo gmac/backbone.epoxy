@@ -27,6 +27,14 @@ For all complete information and documentation, visit the project's website at [
 
 ## Change Log
 
+**0.11.0** – *March 22, 2013* – [Diff](https://github.com/gmac/backbone.epoxy/compare/v0.10.1...v0.11.0 "Diff: v0.10.1/v0.11.0")
+
+Adds final features planned for 1.0 release.
+
+ - Adds `template` binding for rendering data attributes with an Underscore template.
+ - Defines `binding` API, intended for library add-on extensions.
+ - Revised docs.
+
 **0.10.1** – *March 21, 2013* – [Diff](https://github.com/gmac/backbone.epoxy/compare/v0.10.0...v0.10.1 "Diff: v0.10.0/v0.10.1")
 
 Large codebase refactoring.
@@ -38,7 +46,7 @@ Large codebase refactoring.
 
 Adds additional binding features to stage for a 1.0 release.
 
- - Adds select menu options binding suite and supporting tests; includes:
+ - Adds select menu `options` binding suite and supporting tests; includes:
  	- `options` : Binds the contents of an Array or Collection to select menu options.
 	- `optionsDefault` : Provides a default option to include above `options` items.
 	- `optionsEmpty` : Provides an empty placeholder option to display when `options` is empty.
