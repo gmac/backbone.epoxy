@@ -920,7 +920,7 @@ describe("Backbone.Epoxy.View", function() {
 		expect( $el.find(":first-child").text() ).toBe( "empty" );
 	});
 	
-	
+
 	it("binding 'template:' should render a bound Model with a provided template reference.", function() {
 		var $el = $(".test-template");
 		
@@ -962,7 +962,7 @@ describe("Backbone.Epoxy.View", function() {
 		expect( $el.val().length ).toBe( 2 );
 		expect( $el.val().join(",") ).toBe( "1,2" );
 	});
-	
+
 	
 	it("binding 'value:' should set a value from the view into the model.", function() {
 		var $el = $(".test-input-first");

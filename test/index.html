@@ -42,7 +42,7 @@
 	</style>
 </head>
 <body>
-	
+	<div id="ie-console"></div>
 	<div id="dom-view" class="test-view">
 		<strong>DOM / Attribute Mapping</strong>
 		<div class="section">
@@ -134,12 +134,21 @@
 		</div>
 	</script>
 	
+	<script src="../www/js/json2.js"></script>
 	<script src="../www/js/jquery.js"></script>
 	<script src="../www/js/underscore.js"></script>
 	<script src="../www/js/backbone.js"></script>
 	<script src="../backbone.epoxy.js"></script>
 	<script src="../backbone.epoxy-extras.js"></script>
 	<script>
+	if (!window.console) {
+		console = {
+			log: function( mssg ) {
+				$("#ie-console").append("<p>"+mssg+"</p>");
+			}
+		};
+	}
+	
 	_.templateSettings = { interpolate : /\{\{(.+?)\}\}/g };
 	</script>
 	<script src="epoxy-test.js"></script>

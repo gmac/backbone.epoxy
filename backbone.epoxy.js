@@ -133,8 +133,8 @@
 		// Backbone.Model.toJSON() override:
 		// adds an "obs" option, specifying to include observable attributes.
 		toJSON: function( options ) {
-			var json = modelSuper( this, "toJSON", options );
-			
+			var json = modelSuper( this, "toJSON", arguments );
+
 			if ( options && options.obs ) {
 				_.each(this.obs, function( observable, attribute ) {
 					json[ attribute ] = observable.value;
@@ -716,13 +716,10 @@
 						html += self.opt( option );
 					});
 				}
-			
+
 				// Set new HTML to the element, toggle disabled status, and apply selection:
-				$element
-					.html( html )
-					.prop( "disabled", !enabled )
-					.val( selection );
-			
+				$element.html( html ).prop( "disabled", !enabled ).val( selection );
+
 				// Test if previous selection state was successfully applied to the new options:
 				// if not, then flash the element's "change" event to trigger view-capture bindings. 
 				if ( !_.isEqual($element.val(), selection) ) {
@@ -1079,7 +1076,7 @@
 	// @param context: a compiled binding context with all availabe view data.
 	// @param handlers: a compiled handlers table with all native/custom handlers.
 	function bindElementToView( view, $element, declarations, context, handlers ) {
-		
+
 		// Parse localized binding context:
 		// parsing function is invoked with "operators" and "context" properties made available,
 		// yeilds a native context object with element-specific bindings defined.
