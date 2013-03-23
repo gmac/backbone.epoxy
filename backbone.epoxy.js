@@ -56,7 +56,7 @@
 			// Add all default observable attributes:
 			if ( this.observableDefaults ) {
 				_.each(this.observableDefaults, function( value, attribute ) {
-					this.addObservable( attribute, isFunction(value) ? value() : model_copyValue(value) );
+					this.addObservable( attribute, isFunction(value) ? value() : copyModelValue(value) );
 				}, this);
 			}
 			
@@ -98,7 +98,7 @@
 		// Array and Object values will return a shallow copy,
 		// primitive values will be returned directly.
 		getCopy: function( attribute ) {
-			return model_copyValue( this.get(attribute) );
+			return copyModelValue( this.get(attribute) );
 		},
 		
 		// Backbone.Model.set() override:
@@ -123,7 +123,7 @@
 				// All param properties are tested against observable setters,
 				// properties set to observables will be removed from the params table.
 				// Optionally, an observable setter may return key/value pairs to be merged into the set.
-				params = model_deepSet(this, params, {}, []);
+				params = deepModelSet(this, params, {}, []);
 			}
 			
 			// Pass all resulting set params along to the underlying Backbone Model.
@@ -275,7 +275,7 @@
 	// @param toSet: an object of key/value pairs to attempt to set within the observable model.
 	// @param toReturn: resolved non-ovservable attribute values to be returned back to the native model.
 	// @param trace: property stack trace (prevents circular setter loops).	
-	function model_deepSet( model, toSet, toReturn, stack ) {
+	function deepModelSet( model, toSet, toReturn, stack ) {
 		
 		// Loop through all setter properties:
 		for ( var attribute in toSet ) {
@@ -297,7 +297,7 @@
 						// Recursively set new values for a returned params object:
 						// creates a new copy of the stack trace for each new search branch.
 						if ( value && isObject(value) ) {
-							toReturn = model_deepSet( model, value, toReturn, stack.slice().concat([attribute]) );
+							toReturn = deepModelSet( model, value, toReturn, stack.slice().concat([attribute]) );
 						}
 						
 					} else {
@@ -319,7 +319,7 @@
 	
 	// Creates a shallow-copy of object values:
 	// Array values are sliced, objects are cloned, primitives are returned.
-	function model_copyValue( value ) {
+	function copyModelValue( value ) {
 		if ( isArray(value) ) {
 			return value.slice();
 		} else if ( isObject(value) ) {
@@ -693,49 +693,51 @@
 				var self = this;
 				var optionsEmpty = readAccessor( self.e );
 				var optionsDefault = readAccessor( self.d );
-				var selection = readAccessor( self.v );
+				var currentValue = readAccessor( self.v );
+				var selection = isArray(currentValue) ? currentValue : [ currentValue ];
 				var options = isCollection( value ) ? value.models : value;
+				var numOptions = options.length;
 				var enabled = true;
 				var html = "";
 				
-				// Throw error for invalid options list:
-				if (!options) throw( "Binding 'options' is "+options );
-				
 				// No options or default, and has an empty options placeholder:
 				// display placeholder and disable select menu.
-				if ( !options.length && !optionsDefault && optionsEmpty ) {
+				if ( !numOptions && !optionsDefault && optionsEmpty ) {
 				
-					html += self.opt( optionsEmpty );
+					html += self.opt( optionsEmpty, numOptions, selection );
 					enabled = false;
 				
 				} else {
 					// Try to populate default option and options list:
 				
-					// Create the default option, if defined:
+					// Configure list with a default first option, if defined:
 					if ( optionsDefault ) {
-						html += self.opt( optionsDefault );
+						options = [ optionsDefault ].concat( options );
 					}
 				
 					// Create all option items:
-					_.each(options, function( option ) {
-						html += self.opt( option );
+					_.each(options, function( option, index ) {
+						html += self.opt( option, numOptions, selection );
 					});
 				}
 
-				// Set new HTML to the element, toggle disabled status, and apply selection:
-				$element.html( html ).prop( "disabled", !enabled ).val( selection );
+				// Set new HTML to the element and toggle disabled status:
+				$element.html( html ).prop( "disabled", !enabled );
 
-				// Test if previous selection state was successfully applied to the new options:
-				// if not, then flash the element's "change" event to trigger view-capture bindings. 
-				if ( !_.isEqual($element.val(), selection) ) {
-					$element.trigger( "change" );
+				// Pull revised value with new options selection state:
+				var revisedValue = $element.val();
+				
+				// Test if the current value was successfully applied:
+				// if not, set the new selection state into the model. 
+				if ( self.v && !_.isEqual(currentValue, revisedValue) ) {
+					self.v( revisedValue );
 				}
 			},
-			opt: function( option ) {
+			opt: function( option, numOptions, selection ) {
 				// Set both label and value as the raw option object by default:
 				var label = option;
 				var value = option;
-
+				
 				// Dig deeper into label/value settings for non-primitive values:
 				if ( isObject( option ) ) {
 					// Extract a label and value from each object:
@@ -743,8 +745,12 @@
 					label = isModel( option ) ? option.get( "label" ) : option.label;
 					value = isModel( option ) ? option.get( "value" ) : option.value;
 				}
-
-				return "<option value='"+ value +"'>"+ label +"</option>";
+				
+				// Configure selection-state option fragment:
+				// option should be selected if it's the only item (default/empty), or exists in the selection:
+				var select = (!numOptions || _.contains(selection, value)) ? "' selected='selected'>" : "'>";
+				
+				return "<option value='"+ value + select + label +"</option>";
 			},
 			clean: function() {
 				this.d = this.e = this.v = null;
@@ -1007,9 +1013,6 @@
 			// Establish source prefix:
 			var prefix = name ? name+"_" : "";
 			
-			// Create a table of all model attributes (native and -optionally- observable):
-			var attrs = _.extend({}, source.attributes, source.obs||{});
-			
 			// Create a read-only accessor for the model instance:
 			context[ "$"+(name||"model") ] = function() {
 				viewMap && viewMap.push([source, "change"]);
@@ -1017,30 +1020,13 @@
 			};
 			
 			// Compile all model attributes as accessors within the context:
-			_.each(attrs, function(value, attribute) {
+			_.each(source.toJSON({obs:true}), function(value, attribute) {
 				
 				// Create named accessor functions:
 				// -> Attributes from "view.model" use their normal names.
 				// -> Attributes from additional sources are named as "source_attribute".
 				context[ prefix+attribute ] = function( value ) {
-					
-					// Register the attribute to the bindings map, if enabled:
-					viewMap && viewMap.push([source, "change:"+attribute]);
-
-					// Set attribute value when accessor is invoked with an argument:
-					if ( !isUndefined(value) ) {
-						
-						// Set Object (non-null, non-array) hashtable value:
-						if ( isObject(value) && !isArray(value) ) {
-							return source.set( value );
-						}
-						
-						// Set single attribute/value pair:
-						return source.set( attribute, value );
-					}
-					
-					// Get the attribute value by default:
-					return source.get( attribute );
+					return accessViewDataAttribute( source, attribute, value );
 				};
 			});
 			
@@ -1057,6 +1043,32 @@
 		
 		// Return original object, or newly constructed data source:
 		return source;
+	}
+	
+	// Attribute data accessor:
+	// exchanges individual attribute values with model sources.
+	// This function is broken out from the accessor creation process for performance.
+	// @param source: the model data source to interact with.
+	// @param attribute: the model attribute to read/write.
+	// @param value: the value to set, or "undefined" to get the current value.
+	function accessViewDataAttribute( source, attribute, value ) {
+		// Register the attribute to the bindings map, if enabled:
+		viewMap && viewMap.push([source, "change:"+attribute]);
+
+		// Set attribute value when accessor is invoked with an argument:
+		if ( !isUndefined(value) ) {
+			
+			// Set Object (non-null, non-array) hashtable value:
+			if ( isObject(value) && !isArray(value) ) {
+				return source.set( value );
+			}
+			
+			// Set single attribute/value pair:
+			return source.set( attribute, value );
+		}
+		
+		// Get the attribute value by default:
+		return source.get( attribute );
 	}
 	
 	// Queries element selectors within a view:
