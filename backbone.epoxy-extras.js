@@ -15,31 +15,25 @@
 	
 	if (!Epoxy) throw( "Backbone.Epoxy not found." );
 	
-	var readAccessor = Epoxy.binding.readAccessor;
-	var makeOperator = Epoxy.binding.makeOperator;
-
+	var readAccessor = Epoxy.binding.readValue;
+	var addHandler = Epoxy.binding.addHandler;
+	var addOperator = Epoxy.binding.addOperator;
+	
 	// Binding Handlers
 	// ----------------
-	_.extend(Epoxy.binding.handlers, {
+	addHandler("readonly", function( $element, value ) {
+		$element.prop( "readonly", !!value );
+	});
 		
-		readonly: {
-			set: function( $element, value ) {
-				$element.prop( "readonly", !!value );
-			}
-		},
-		
-		placeholder: {
-			set: function( $element, value ) {
-				
-			}
-		}
+	addHandler("placeholder", function( $element, value ) {
+
 	});
 	
 	
 	// Binding Operators
 	// -----------------
-	_.extend(Epoxy.binding.operators, {
-		
+	addOperator("tern", function( condition, truthy, falsey ) {
+		return condition ? truthy : falsey;
 	});
 	
 }).call( this );

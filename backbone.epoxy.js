@@ -814,9 +814,20 @@
 		return function() {
 			var params = arguments;
 			return function() {
-				return handler( params );
+				return handler.apply(this, readOperatorParams(params));
 			};
 		};
+	}
+	
+	// Reads a list of cached operator params:
+	// this makes sure all params are accessed (for mapping purposes),
+	// and also unpacks the current value of each parameter for use within the handler.
+	function readOperatorParams( params ) {
+		var args = [];
+		for (var i=0, len=params.length; i < len; i++) {
+			args.push( readAccessor(params[i]) );
+		}
+		return args;
 	}
 	
 	// IMPORTANT: binding operators must access ALL of their dependent params while running,
@@ -825,72 +836,71 @@
 	
 	var bindingOperators = {
 		// Tests if all of the provided accessors are truthy (and):
-		all: makeOperator(function( params ) {
-			var result = true;
+		all: makeOperator(function() {
+			var params = arguments;
 			for ( var i=0, len=params.length; i < len; i++ ) {
-				if ( !readAccessor(params[i]) ) result = false;
+				if ( !params[i] ) return false;
 			}
-			return result;
+			return true;
 		}),
 	
 		// Tests if any of the provided accessors are truthy (or):
-		any: makeOperator(function( params ) {
-			var result = false;
+		any: makeOperator(function() {
+			var params = arguments;
 			for ( var i=0, len=params.length; i < len; i++ ) {
-				if ( readAccessor(params[i]) ) result = true;
+				if ( params[i] ) return true;
 			}
-			return result;
+			return false;
 		}),
 		
 		// Reads the length of the accessed property:
 		// assumes accessor value to be an Array or Collection; defaults to 0.
-		length: makeOperator(function( params ) {
-			return readAccessor( params[0] ).length || 0;
+		length: makeOperator(function( value ) {
+			return value.length || 0;
 		}),
 		
 		// Tests if none of the provided accessors are truthy (and not):
-		none: makeOperator(function( params ) {
-			var result = true;
+		none: makeOperator(function() {
+			var params = arguments;
 			for ( var i=0, len=params.length; i < len; i++ ) {
-				if ( readAccessor(params[i]) ) result = false;
+				if ( params[i] ) return false;
 			}
-			return result;
+			return true;
 		}),
 	
 		// Negates an accessor's value:
-		not: makeOperator(function( params ) {
-			return !readAccessor( params[0] );
+		not: makeOperator(function( value ) {
+			return !value;
 		}),
 	
 		// Formats one or more accessors into a text string:
 		// ("$1 $2 did $3", firstName, lastName, action)
-		format: makeOperator(function( params ) {
-			var str = readAccessor(params[0]);
+		format: makeOperator(function( str ) {
+			var params = arguments;
 			
 			for ( var i=1, len=params.length; i < len; i++ ) {
 				// TODO: need to make something like this work: (?<!\\)\$1
-				str = str.replace( new RegExp("\\$"+i, "g"), readAccessor(params[i]) );
+				str = str.replace( new RegExp("\\$"+i, "g"), params[i] );
 			}
 			return str;
 		}),
 		
 		// Provides one of two values based on a ternary condition:
 		// uses first param (a) as condition, and returns either b (truthy) or c (falsey).
-		select: makeOperator(function( params ) {
-			var a = readAccessor(params[0]);
-			var b = readAccessor(params[1]);
-			var c = readAccessor(params[2]);
-			return a ? b : c;
+		select: makeOperator(function( condition, truthy, falsey ) {
+			return condition ? truthy : falsey;
 		})
 	};
 	
 	
 	// Define binding API:
 	Epoxy.binding = {
-		handlers: bindingHandlers,
-		operators: bindingOperators,
-		makeOperator: makeOperator,
-		readAccessor: readAccessor
+		addHandler: function( name, handler ) {
+			bindingHandlers[ name ] = isFunction( handler ) ? {set:handler} : handler;
+		},
+		addOperator: function( name, handler ) {
+			bindingOperators[ name ] = makeOperator( handler );
+		}
 	};
 	
 	

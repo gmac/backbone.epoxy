@@ -35,7 +35,7 @@
 			<p class="title"><span><b>Epoxy</b>.js</span> Elegant Data Binding for Backbone</p>
 			<div class="download">
 				<a href="js/backbone.epoxy.min.js" class="download-button">Download Epoxy 0.11.0</a>
-				<p class="download-info">8k min, 2k gzip <i>|</i> <a href="https://github.com/gmac/backbone.epoxy">GitHub Full Source</a></p>
+				<p class="download-info">8.5k min, 2k gzip <i>|</i> <a href="https://github.com/gmac/backbone.epoxy">GitHub Full Source</a></p>
 			</div>
 		</div>
 		<div class="navigation" role="navigation">
@@ -93,6 +93,7 @@
 						<li><a href="#handler-options">options</a></li>
 						<li><a href="#handler-options-default">optionsDefault</a></li>
 						<li><a href="#handler-options-empty">optionsEmpty</a></li>
+						<li><a href="#handler-template">template</a></li>
 						<li><a href="#handler-text">text</a></li>
 						<li><a href="#handler-toggle">toggle</a></li>
 						<li><a href="#handler-value">value</a></li>
@@ -111,7 +112,8 @@
 					
 					<b><a href="#bindingapi">Epoxy.binding</a></b>
 					<ul>
-						<li><a href="#bindingapi-handlers">handlers</a></li>
+						<li><a href="#bindingapi-add-handler">addHandler</a></li>
+						<li><a href="#bindingapi-add-operator">addOperator</a></li>
 					</ul>
 				</div>
 			</div>
@@ -721,7 +723,7 @@ var view = new ListView();</code></pre>
 			</div>
 			
 			<div class="section">
-				<h3 id="handler-text">template</h3>
+				<h3 id="handler-template">template</h3>
 				<span class="alias">read-only</span>
 				<code>data-bind="template:$source"</code>
 				<p>The <b>template</b> binding extracts its element's HTML content while initializing, and then parses that content into an Underscore template using the bound data. You have some options on how both the template string and the bound data sources are defined.</p>
@@ -863,20 +865,57 @@ var view = new ListView();</code></pre>
 			<div class="section">
 				<h2 id="bindingapi">Epoxy.binding</h2>
 				<code>Backbone.Epoxy.binding</code>
-				<p>The <tt>Epoxy.binding</tt> namespace is an advanced API that provides access to Epoxy's binding internals. This API is used to extend the Epoxy core; its most common use case will be to add additional handlers to Epoxy's list of default bindings.</p>
+				<p>The <tt>Epoxy.binding</tt> namespace is an advanced API providing access to Epoxy's binding internals. This API is used to extend the Epoxy core; its most common use case is to add additional handlers to the list of default bindings.</p>
 			</div>
 			
 			<div class="section">
-				<h3 id="bindingapi-handlers">handlers</h3>
-				<code>Backbone.Epoxy.binding.handlers</code>
-				<p>Provides a reference to Epoxy's table of default <a href="#binding-handlers">binding handlers</a>. This may be extended with additional binding handlers made available to all Epoxy views. Binding handlers require a minimum definition of an object with a <b>set</b> function; they may optionally include <b>init</b>, <b>get</b>, and <b>clean</b> functions.</p>
+				<h3 id="bindingapi-add-handler">addHandler</h3>
+				<code>Backbone.Epoxy.binding.addHandler( name, handler )</code>
+				<p>Adds a <a href="#binding-handlers">binding handler</a> to Epoxy's table of internal defaults. Handlers added with this method become available to all Epoxy views. Binding handlers are added with a name string and a handler function/methods object. A simple one-way binding handler (writes to the DOM) may be defined as:</p>
 
-<pre><code class="js">Backbone.Epoxy.binding.handers["readonly"] = {
+<pre><code class="js">Backbone.Epoxy.binding.addHandler("readonly", function( $element, value ) {
+    $element.prop( "readonly", !!value );
+});</code></pre>
+
+				<p>Binding handlers may also be defined as a methods object that provides functions for getting/setting the element value, and initialization/cleanup of the handler:</p>
+
+<pre><code class="js">Backbone.Epoxy.binding.addHandler("handler_name", {
+    init: function( $element, value, bindings, context ) {
+        // Initialize the binding handler...
+    },
+    get: function( $element, value ) {
+        // Get data from the bound element...
+        return $element.val();
+    },
     set: function( $element, value ) {
-        $element.prop( "readonly", !!value );
+        // Set data into the bound element...
+        $element.val( value );
+    },
+    clean: function() {
+        // Cleanup the binding handler...
     }
-};</code></pre>
+});</code></pre>
 
+				<ul>
+					<li><tt>handler.init( $element, value, bindings, context )</tt> : <i>optional</i>. A handler's <b>init</b> method is called immediately to configure the handler. This is generally only needed for complex handlers that store operational data on themselves. The method receives the bound element (as jQuery) and the bound data value as arguments, as well as the hash of parsed bindings being applied to the element, and a reference to the full binding context of all available view data. The <tt>bindings</tt> and <tt>context</tt> arguments are handy for pulling additional data into the handler if needed. The <b>init</b> method may also return a reformatted version of its managed value, although this is only recommended for developers with insight into Epoxy internals. If you're not sure, don't return anything.</li>
+					
+					<li><tt>handler.get( $element, value )</tt> : <i>required for two-way bindings</i>. Reads and returns the bound element's value. This should poll data from the DOM element, and then return the value formatted for the model. The existing model value is provided for comparative reference.</li>
+					
+					<li><tt>handler.set( $element, value )</tt> : <i>required</i>. Writes a data value into the DOM element. Receives the element (as jQuery) and the value to set, and returns nothing.</li>
+					
+					<li><tt>handler.clean()</tt> : <i>optional</i>. Called during handler disposal; offers a cleanup hook to remove any custom binding configuration as the handler is deprecated.</li>
+				</ul>
+			</div>
+			
+			<div class="section">
+				<h3 id="bindingapi-add-operator">addOperator</h3>
+				<code>Backbone.Epoxy.binding.addOperator( name, operator )</code>
+				<p>Adds a <a href="#binding-operators">binding operator</a> to Epoxy's table of internal defaults. Operators added with this method become available to all Epoxy views. Operators are added with a name string and an operator function, and return a modified binding value. For example, the implementation of Epoxy's native <b><a href="#operator-select">select</a></b> operator would look like this:</p>
+				
+<pre><code class="js">Backbone.Epoxy.binding.addOperator("select", function(condition, truthy, falsey) {
+    return condition ? truthy : falsey;
+});</code></pre>
+				
 			</div>
 			
 			<div class="footer" role="contentinfo">
