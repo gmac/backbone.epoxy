@@ -830,10 +830,6 @@
 		return args;
 	}
 	
-	// IMPORTANT: binding operators must access ALL of their dependent params while running,
-	// otherwise accessor params become unreachable and will not provide binding hooks.
-	// Therefore, assessment loops must NOT exit early... so do not optimize!
-	
 	var bindingOperators = {
 		// Tests if all of the provided accessors are truthy (and):
 		all: makeOperator(function() {
