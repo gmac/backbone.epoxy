@@ -17,7 +17,7 @@
 	
 	var readAccessor = Epoxy.binding.readValue;
 	var addHandler = Epoxy.binding.addHandler;
-	var addOperator = Epoxy.binding.addOperator;
+	var addFilter = Epoxy.binding.addFilter;
 	
 	// Binding Handlers
 	// ----------------
@@ -32,7 +32,7 @@
 	
 	// Binding Operators
 	// -----------------
-	addOperator("tern", function( condition, truthy, falsey ) {
+	addFilter("tern", function( condition, truthy, falsey ) {
 		return condition ? truthy : falsey;
 	});
 	

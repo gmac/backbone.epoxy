@@ -52,7 +52,7 @@
 						<li><a href="#observables-computeds">Model Observables &amp; Computeds</a></li>
 						<li><a href="#computed-dependencies">Managing Computed Dependencies</a></li>
 						<li><a href="#computed-get-set">Computed Getters and Setters</a></li>
-						<li><a href="#binding-operators">View Binding Operators</a></li>
+						<li><a href="#binding-filters">View Binding Filters</a></li>
 						<li><a href="#binding-handlers">Custom Binding Handlers</a></li>
 						<li><a href="#binding-sources">Binding Collections &amp; Multiple Sources</a></li>
 						<li><a href="#epoxy-todos">Epoxy ToDos</a></li>
@@ -323,11 +323,11 @@ var view = new Backbone.Epoxy.View({
 			
 			<p>Learn more about computed getters and setters in the <b><a href="documentation.html#model-add-computed">Model.addComputed</a></b> documentation.</p>
 			
-			<h2 id="binding-operators">View Binding Operators</h2>
+			<h2 id="binding-filters">View Binding Filters</h2>
 
 			<p>Now let's turn our attention back to using bindings within an Epoxy view. Epoxy tries to strike a balance between robust binding options and clean binding definitions. While Epoxy uses a similar binding technique to <a href="http://knockoutjs.com/">Knockout.js</a>, it intentionally discourages some of Knockout's inline-javascript allowances.</p>
 
-			<p>Instead, Epoxy provides some operational wrappers for formatting data directly within your bindings. Notice how the <tt>not()</tt> and <tt>format()</tt> operators are used in the following binding scheme:</p>
+			<p>Instead, Epoxy provides some filtering wrappers for formatting data directly within your bindings. Notice how the <tt>not()</tt> and <tt>format()</tt> filters are used in the following binding scheme:</p>
 
 <div class="example">
 <ul class="tabs">
@@ -336,7 +336,7 @@ var view = new Backbone.Epoxy.View({
 </ul>
 
 <pre><code class="js">var view = new Backbone.Epoxy.View({
-    el: "#app-operators",
+    el: "#app-filters",
     model: new Backbone.Model({
         firstName: "Luke",
         lastName: "Skywalker"
@@ -344,7 +344,7 @@ var view = new Backbone.Epoxy.View({
 });
 </code></pre>
 
-<pre><code class="html">&lt;div id="app-operators"&gt;
+<pre><code class="html">&lt;div id="app-filters"&gt;
   &lt;p&gt;
       &lt;label&gt;First name*&lt;/label&gt;
       &lt;input type="text" data-bind="value:firstName,events:['keyup']"&gt;
@@ -360,11 +360,11 @@ var view = new Backbone.Epoxy.View({
 &lt;/div&gt;</code></pre>
 </div>
 
-			<p>In the above example, operational wrappers are used to format binding data for specific implementations. The <tt>not()</tt> operator is used to negate a value's truthiness, and the <tt>format()</tt> operator is used to combine multiple values into a display string through a familiar RegEx backreference format.</p>
+			<p>In the above example, formatting wrappers are used to format binding data for specific implementations. The <tt>not()</tt> filter is used to negate a value's truthiness, and the <tt>format()</tt> filter is used to combine multiple values into a display string through a familiar RegEx backreference format.</p>
 			
-			<p>The only catch with binding operators is that they may <strong>NOT</strong> be nested. Binding operators only accept primitive values and data within the binding context. This is a deliberate limitation about which Epoxy is fairly opinionated: application logic does not belong in your binding declarations. If a value requires more than a simple formatting pass, then it should be pre-processed within a model, or else applied to the view using a custom handler.</p>
+			<p>The only catch with binding filters is that they may <strong>NOT</strong> be nested. Binding filters only accept primitive values and data within the binding context. This is a deliberate limitation about which Epoxy is fairly opinionated: application logic does not belong in your binding declarations. If a value requires more than a simple formatting pass, then it should be pre-processed within a model, or else applied to the view using a custom handler.</p>
 			
-			<p>See a full list of available <a href="documentation.html#binding-operators">binding operators</a> in documentation.</p>
+			<p>See a full list of available <a href="documentation.html#binding-filters">binding filters</a> in documentation.</p>
 
 			<h2 id="binding-handlers">Custom Binding Handlers</h2>
 

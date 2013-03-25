@@ -818,25 +818,27 @@
 	};
 
 	
-	// Binding Operators
-	// -----------------
-	// Operators are special binding handlers that may be invoked while binding;
+	// Binding Filters
+	// ---------------
+	// Filters are special binding handlers that may be invoked while binding;
 	// they will return a wrapper function used to modify how accessors are read.
 	
-	// Partial application wrapper for creating binding operators:
-	function makeOperator( handler ) {
+	// Partial application wrapper for creating binding filters:
+	function makeFilter( handler ) {
 		return function() {
 			var params = arguments;
-			return function() {
-				return handler.apply(this, readOperatorParams(params));
+			return function( input ) {
+				return handler.apply(this, readFilterParams(params, input));
 			};
 		};
 	}
 	
-	// Reads a list of cached operator params:
+	// Reads a list of cached filter params:
 	// this makes sure all params are accessed (for mapping purposes),
 	// and also unpacks the current value of each parameter for use within the handler.
-	function readOperatorParams( params ) {
+	function readFilterParams( params, input ) {
+		if ( input ) throw("binding error: filtered values are read-only.");
+		
 		var args = [];
 		for (var i=0, len=params.length; i < len; i++) {
 			args.push( readAccessor(params[i]) );
@@ -844,9 +846,9 @@
 		return args;
 	}
 	
-	var bindingOperators = {
+	var bindingFilters = {
 		// Tests if all of the provided accessors are truthy (and):
-		all: makeOperator(function() {
+		all: makeFilter(function() {
 			var params = arguments;
 			for ( var i=0, len=params.length; i < len; i++ ) {
 				if ( !params[i] ) return false;
@@ -855,7 +857,7 @@
 		}),
 	
 		// Tests if any of the provided accessors are truthy (or):
-		any: makeOperator(function() {
+		any: makeFilter(function() {
 			var params = arguments;
 			for ( var i=0, len=params.length; i < len; i++ ) {
 				if ( params[i] ) return true;
@@ -865,12 +867,12 @@
 		
 		// Reads the length of the accessed property:
 		// assumes accessor value to be an Array or Collection; defaults to 0.
-		length: makeOperator(function( value ) {
+		length: makeFilter(function( value ) {
 			return value.length || 0;
 		}),
 		
 		// Tests if none of the provided accessors are truthy (and not):
-		none: makeOperator(function() {
+		none: makeFilter(function() {
 			var params = arguments;
 			for ( var i=0, len=params.length; i < len; i++ ) {
 				if ( params[i] ) return false;
@@ -879,13 +881,13 @@
 		}),
 	
 		// Negates an accessor's value:
-		not: makeOperator(function( value ) {
+		not: makeFilter(function( value ) {
 			return !value;
 		}),
 	
 		// Formats one or more accessors into a text string:
 		// ("$1 $2 did $3", firstName, lastName, action)
-		format: makeOperator(function( str ) {
+		format: makeFilter(function( str ) {
 			var params = arguments;
 			
 			for ( var i=1, len=params.length; i < len; i++ ) {
@@ -897,7 +899,7 @@
 		
 		// Provides one of two values based on a ternary condition:
 		// uses first param (a) as condition, and returns either b (truthy) or c (falsey).
-		select: makeOperator(function( condition, truthy, falsey ) {
+		select: makeFilter(function( condition, truthy, falsey ) {
 			return condition ? truthy : falsey;
 		})
 	};
@@ -908,8 +910,8 @@
 		addHandler: function( name, handler ) {
 			bindingHandlers[ name ] = isFunction( handler ) ? {set:handler} : handler;
 		},
-		addOperator: function( name, handler ) {
-			bindingOperators[ name ] = makeOperator( handler );
+		addFilter: function( name, handler ) {
+			bindingFilters[ name ] = makeFilter( handler );
 		},
 		config: function( settings ) {
 			_.extend( bindingSettings, settings );
@@ -952,6 +954,7 @@
 			var sources = self.bindingSources;
 			var declarations = self.bindings;
 			var handlers = _.clone( bindingHandlers );
+			var filters = _.clone( bindingFilters );
 			var context = {};
 			
 			// Compile a complete set of binding handlers for the view:
@@ -959,6 +962,12 @@
 			// Custom handlers defined as plain functions are registered as read-only setters.
 			_.each(self.bindingHandlers||{}, function( handler, name ) {
 			    handlers[ name ] = isFunction(handler) ? {set: handler} : handler;
+			});
+			
+			// Compile a complete set of binding filters for the view:
+			// mixes all custom filters into a copy of default filters.
+			_.each(self.bindingFilters||{}, function( filter, name ) {
+			    filters[ name ] = makeFilter( filter );
 			});
 			
 			// Add native "model" and "collection" data sources:
@@ -984,7 +993,7 @@
 
 					// Ignore empty DOM queries (without errors):
 					if ( $element.length ) {
-						bindElementToView( self, $element, elementDecs, context, handlers );
+						bindElementToView( self, $element, elementDecs, context, handlers, filters );
 					}
 				});
 				
@@ -996,7 +1005,7 @@
 				// Create bindings for each matched element:
 				queryViewForSelector( self, "["+declarations+"]" ).each(function() {
 					var $element = $(this);
-					bindElementToView( self, $element, $element.attr(declarations), context, handlers );
+					bindElementToView( self, $element, $element.attr(declarations), context, handlers, filters );
 				});
 			}
 		},
@@ -1014,7 +1023,6 @@
 			this.removeBindings();
 			viewSuper( this, "remove" );
 		}
-		
 	});
 	
 	// Epoxy.View -> Private
@@ -1114,13 +1122,13 @@
 	// @param declarations: the string of binding declarations provided for the element.
 	// @param context: a compiled binding context with all availabe view data.
 	// @param handlers: a compiled handlers table with all native/custom handlers.
-	function bindElementToView( view, $element, declarations, context, handlers ) {
+	function bindElementToView( view, $element, declarations, context, handlers, filters ) {
 
 		// Parse localized binding context:
-		// parsing function is invoked with "operators" and "context" properties made available,
+		// parsing function is invoked with "filters" and "context" properties made available,
 		// yeilds a native context object with element-specific bindings defined.
 		try {
-		 	var bindings = new Function("$o","$c","with($o){with($c){return{"+ declarations +"}}}")(bindingOperators, context);
+		 	var bindings = new Function("$f","$c","with($f){with($c){return{"+ declarations +"}}}")(filters, context);
 		} catch ( error ) {
 			throw( "Error parsing bindings: "+declarations );
 		}
