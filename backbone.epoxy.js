@@ -5,18 +5,19 @@
 // For usage and documentation:
 // http://epoxyjs.org
 
-(function() {
-	
-	// Operations scope:
-	var root = this;
-	var Backbone = root.Backbone;
-	var _ = root._;
-	
+(function(root, factory) {
+  if (typeof exports !== 'undefined') {
+  	module.exports = factory(require('underscore'), require('backbone'));
+  } else if (typeof define === 'function' && define.amd) {
+    define(['underscore', 'backbone'], factory);
+  } else {
+  	factory(root._, root.Backbone);
+  }
+}(this, function(_, Backbone) {
 	
 	// Epoxy namespace:
 	var Epoxy = Backbone.Epoxy = {};
-	
-	
+		
 	// Object-type assessment utils:
 	var array = Array.prototype;
 	var isUndefined = _.isUndefined;
@@ -1147,5 +1148,7 @@
 			this.$el = null;
 		}
 	});
-	
-}).call( this );
+
+	return Epoxy;
+
+}));
