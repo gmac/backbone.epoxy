@@ -32,9 +32,12 @@ For all complete information and documentation, visit the project's website at [
 Adds final features planned for 1.0 release.
 
  - Adds `template` binding for rendering data attributes with an Underscore template.
- - Defines `binding` API, intended for library add-on extensions.
+ - Adds `bindingFilters` namespace for defining custom data filters.
+ - Defines `binding` API for core configuration and add-ons.
  - Browser compatibility fixes to the `options` binding.
  - Refactoring for performance (at slight expense to file size).
+ - Adds environment setup and AMD definition, courtesy of jpurcell001 and Marionette.
+ - The notion of "operators" is officially reclassified as "filters".
  - Revised docs.
 
 **0.10.1** – *March 21, 2013* – [Diff](https://github.com/gmac/backbone.epoxy/compare/v0.10.0...v0.10.1 "Diff: v0.10.0/v0.10.1")
