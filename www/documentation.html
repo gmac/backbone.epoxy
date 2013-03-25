@@ -674,9 +674,9 @@ var view = new ListView();</code></pre>
 				<ul>
 					<li><tt>["Luke", "Han", "Leia"]</tt> : Primitives list. Given an array of primitives, options will be created using the array values as both the text and value for each option.</li>
 					
-					<li><tt>[{label:"Luke", value:"1"}, {label:"Leia", value:"2"}]</tt> : Label/value pairs. Given an array of objects, options will be created using each object's <b>label</b> and <b>value</b> properties as the text and value of each option.</li>
+					<li><tt>[{label:"Luke", value:"1"}, {label:"Leia", value:"2"}]</tt> : Label/value pairs. Given an array of objects, options will be created using each object's <b>label</b> and <b>value</b> properties as the text and value of each option. These property names may be adjusted globally through <a href="#binding-config">binding config</a>.</li>
 					
-					<li><tt>Backbone.Collection</tt> : Models list. The collection's <b>models</b> array will be used as the array source. Options will be created using each model's <b>label</b> and <b>value</b> attributes as the text and value of each option. An <tt>Epoxy.Model</tt> may be used to virtualize these values as observable/computed attributes if needed. Note that the <b>options</b> binding does not register a <tt>"change"</tt> event on its collection to avoid generally superfluous updates. Instead, you may manually trigger an <tt>"update"</tt> event on the collection to refresh its bindings.</li>
+					<li><tt>Backbone.Collection</tt> : Models list. The collection's <b>models</b> array will be used as the array source. Options will be created using each model's <b>label</b> and <b>value</b> attributes as the text and value of each option. These attribute names may be adjusted globally through <a href="#binding-config">binding config</a>. An <tt>Epoxy.Model</tt> may be used to virtualize these values as observable/computed attributes if needed. Note that the <b>options</b> binding does not register a <tt>"change"</tt> event on its collection to avoid generally superfluous updates. Instead, you may manually trigger an <tt>"update"</tt> event on the collection to refresh its bindings.</li>
 				</ul>
 				
 <pre><code class="js">observableDefaults: {
