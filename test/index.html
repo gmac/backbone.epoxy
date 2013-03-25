@@ -42,7 +42,7 @@
 	</style>
 </head>
 <body>
-	
+	<div id="ie-console"></div>
 	<div id="dom-view" class="test-view">
 		<strong>DOM / Attribute Mapping</strong>
 		<div class="section">
@@ -115,6 +115,11 @@
 			<p><select class="test-select-multi" multiple="multiple" data-bind="value:valMulti,options:optionsList"></select></p>
 		</div>
 		<div class="section">
+			<div class="test-template" data-bind="template:['firstName','lastName']">
+				<script type="text/tmpl"><p>{{ firstName }} {{ lastName }}</p></script>
+			</div>
+		</div>
+		<div class="section">
 			<strong>Collection Management</strong>
 			<input class="name-input" type="text" value="">
 			<button class="name-add">Add</button>
@@ -129,12 +134,25 @@
 		</div>
 	</script>
 	
+	<script src="../www/js/json2.js"></script>
 	<script src="../www/js/jquery.js"></script>
 	<script src="../www/js/underscore.js"></script>
 	<script src="../www/js/backbone.js"></script>
 	<script src="../backbone.epoxy.js"></script>
+	<script>
+	if (!window.console) {
+		console = {
+			log: function( mssg ) {
+				$("#ie-console").append("<p>"+mssg+"</p>");
+			}
+		};
+	}
+	
+	_.templateSettings = { interpolate : /\{\{(.+?)\}\}/g };
+	</script>
 	<script src="epoxy-test.js"></script>
 	<script type="text/javascript">
+	
 	$(function() {
 		var jasmineEnv = jasmine.getEnv();
 		jasmineEnv.updateInterval = 1000;

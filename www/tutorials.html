@@ -33,8 +33,8 @@
 		<div class="banner clearfix" role="banner">
 			<p class="title"><span><b>Epoxy</b>.js</span> Elegant Data Binding for Backbone</p>
 			<div class="download">
-				<a href="js/backbone.epoxy.min.js" class="download-button">Download Epoxy 0.10.0</a>
-				<p class="download-info">8k min, 2k gzip <i>|</i> <a href="https://github.com/gmac/backbone.epoxy">GitHub Full Source</a></p>
+				<a href="js/backbone.epoxy.min.js" class="download-button">Download Epoxy 0.11.0</a>
+				<p class="download-info">9k min, 2k gzip <i>|</i> <a href="https://github.com/gmac/backbone.epoxy">GitHub Full Source</a></p>
 			</div>
 		</div>
 		<div class="navigation" role="navigation">
@@ -52,7 +52,7 @@
 						<li><a href="#observables-computeds">Model Observables &amp; Computeds</a></li>
 						<li><a href="#computed-dependencies">Managing Computed Dependencies</a></li>
 						<li><a href="#computed-get-set">Computed Getters and Setters</a></li>
-						<li><a href="#binding-operators">View Binding Operators</a></li>
+						<li><a href="#binding-filters">View Binding Filters</a></li>
 						<li><a href="#binding-handlers">Custom Binding Handlers</a></li>
 						<li><a href="#binding-sources">Binding Collections &amp; Multiple Sources</a></li>
 						<li><a href="#epoxy-todos">Epoxy ToDos</a></li>
@@ -65,16 +65,14 @@
 			
 			<h2 id="installation">Installation</h2>
 
-			<p>Epoxy requires <a href="http://jquery.com/">jQuery</a> 1.7.0+, <a href="http://underscorejs.org/">Underscore</a> 1.4.3+, and <a href="http://backbonejs.org/">Backbone</a> 0.9.9+. To install Epoxy, download the <a href="https://github.com/gmac/backbone.epoxy/blob/master/backbone.epoxy.min.js">Epoxy library</a> (8k min, 3k gzip) and include its script tag in your document after all dependencies:</p>
+			<p>Epoxy requires <a href="http://jquery.com/">jQuery</a> 1.7.0+, <a href="http://underscorejs.org/">Underscore</a> 1.4.3+, and <a href="http://backbonejs.org/">Backbone</a> 0.9.9+. To install Epoxy, download the <a href="https://github.com/gmac/backbone.epoxy/blob/master/backbone.epoxy.min.js">Epoxy library</a> (9k min, 2k gzip) and include its script tag in your document after all dependencies:</p>
 
 <pre><code class="html">&lt;script src="js/jquery-min.js"&gt;&lt;/script&gt;
 &lt;script src="js/underscore-min.js"&gt;&lt;/script&gt;
 &lt;script src="js/backbone-min.js"&gt;&lt;/script&gt;
 &lt;script src="js/backbone.epoxy.min.js"&gt;&lt;/script&gt;</code></pre>
 
-			<!--p>Note that Epoxy's <tt>Model</tt> and <tt>View</tt> components operate independently of each other, therefore you may choose to just include the <a href="#">model script</a> or <a href="#">view script</a> if you only plan to use one component. Each component script is roughly 4k min, 1.5k gzip.</p-->
-			
-			<p>Epoxy is open source under the MIT license; you may browse the full library source in its <a href="https://github.com/gmac/backbone.epoxy">GitHub Repo</a>.</p>
+			<p>You may choose to replace Underscore with the <a href="http://lodash.com/">Lo-Dash</a> alternative (Epoxy's test suite does run slightly faster with Lo-Dash, although the difference is not drastic). Also remember to include <a href="https://github.com/douglascrockford/JSON-js">json2</a> when targeting IE6/7. Epoxy is open source under the MIT license; you may browse the full library source in its <a href="https://github.com/gmac/backbone.epoxy">GitHub Repo</a>.</p>
 			
 			<h2 id="simple-bindings">Simple View Bindings</h2>
 
@@ -325,11 +323,11 @@ var view = new Backbone.Epoxy.View({
 			
 			<p>Learn more about computed getters and setters in the <b><a href="documentation.html#model-add-computed">Model.addComputed</a></b> documentation.</p>
 			
-			<h2 id="binding-operators">View Binding Operators</h2>
+			<h2 id="binding-filters">View Binding Filters</h2>
 
 			<p>Now let's turn our attention back to using bindings within an Epoxy view. Epoxy tries to strike a balance between robust binding options and clean binding definitions. While Epoxy uses a similar binding technique to <a href="http://knockoutjs.com/">Knockout.js</a>, it intentionally discourages some of Knockout's inline-javascript allowances.</p>
 
-			<p>Instead, Epoxy provides some operational wrappers for formatting data directly within your bindings. Notice how the <tt>not()</tt> and <tt>format()</tt> operators are used in the following binding scheme:</p>
+			<p>Instead, Epoxy provides some filtering wrappers for formatting data directly within your bindings. Notice how the <tt>not()</tt> and <tt>format()</tt> filters are used in the following binding scheme:</p>
 
 <div class="example">
 <ul class="tabs">
@@ -338,7 +336,7 @@ var view = new Backbone.Epoxy.View({
 </ul>
 
 <pre><code class="js">var view = new Backbone.Epoxy.View({
-    el: "#app-operators",
+    el: "#app-filters",
     model: new Backbone.Model({
         firstName: "Luke",
         lastName: "Skywalker"
@@ -346,7 +344,7 @@ var view = new Backbone.Epoxy.View({
 });
 </code></pre>
 
-<pre><code class="html">&lt;div id="app-operators"&gt;
+<pre><code class="html">&lt;div id="app-filters"&gt;
   &lt;p&gt;
       &lt;label&gt;First name*&lt;/label&gt;
       &lt;input type="text" data-bind="value:firstName,events:['keyup']"&gt;
@@ -362,11 +360,11 @@ var view = new Backbone.Epoxy.View({
 &lt;/div&gt;</code></pre>
 </div>
 
-			<p>In the above example, operational wrappers are used to format binding data for specific implementations. The <tt>not()</tt> operator is used to negate a value's truthiness, and the <tt>format()</tt> operator is used to combine multiple values into a display string through a familiar RegEx backreference format.</p>
+			<p>In the above example, formatting wrappers are used to format binding data for specific implementations. The <tt>not()</tt> filter is used to negate a value's truthiness, and the <tt>format()</tt> filter is used to combine multiple values into a display string through a familiar RegEx backreference format.</p>
 			
-			<p>The only catch with binding operators is that they may <strong>NOT</strong> be nested. Binding operators only accept primitive values and data within the binding context. This is a deliberate limitation about which Epoxy is fairly opinionated: application logic does not belong in your binding declarations. If a value requires more than a simple formatting pass, then it should be pre-processed within a model, or else applied to the view using a custom handler.</p>
+			<p>The only catch with binding filters is that they may <b>NOT</b> be nested. Binding filters only accept primitive values and data within the binding context. This is a deliberate limitation about which Epoxy is fairly opinionated: application logic does not belong in your binding declarations. If a value requires more than a simple formatting pass, then it should be pre-processed within a model, or else applied to the view using a custom handler.</p>
 			
-			<p>See a full list of available <a href="documentation.html#binding-operators">binding operators</a> in documentation.</p>
+			<p>See a full list of available <a href="documentation.html#binding-filters">binding filters</a>, or learn how to define your own <a href="documentation.html#view-binding-filters">custom filters</a>.</p>
 
 			<h2 id="binding-handlers">Custom Binding Handlers</h2>
 

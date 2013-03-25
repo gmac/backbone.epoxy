@@ -34,8 +34,8 @@
 		<div class="banner clearfix" role="banner">
 			<p class="title"><span><b>Epoxy</b>.js</span> Elegant Data Binding for Backbone</p>
 			<div class="download">
-				<a href="js/backbone.epoxy.min.js" class="download-button">Download Epoxy 0.10.0</a>
-				<p class="download-info">8k min, 2k gzip <i>|</i> <a href="https://github.com/gmac/backbone.epoxy">GitHub Full Source</a></p>
+				<a href="js/backbone.epoxy.min.js" class="download-button">Download Epoxy 0.11.0</a>
+				<p class="download-info">9k min, 2k gzip <i>|</i> <a href="https://github.com/gmac/backbone.epoxy">GitHub Full Source</a></p>
 			</div>
 		</div>
 		<div class="navigation" role="navigation">
@@ -63,6 +63,7 @@
 						<li><a href="#model-observable-defaults">observableDefaults</a></li>
 						<li><a href="#model-remove-observable">removeObservable</a></li>
 						<li><a href="#model-set">set</a></li>
+						<li><a href="#model-tojson">toJSON</a></li>
 					</ul>
 			
 					<b><a href="#view">Epoxy.View</a></b>
@@ -71,6 +72,7 @@
 						<li><b><a href="#view-constructor">constructor</a></b></li>
 						<li><b><a href="#view-binding-context">binding context</a></b></li>
 						<li><a href="#view-apply-bindings">applyBindings</a></li>
+						<li><a href="#view-binding-filters">bindingFilters</a></li>
 						<li><a href="#view-binding-handlers">bindingHandlers</a></li>
 						<li><a href="#view-bindings">bindings</a></li>
 						<li><a href="#view-binding-sources">bindingSources</a></li>
@@ -92,20 +94,28 @@
 						<li><a href="#handler-options">options</a></li>
 						<li><a href="#handler-options-default">optionsDefault</a></li>
 						<li><a href="#handler-options-empty">optionsEmpty</a></li>
+						<li><a href="#handler-template">template</a></li>
 						<li><a href="#handler-text">text</a></li>
 						<li><a href="#handler-toggle">toggle</a></li>
 						<li><a href="#handler-value">value</a></li>
 					</ul>
 			
-					<b><a href="#binding-operators">View Binding Operators</a></b>
+					<b><a href="#binding-filters">View Binding Filters</a></b>
 					<ul>
-						<li><a href="#operator-all">all</a></li>
-						<li><a href="#operator-any">any</a></li>
-						<li><a href="#operator-format">format</a></li>
-						<li><a href="#operator-length">length</a></li>
-						<li><a href="#operator-none">none</a></li>
-						<li><a href="#operator-not">not</a></li>
-						<li><a href="#operator-select">select</a></li>
+						<li><a href="#filter-all">all</a></li>
+						<li><a href="#filter-any">any</a></li>
+						<li><a href="#filter-format">format</a></li>
+						<li><a href="#filter-length">length</a></li>
+						<li><a href="#filter-none">none</a></li>
+						<li><a href="#filter-not">not</a></li>
+						<li><a href="#filter-select">select</a></li>
+					</ul>
+					
+					<b><a href="#binding">Epoxy.binding</a></b>
+					<ul>
+						<li><a href="#binding-add-filter">addFilter</a></li>
+						<li><a href="#binding-add-handler">addHandler</a></li>
+						<li><a href="#binding-config">config</a></li>
 					</ul>
 				</div>
 			</div>
@@ -333,6 +343,12 @@ alert( model.get("wordsDict").hasOwnProperty("deathstar") );</code>
 			</div>
 			
 			<div class="section">
+				<h3 id="model-tojson">toJSON</h3>
+				<code>model.toJSON([options])</code>
+				<p>Override wrapper for the Backbone Model's native <b>toJSON</b> method. Allows an optional <tt>{obs:true}</tt> param to be passed, specifying that observable/computed attribute values should be included in the returned data.</p>
+			</div>
+			
+			<div class="section">
 				<h2 id="view">Epoxy.View</h2>
 
 				<p>The Epoxy View object extends <tt>Backbone.View</tt>, providing a new view abstract to be extended into your application.</p>
@@ -369,6 +385,30 @@ alert( model.get("wordsDict").hasOwnProperty("deathstar") );</code>
 				<p>The <b>applyBindings</b> method is automatically called by the view constructor <i>after</i> the view's <b>initialize</b> method runs. This allows the <b>initialize</b> step to make adjustments within the view prior to bindings being applied. You generally shouldn't need to call <b>applyBindings</b> manually.</p>
 
 				<p>Also note that view bindings are baked at the time they are applied. All relationships between data sources and the view are established during this binding step and can only be reconfigured by unbinding and rebinding the view.</p>
+			</div>
+			
+			<div class="section">
+				<h3 id="view-binding-filters">bindingFilters</h3>
+				<code>view.bindingFilters</code>
+				<p>A hash table defining a view's custom binding filters. Binding filters are used to format model data for display within the view. While Epoxy includes a <a href="#binding-filters">core set</a> of basic binding filters for common formatting operations, developers are encouraged to extend their views with customized binding filters.</p>
+
+				<p>To declare binding filters, define a new property on the <b>bindingFilters</b> hash with a formatting function that receives data arguments and returns a formatted value:</p>
+
+<pre><code class="js">var BindingView = Backbone.Epoxy.View.extend({
+    bindingFilters: {
+        yourName: function( firstName, lastName ) {
+            return "Your name is: "+ firstName +" "+ lastName;
+        }
+    }
+});</code></pre>				
+				
+				<p>The above filter definition would be bound as:</p>
+				
+<pre><code class="html">&lt;div data-bind="text:yourName(firstName,lastName)"&gt;&lt;/div&gt;</code></pre>
+
+				<p>Binding filter functions are called anonymously and operate in global scope. Note that filters generate read-only values, therefore may only be applied to one-way binding handlers. Filters applied to two-way handlers will throw an error when data is submitted back into the filter.</p>
+				
+				<p>Also of note – unlike computed model properties, you may safely use conditional logic in filter functions without creating holes in the dependency graph. Epoxy has enough information about filter functions to pre-process their arguments and guarantee their dependency mapping.</p>
 			</div>
 			
 			<div class="section">
@@ -463,7 +503,7 @@ var BindingView = Backbone.Epoxy.View.extend({
 				<p class="draft">This API is a working draft. Implementation may change.</p>
 				<p>A hash table defining additional binding sources to be added to the view's binding context. Binding sources are instances of <tt>Backbone.Model</tt> and/or <tt>Backbone.Collection</tt>. By default, an Epoxy view configures two potential binding sources: the view's <b>model</b> and <b>collection</b> properties are automatically added to the binding context under the aliases <tt>$model</tt> and <tt>$collection</tt>. Additional model and collection data sources may be specified within the <b>bindingSources</b> hash; these additional data sources will be added into the binding context under the alias <tt>$sourceName</tt>.</p>
 
-				<p>Additionally, model data sources provide aliases to all of their attributes within the binding context. In the case of the default <tt>$model</tt> data source, all model attributes are aliased within the binding context using their normal <tt>attribute</tt> name. For additional model sources added through the <b>bindingSources</b> hash, model attributes are added under the alias <tt>source_attributeName</tt>. This avoids attribute naming conflicts while binding multiple models of the same type.</p>
+				<p>Additionally, model data sources provide aliases to all of their attributes within the binding context. In the case of the default <tt>$model</tt> data source, all model attributes are aliased within the binding context using their normal <tt>attribute</tt> name. For additional model sources added through the <b>bindingSources</b> hash, model attributes are added under the alias <tt>source_attribute</tt>. This avoids attribute naming conflicts while binding multiple models of the same type.</p>
 
 <pre>
 <code class="js">// Epoxy view specifying five data sources:
@@ -484,9 +524,9 @@ var BindingView = Backbone.Epoxy.View.extend({
     $han: &lt;Backbone.Model&gt;,
     $obiwan: &lt;Backbone.Model&gt;,
     $users: &lt;Backbone.Collection&gt;,
-    name: &lt;$model:name&gt;,
-    han_name: &lt;$han:name&gt;,
-    obiwan_name: &lt;$obiwan:name&gt;
+    name: &lt;$model.name&gt;,
+    han_name: &lt;$han.name&gt;,
+    obiwan_name: &lt;$obiwan.name&gt;
 }
 </code>
 </pre>
@@ -709,6 +749,74 @@ var view = new ListView();</code></pre>
 			</div>
 			
 			<div class="section">
+				<h3 id="handler-template">template</h3>
+				<span class="alias">read-only</span>
+				<code>data-bind="template:$source"</code>
+				<p>The <b>template</b> binding extracts its element's HTML content while initializing, and then parses that content into an Underscore template using the bound data. You have some options on how both the template string and the bound data sources are defined.</p>
+				
+				<p><b>Defining the template string</b></p>
+				
+				<p>When the <b>template</b> binding initializes, it will extract content from its element to use as the template string. However, to safeguard against malformed HTML within the DOM, the <b>template</b> binding will first search its element for a <tt>&lt;script&gt;</tt> or a <tt>&lt;template&gt;</tt> tag to extract content from, such as:</p>
+
+<pre><code class="html">&lt;div data-bind="template:$model"&gt;
+    &lt;script type="text/tmpl"&gt;&lt;%= firstName %&gt; &lt;%= lastName %&gt;&lt;/script&gt;
+&lt;/div&gt;
+
+&lt;div data-bind="template:$model"&gt;
+    &lt;template&gt;&lt;%= firstName %&gt; &lt;%= lastName %&gt;&lt;/template&gt;
+&lt;/div&gt;</code></pre>
+
+				<p>If a <tt>&lt;script&gt;</tt> or <tt>&lt;template&gt;</tt> container is <i>not</i> found within the element, then the element's entire contents are parsed as the template string. If you choose this approach, then it's highly recommended that you modify Underscore's <a href="http://underscorejs.org/#template">templateSettings</a> param to choose more DOM-friendly field delimiters. Also, to avoid the infamous <a href="http://www.bluerobot.com/web/css/fouc.asp/">FOUC</a>, you're best off hiding the element with CSS and then toggle it's visibility with a binding:</p>
+				
+<pre><code class="html">&lt;div style="display:none;" data-bind="template:$model,toggle:true"&gt;
+    {{ firstName }} {{ lastName }}
+&lt;/div&gt;</code></pre>
+				
+				<p><b>Defining data sources</b></p>
+				
+				<p>The <b>template</b> binding may specify data sources in a few different ways. First, let's assume the following example view configuration:</p>
+
+<pre><code class="js">var MyView = Backbone.Epoxy.View.extend({
+    el: "#my-view",
+    model: new Backbone.Model({
+        firstName: "Luke",
+        lastName: "Skywalker",
+        isActive: false
+    });
+});</code></pre>			
+				
+				<ul>
+					<li>
+						<p><b>Model Source</b> : given the above <tt>MyView</tt> example, the <b>template</b> binding may reference a <tt>Backbone.Model</tt> data source directly through its context reference (<tt>$sourceName</tt>), such as:</p>
+				
+<pre><code class="html">&lt;div id="my-view" data-bind="template:$model"&gt;
+    &lt;template&gt;&lt;%= firstName %&gt; &lt;%= lastName %&gt;&lt;/template&gt;
+&lt;/div&gt;</code></pre>
+				
+						<p>When binding to a model source, all model attributes will be available to the template (this is equivalent to providing <tt>model.toJSON()</tt> to the template renderer). While this is a quick and easy binding method, it may not be the most efficient. The bound template will re-render in response to <i>all</i> model changes, rather than just changes to specific attributes used in the template. In this scenario, our template would re-render in response to <tt>isActive</tt> changing, even though it's not included within the template.</p>
+					</li>
+					<li>
+						<p><b>Array Source</b> : Given the above <tt>MyView</tt> example, the <b>template</b> binding may specify an array of attribute name strings to bind on, such as:</p>
+
+<pre><code class="html">&lt;div id="my-view" data-bind="template:['firstName','lastName']"&gt;
+   &lt;template&gt;&lt;%= firstName %&gt; &lt;%= lastName %&gt;&lt;/template&gt;
+&lt;/div&gt;</code></pre>
+
+						<p>When binding on attribute names, only the specified names are made available to the template. Also, our template will only re-render in response to changes in these attributes (in this scenario, changing the <tt>isActive</tt> attribute will no longer trigger a template refresh).</p>
+					</li>
+					<li>
+						<p><b>Hash Source</b> : Given the above <tt>MyView</tt> example, the <b>template</b> binding may define an object hash that maps keys to data attributes, such as:</p>
+
+<pre><code class="html">&lt;div id="my-view" data-bind="template:{first:firstName, last:lastName}"&gt;
+    &lt;template&gt;&lt;%= first %&gt; &lt;%= last %&gt;&lt;/template&gt;
+&lt;/div&gt;</code></pre>
+
+						<p>When defining a mapping hash, the declared object keys are the variables available within the template, and their values are bound attributes from the model. This is similar to the array declaration method (which effectively builds this hash mapping for you with matching key/value pairs). Like the array method, the template will only re-render in response to changes in the specifically referenced model attributes.</p>
+					</li>
+				</ul>
+			</div>
+			
+			<div class="section">
 				<h3 id="handler-text">text</h3>
 				<span class="alias">read-only</span>
 				<code>data-bind="text:modelAttribute"</code>
@@ -730,54 +838,127 @@ var view = new ListView();</code></pre>
 			</div>
 			
 			<div class="section">
-				<h2 id="binding-operators">View Binding Operators</h2>
-				<p>Binding operators provide a layer of flexibility for formatting data attributes directly within a binding declaration; they allow values to be formatted for binding-specific implementations:</p>
+				<h2 id="binding-filters">View Binding Filters</h2>
+				<p>Binding filters provide a layer of flexibility for formatting data attributes directly within a binding declaration; they allow values to be formatted for binding-specific implementations:</p>
 
 <pre><code class="html">&lt;span data-bind="toggle:not(firstName)"&gt;Please enter a first name.&lt;/span&gt;</code></pre>
 				
-				<p>Binding operators may be parameterized with any data attribute available in the <a href="#view-binding-context">binding context</a>, or with primitive values (<tt>String</tt>, <tt>Number</tt>, or <tt>Boolean</tt>). Be aware that you may <strong>NOT</strong> nest binding operators within one another &mdash; this is very deliberate, and a principle on which Epoxy is fairly opinionated: application logic does not belong within a binding declaration. If you need to perform multi-pass value transformations, that work should be done within your model or else in a custom binding handler.</p>
+				<p>Binding filters may be parameterized with any data attribute(s) available in the <a href="#view-binding-context">binding context</a>, or with primitive values (<tt>String</tt>, <tt>Number</tt>, or <tt>Boolean</tt>). However, binding filters may <b>NOT</b> be nested within one another &mdash; this is very deliberate, and a principle on which Epoxy is opinionated: application logic does not belong within binding declarations. If you need to perform multi-pass value filtering, that work should either be done within your model or else through a single custom binding filter and/or handler.</p>
+				
+				<p>Also note: binding filters are <b>one-way</b> sources, meaning they can format data for the view, but can <b>not</b> submit it back to the model. Assigning a filter to a two-way binding will throw an error when data is passed back into the filter.</p>
 			</div>
 			
 			<div class="section">
-				<h3 id="operator-all">all</h3>
+				<h3 id="filter-all">all</h3>
 				<code>data-bind="toggle:all(dataAttribute,[...])"</code>
 				<p>Assesses one or more data attributes as <tt>true</tt> if <i>all</i> attributes are truthy.</p>
 			</div>
 			
 			<div class="section">
-				<h3 id="operator-any">any</h3>
+				<h3 id="filter-any">any</h3>
 				<code>data-bind="toggle:any(dataAttribute,[...])"</code>
 				<p>Assesses one or more data attributes as <tt>true</tt> if <i>any</i> of the attributes are truthy.</p>
 			</div>
 			
 			<div class="section">
-				<h3 id="operator-format">format</h3>
+				<h3 id="filter-format">format</h3>
 				<code>data-bind="text:format('$1 of $2',dataAttribute,dataAttribute)"</code>
 				<p>Formats a string with a series of data attribute replacements. Operates the same as string replacement for <tt>RegExp</tt> capture groups, where field insertions are denoted as <tt>"$1,&nbsp;$2,&nbsp;...&nbsp;$n"</tt>. Escape intentional "$n" patterns within the template string as "\$n". Note that the first value insertion index is 1, not 0.</p>
 			</div>
 			
 			<div class="section">
-				<h3 id="operator-length">length</h3>
+				<h3 id="filter-length">length</h3>
 				<code>data-bind="toggle:length(dataAttribute)"</code>
 				<p>Returns the length of an <tt>Array</tt> or <tt>Collection</tt> data attribute, or <tt>0</tt> by default. Useful for loosely-typed assessments of a collection's content status.</p>
 			</div>
 			
 			<div class="section">
-				<h3 id="operator-none">none</h3>
+				<h3 id="filter-none">none</h3>
 				<code>data-bind="toggle:none(dataAttribute,[...])"</code>
 				<p>Assesses one or more data attributes as <tt>true</tt> if <i>none</i> of the attributes are truthy.</p>
 			</div>
 			
 			<div class="section">
-				<h3 id="operator-not">not</h3>
+				<h3 id="filter-not">not</h3>
 				<code>data-bind="toggle:not(dataAttribute)"</code>
 				<p>Inverts the loosely-typed boolean value of a data attribute.</p>
 			</div>
 			
 			<div class="section">
-				<h3 id="operator-select">select</h3>
+				<h3 id="filter-select">select</h3>
 				<code>data-bind="text:select(conditionalValue,truthyValue,falseyValue)"</code>
 				<p>Performs a ternary operation using JavaScript's <tt>?:</tt> operator. The <b>select</b> operation receives three arguments: the first argument is assessed as a loosely-typed conditional; if truthy, the second argument is returned; if falsey, the third argument is returned.</p>
+			</div>
+			
+			<div class="section">
+				<h2 id="binding">Epoxy.binding</h2>
+				<code>Backbone.Epoxy.binding</code>
+				<p>The <tt>Epoxy.binding</tt> API allows customization of Epoxy's default binding capabilities and configuration of binding settings.</p>
+			</div>
+			
+			<div class="section">
+				<h3 id="binding-add-filter">addFilter</h3>
+				<code>Backbone.Epoxy.binding.addFilter( name, filter )</code>
+				<p>Adds a <a href="#binding-filters">binding filter</a> to Epoxy's table of internal defaults. Filters added with this method become available to all Epoxy views. Filters are added with a name string and a filter function, and return a modified binding value. Filters create read-only values, so should only be applied to one-way binding handlers. All filter arguments are pre-processed by the filter, so you may safely use conditional logic in filters without breaking automated dependency mapping:</p>
+
+<pre><code class="js">Backbone.Epoxy.binding.addFilter("select", function(condition, truthy, falsey) {
+    return condition ? truthy : falsey;
+});</code></pre>
+			</div>
+						
+			<div class="section">
+				<h3 id="binding-add-handler">addHandler</h3>
+				<code>Backbone.Epoxy.binding.addHandler( name, handler )</code>
+				<p>Adds a <a href="#binding-handlers">binding handler</a> to Epoxy's table of internal defaults. Handlers added with this method become available to all Epoxy views. Binding handlers are added with a name string and a handler function or methods object. A simple one-way binding handler (writes to the DOM) may be defined as:</p>
+
+<pre><code class="js">Backbone.Epoxy.binding.addHandler("readonly", function( $element, value ) {
+    $element.prop( "readonly", !!value );
+});</code></pre>
+
+				<p>Binding handlers may also be defined as a methods object that provides functions for getting/setting the element value, and initialization/cleanup of the handler:</p>
+
+<pre><code class="js">Backbone.Epoxy.binding.addHandler("handler_name", {
+    init: function( $element, value, bindings, context ) {
+        // Initialize the binding handler...
+    },
+    get: function( $element, value ) {
+        // Get data from the bound element...
+        return $element.val();
+    },
+    set: function( $element, value ) {
+        // Set data into the bound element...
+        $element.val( value );
+    },
+    clean: function() {
+        // Cleanup the binding handler...
+    }
+});</code></pre>
+
+				<ul>
+					<li><tt>handler.init( $element, value, bindings, context )</tt> : <i>optional</i>. A handler's <b>init</b> method is called immediately to configure the handler. This is generally only needed for complex handlers that store operational data on themselves. The method receives the bound element (as jQuery) and the bound data value as arguments, as well as the hash of parsed bindings being applied to the element, and a reference to the full binding context of all available view data. The <tt>bindings</tt> and <tt>context</tt> arguments are handy for pulling additional data into the handler if needed. The <b>init</b> method may also return a reformatted version of its managed value, although this is only recommended for developers with insight into Epoxy internals. If you're not sure, don't return anything.</li>
+					
+					<li><tt>handler.get( $element, value )</tt> : <i>required for two-way bindings</i>. Reads and returns the bound element's value. This should poll data from the DOM element, and then return the value formatted for the model. The existing model value is provided for comparative reference.</li>
+					
+					<li><tt>handler.set( $element, value )</tt> : <i>required</i>. Writes a data value into the DOM element. Receives the element (as jQuery) and the value to set, and returns nothing.</li>
+					
+					<li><tt>handler.clean()</tt> : <i>optional</i>. Called during handler disposal; offers a cleanup hook to remove any custom binding configuration as the handler is deprecated.</li>
+				</ul>
+			</div>
+			
+			<div class="section">
+				<h3 id="binding-config">config</h3>
+				<code>Backbone.Epoxy.binding.config( settings )</code>
+				<p>Merges a settings object into the bindings API configuration. The following settings may be passed:</p>
+				
+				<ul>
+					<li><tt>optionText</tt> : configures the <b>options</b> binding. Specifies an attribute name to pick from objects and/or models as the text written into <tt>option</tt> elements. Default is <tt>"label"</tt>.</li>
+					<li><tt>optionValue</tt> : configures the <b>options</b> binding. Specifies an attribute name to pick from objects and/or models as the value written into <tt>option</tt> elements. Default is <tt>"value"</tt>.</li>
+				</ul>
+				
+<pre><code class="js">Backbone.Epoxy.binding.config({
+    optionText: "optText",
+    optionValue: "optValue"
+});</code></pre>
 			</div>
 			
 			<div class="footer" role="contentinfo">

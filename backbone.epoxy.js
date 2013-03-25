@@ -13,11 +13,9 @@
 	if ( typeof exports !== "undefined" ) {
 		// Define as CommonJS export:
 		module.exports = factory( require(underscore), require(backbone) );
-		
 	} else if ( typeof define === "function" && define.amd ) {
 		// Define as AMD:
 		define( [underscore, backbone], factory );
-		
 	} else {
 		// Just run it:
 		factory( root._, root.Backbone );
@@ -36,16 +34,7 @@
 	var isArray = _.isArray;
 	var isModel = function(obj) { return obj instanceof Backbone.Model; };
 	var isCollection = function(obj) { return obj instanceof Backbone.Collection; };
-	
-	
-	function copy( value ) {
-		if ( isArray(value) ) {
-			return value.slice();
-		} else if ( isObject(value) ) {
-			return _.clone(value);
-		}
-		return value;
-	}
+	var blankMethod = function() {};
 	
 	
 	// Partial application for calling method implementations of a super-class object:
@@ -76,7 +65,7 @@
 			// Add all default observable attributes:
 			if ( this.observableDefaults ) {
 				_.each(this.observableDefaults, function( value, attribute ) {
-					this.addObservable( attribute, isFunction(value) ? value() : copy(value) );
+					this.addObservable( attribute, isFunction(value) ? value() : copyModelValue(value) );
 				}, this);
 			}
 			
@@ -118,7 +107,7 @@
 		// Array and Object values will return a shallow copy,
 		// primitive values will be returned directly.
 		getCopy: function( attribute ) {
-			return copy( this.get(attribute) );
+			return copyModelValue( this.get(attribute) );
 		},
 		
 		// Backbone.Model.set() override:
@@ -143,11 +132,25 @@
 				// All param properties are tested against observable setters,
 				// properties set to observables will be removed from the params table.
 				// Optionally, an observable setter may return key/value pairs to be merged into the set.
-				params = modelDeepSet(this, params, {}, []);
+				params = deepModelSet(this, params, {}, []);
 			}
 			
 			// Pass all resulting set params along to the underlying Backbone Model.
 			return modelSuper( this, "set", [params, options] );
+		},
+		
+		// Backbone.Model.toJSON() override:
+		// adds an "obs" option, specifying to include observable attributes.
+		toJSON: function( options ) {
+			var json = modelSuper( this, "toJSON", arguments );
+
+			if ( options && options.obs ) {
+				_.each(this.obs, function( observable, attribute ) {
+					json[ attribute ] = observable.value;
+				});
+			}
+			
+			return json;
 		},
 		
 		// Backbone.Model.destroy() override:
@@ -269,7 +272,9 @@
 		}
 	});
 
-	
+	// Epoxy.Model -> Private
+	// ----------------------
+
 	// Model deep-setter:
 	// Attempts to set a collection of key/value attribute pairs to observable attributes.
 	// Observable setters may digest values, and then return mutated key/value pairs for inclusion into the set operation.
@@ -278,8 +283,8 @@
 	// @param model: target Epoxy model on which to operate.
 	// @param toSet: an object of key/value pairs to attempt to set within the observable model.
 	// @param toReturn: resolved non-ovservable attribute values to be returned back to the native model.
-	// @param trace: property stack trace (prevents circular setter loops).
-	function modelDeepSet( model, toSet, toReturn, stack ) {
+	// @param trace: property stack trace (prevents circular setter loops).	
+	function deepModelSet( model, toSet, toReturn, stack ) {
 		
 		// Loop through all setter properties:
 		for ( var attribute in toSet ) {
@@ -301,7 +306,7 @@
 						// Recursively set new values for a returned params object:
 						// creates a new copy of the stack trace for each new search branch.
 						if ( value && isObject(value) ) {
-							toReturn = modelDeepSet( model, value, toReturn, stack.slice().concat([attribute]) );
+							toReturn = deepModelSet( model, value, toReturn, stack.slice().concat([attribute]) );
 						}
 						
 					} else {
@@ -321,12 +326,24 @@
 		return toReturn;
 	}
 	
+	// Creates a shallow-copy of object values:
+	// Array values are sliced, objects are cloned, primitives are returned.
+	function copyModelValue( value ) {
+		if ( isArray(value) ) {
+			return value.slice();
+		} else if ( isObject(value) ) {
+			return _.clone(value);
+		}
+		return value;
+	}
+	
 	
 	// Epoxy.Model -> Observable
 	// -------------------------
 	// Observable objects store model values independently from the model's attributes table.
 	// Observables may store flat values, or define custom getter/setter functions to manage their value.
-	var EpoxyObservable = function( model, name, params ) {
+	
+	function EpoxyObservable( model, name, params ) {
 		params = params || {};
 		
 		// Rewrite getter param:
@@ -354,7 +371,7 @@
 		// the first pass sets up all observable attributes,
 		// then the second pass initializes all bindings.
 		if ( !model._init ) this.init();
-	};
+	}
 	
 	_.extend(EpoxyObservable.prototype, Backbone.Events, {
 		
@@ -462,206 +479,21 @@
 	});
 	
 	
-	// Epoxy.View
-	// ----------
-	var viewMap;
-	var viewSuper = superClass( Backbone.View );
+	// Epoxy.binding -> Binding API
+	// ----------------------------
 	
-	Epoxy.View = Backbone.View.extend({
-		
-		// Backbone.View constructor override:
-		// sets up binding controls around call to super.
-		constructor: function( options ) {
-			// Create bindings list:
-			this._bind = [];
-			viewSuper( this, "constructor", arguments );
-			this.applyBindings();
-		},
-		
-		// Bindings definition:
-		// this setting defines a DOM attribute name used to query for bindings.
-		// Alternatively, this be replaced with a hash table of key/value pairs,
-		// where "key" is a DOM query and "value" is its binding declaration.
-		bindings: "data-bind",
-		
-		// Compiles a model context, then applies bindings to the view:
-		// All Model->View relationships will be baked at the time of applying bindings;
-		// changes in configuration to source attributes or view bindings will require a complete re-bind.
-		applyBindings: function() {
-			this.removeBindings();
-			
-			// Abort if no data sources are provided:
-			if (!this.model && !this.collection && !this.bindingSources) return;
-			
-			var self = this;
-			var sources = self.bindingSources;
-			var declarations = self.bindings;
-			var handlers = _.clone( bindingHandlers );
-			var context = {};
-			
-			// Compile a complete set of binding handlers for the view:
-			// mixes all custom handlers into a copy of default handlers.
-			// Custom handlers defined as plain functions are registered as read-only setters.
-			_.each(self.bindingHandlers||{}, function( handler, name ) {
-			    handlers[ name ] = isFunction(handler) ? {set: handler} : handler;
-			});
-			
-			// Add native "model" and "collection" data sources:
-			self.model = addSourceToContext( self.model, context );
-			self.collection = addSourceToContext( self.collection, context );
-			
-			// Add all additional data sources:
-			_.each(sources, function( source, sourceName ) {
-				sources[ sourceName ] = addSourceToContext( source, context, sourceName );
-			});
-			
-			// Creates a single element binding:
-			function bind( $element, bindings, selector ) {
-				// Try to compile bindings, throw errors if encountered:
-				try {
-					self._bind.push( new EpoxyBinding($element, bindings, context, handlers) );
-				} catch( error ) {
-					throw( 'Error parsing bindings for "'+ selector +'" >> '+error );
-				}
-			}
-			
-			// Create all bindings:
-			// bindings are created from an object hash of query/binding declarations,
-			// OR based on queried DOM attributes.
-			if ( isObject(declarations) ) {
-				
-				// Object declaration method:
-				// {"span.my-element": "text:attribute"}
-				
-				_.each(declarations, function( bindings, selector ) {
-					// Get DOM jQuery reference:
-					var $elements = this.$( selector );
-
-					// Include top-level view in bindings search:
-					if ( this.$el.is(selector) ) {
-						$elements = $elements.add( this.$el );
-					}
-					
-					// Ignore empty DOM queries (without errors):
-					if ( $elements.length ) {
-						bind( $elements, bindings, selector );
-					}
-				}, this);
-				
-			} else {
-				
-				// DOM attributes declaration method:
-				// <span data-bind="text:attribute"></span>
-				
-				var selector = "["+ declarations +"]";
-				var $elements = this.$( selector );
-
-				// Include top-level view in bindings search:
-				if ( this.$el.is(selector) ) {
-					$elements = $elements.add( this.$el );
-				}
-				
-				// Create bindings for each matched element:
-				$elements.each(function( $element ) {
-					$element = $(this);
-					bind( $element, $element.attr(declarations), selector );
-				});
-			}
-		},
-		
-		// Disposes of all view bindings:
-		removeBindings: function() {
-			while( this._bind.length ) {
-				this._bind.pop().dispose();
-			}
-		},
+	var bindingSettings = {
+		optionText: "label",
+		optionValue: "value"
+	};
 	
-		// Backbone.View.remove() override:
-		// unbinds the view before performing native removal tasks.
-		remove: function() {
-			this.removeBindings();
-			viewSuper( this, "remove" );
-		}
-	});
-	
-	
-	// Adds a data source to a view:
-	// Data sources are Backbone.Model and Backbone.Collection instances.
-	// @param source: a source instance, or a function that returns a source.
-	// @param context: the working binding context. All bindings in a view share a context.
-	function addSourceToContext( source, context, name ) {
-		
-		// Ignore missing sources, and invoke non-instances:
-		if (!source) return;
-		else if (isFunction(source)) source = source();
-		
-		// Add Backbone.Model source instance:
-		if ( isModel(source) ) {
-			
-			// Establish source prefix:
-			var prefix = name ? name+"_" : "";
-			
-			// Create a table of all model attributes (native and -optionally- observable):
-			var attrs = _.extend({}, source.attributes, source.obs||{});
-			
-			// Create a read-only accessor for the model instance:
-			context[ "$"+(name||"model") ] = function() {
-				viewMap && viewMap.push([source, "change"]);
-				return source;
-			};
-			
-			// Compile all model attributes as accessors within the context:
-			_.each(attrs, function(value, attribute) {
-				
-				// Create named accessor functions:
-				// -> Attributes from "view.model" use their normal names.
-				// -> Attributes from additional sources are named as "source_attribute".
-				context[ prefix+attribute ] = function( value ) {
-					
-					// Register the attribute to the bindings map, if enabled:
-					viewMap && viewMap.push([source, "change:"+attribute]);
-
-					// Set attribute value when accessor is invoked with an argument:
-					if ( !isUndefined(value) ) {
-						
-						// Set Object (non-null, non-array) hashtable value:
-						if ( isObject(value) && !isArray(value) ) {
-							return source.set( value );
-						}
-						
-						// Set single attribute/value pair:
-						return source.set( attribute, value );
-					}
-					
-					// Get the attribute value by default:
-					return source.get( attribute );
-				};
-			});
-			
-		}
-		// Add Backbone.Collection source instance:
-		else if ( isCollection(source) ) {
-			
-			// Create a read-only accessor for the collection instance:
-			context[ "$"+(name||"collection") ] = function() {
-				viewMap && viewMap.push([source, "reset add remove sort update"]);
-				return source;
-			};
-		}
-		
-		// Return original object, or newly constructed data source:
-		return source;
-	}
-	
-	
-	// readAccessor()
-	// --------------
 	// Reads value from an accessor:
 	// Accessors come in three potential forms:
 	// => A function to call for the requested value.
 	// => An object with a collection of attribute accessors.
 	// => A primitive (string, number, boolean, etc).
 	// This function unpacks an accessor and returns its underlying value(s).
+	
 	function readAccessor( accessor ) {
 		
 		if ( isFunction(accessor) ) {
@@ -679,30 +511,12 @@
 		// return formatted value, or pass through primitives:
 		return accessor;
 	}
-	
-	
-	// Creates a new HTML string for a <select> menu option:
-	// used to generate elements for the "options" binding.
-	function createSelectOption( option ) {
-		
-		// Set both label and value as the raw option object by default:
-		var label = option;
-		var value = option;
-		
-		// Dig deeper into label/value settings for non-primitive values:
-		if ( isObject( option ) ) {
-			// Extract a label and value from each object:
-			// a model's "get" method is used to access potential observable values.
-			label = isModel( option ) ? option.get( "label" ) : option.label;
-			value = isModel( option ) ? option.get( "value" ) : option.value;
-		}
-		
-		return "<option value='"+ value +"'>"+ label +"</option>";
-	}
 
 	
-	// binding handlers
+	// Binding Handlers
 	// ----------------
+	// Handlers define set/get methods for exchanging data with the DOM.
+	
 	var bindingHandlers = {
 		// Attribute: write-only. Sets element attributes.
 		attr: {
@@ -765,80 +579,86 @@
 		
 		// Collection: write-only. Manages a list of views bound to a Backbone.Collection.
 		collection: {
+			init: function( $element, collection ) {
+				if ( !isCollection(collection) || !isFunction(collection.view) ) {
+					throw( "Binding 'collection' requires a Collection with a 'view' constructor." );
+				}
+				this.v = {};
+			},
 			set: function( $element, collection, target ) {
+								
+				var models = collection.models;
+				var views = this.v;
+				var view;
 				
-				// Requires a valid collection argument with an associated view:
-				if ( isCollection(collection) && isFunction(collection.view) ) {
+				// Default target to the bound collection object:
+				// during init (or failure), the binding will reset.
+				target = target || collection;
+				
+				if ( isModel(target) ) {
 					
-					var models = collection.models;
-					var views = this.v;
-					var view;
-					
-					// Default target to the bound collection object:
-					// during init (or failure), the binding will reset.
-					target = target || collection;
-					
-					if ( isModel(target) ) {
+					// ADD/REMOVE Event (from a Model):
+					// test if view exists within the binding...
+					if ( !views.hasOwnProperty(target.cid) ) {
 						
-						// ADD/REMOVE Event (from a Model):
-						// test if view exists within the binding...
-						if ( !views.hasOwnProperty(target.cid) ) {
-							
-							// Add new view:
-							views[ target.cid ] = view = new collection.view({model: target});
-							var index = _.indexOf(models, target);
-							
-							// Attempt to add at proper index,
-							// otherwise just append into the element.
-							if ($element.children().length < index) {
-								$element.eq( index ).before( view.$el );
-							} else {
-								$element.append( view.$el );
-							}
-							
+						// Add new view:
+						views[ target.cid ] = view = new collection.view({model: target});
+						var index = _.indexOf(models, target);
+						
+						// Attempt to add at proper index,
+						// otherwise just append into the element.
+						if ($element.children().length < index) {
+							$element.eq( index ).before( view.$el );
 						} else {
-							
-							// Remove existing view:
-							view = views[ target.cid ];
-							view.remove();
-							delete views[ target.cid ];
+							$element.append( view.$el );
 						}
 						
-					} else if ( isCollection(target) ) {
+					} else {
 						
-						// SORT/RESET Event (from a Collection):
-						// First test if we're sorting...
-						// (we have models and all their views are present)
-						var sort = models.length && _.every(models, function( model ) {
-							return views.hasOwnProperty(model.cid);
-						});
-						
-						// Hide element before manipulating:
-						$element.hide();
-						
-						if ( sort ) {
-							// Sort existing views:
-							collection.each(function( model ) {
-								$element.append( views[model.cid].$el );
-							});
-							
-						} else {
-							// Reset with new views:
-							this.empty();
-							
-							collection.each(function( model ) {
-								views[ model.cid ] = view = new collection.view({model: model});
-								$element.append( view.$el );
-							});
-						}
-						
-						// Show element after manipulating:
-						$element.show();
+						// Remove existing view:
+						view = views[ target.cid ];
+						view.remove();
+						delete views[ target.cid ];
 					}
 					
-				} else {
-					// Throw error for invalid binding params:
-					throw( "Binding 'collection' requires a Collection with a 'view' constructor." );
+				} else if ( isCollection(target) ) {
+					
+					// SORT/RESET Event (from a Collection):
+					// First test if we're sorting...
+					// (we have models and all their views are present)
+					var sort = models.length && _.every(models, function( model ) {
+						return views.hasOwnProperty(model.cid);
+					});
+					
+					// Hide element before manipulating:
+					$element.hide();
+					
+					if ( sort ) {
+						// Sort existing views:
+						collection.each(function( model ) {
+							$element.append( views[model.cid].$el );
+						});
+						
+					} else {
+						// Reset with new views:
+						this.clean();
+						
+						collection.each(function( model ) {
+							views[ model.cid ] = view = new collection.view({model: model});
+							$element.append( view.$el );
+						});
+					}
+					
+					// Show element after manipulating:
+					$element.show();
+				}
+			},
+			clean: function() {
+				for (var id in this.v) {
+					if ( this.v.hasOwnProperty( id ) ) {
+						this.v[ id ].remove();
+						delete this.v[ id ];
+					}
 				}
 			}
 		},
@@ -873,62 +693,107 @@
 		
 		// Options: write-only. Sets option items to a <select> element, then updates the value.
 		options: {
+			init: function( $element, value, context, bindings ) {
+				this.e = bindings.optionsEmpty;
+				this.d = bindings.optionsDefault;
+				this.v = bindings.value;
+			},
 			set: function( $element, value ) {
 				
 				// Pre-compile empty and default option values:
 				// both values MUST be accessed, for two reasons:
 				// 1) we need to need to guarentee that both values are reached for mapping purposes.
 				// 2) we'll need their values anyway to determine their defined/undefined status.
-				var optionsEmpty = readAccessor( this.optionsEmpty );
-				var optionsDefault = readAccessor( this.optionsDefault );
+				var self = this;
+				var optionsEmpty = readAccessor( self.e );
+				var optionsDefault = readAccessor( self.d );
+				var currentValue = readAccessor( self.v );
+				var selection = isArray(currentValue) ? currentValue : [ currentValue ];
 				var options = isCollection( value ) ? value.models : value;
+				var numOptions = options.length;
+				var enabled = true;
+				var html = "";
 				
-				// If value is a valid array:
-				if ( isArray(options) ) {
-					
-					var selection = $element.val();
-					var enabled = true;
-					var html = "";
-					
-					// No options or default, and has an empty options placeholder:
-					// display placeholder and disable select menu.
-					if ( !options.length && !optionsDefault && optionsEmpty ) {
-						html += createSelectOption( optionsEmpty );
-						enabled = false;
-					}
-					// Try to populate default option and options list:
-					else {
-						
-						// Create the default option, if defined:
-						if ( optionsDefault ) {
-							html += createSelectOption( optionsDefault );
-						}
-						
-						// Create all option items:
-						_.each(options, function( option ) {
-							html += createSelectOption( option );
-						});
-					}
-					
-					// Set new HTML to the element, toggle disabled status, and apply selection:
-					$element
-						.html( html )
-						.prop( "disabled", !enabled )
-						.val( selection );
-					
-					// Test if previous selection state was successfully applied to the new options:
-					// if not, then flash the element's "change" event to trigger view-capture bindings. 
-					if ( !_.isEqual($element.val(), selection) ) {
-						$element.trigger( "change" );
-					}
-
+				// No options or default, and has an empty options placeholder:
+				// display placeholder and disable select menu.
+				if ( !numOptions && !optionsDefault && optionsEmpty ) {
+				
+					html += self.opt( optionsEmpty, numOptions, selection );
+					enabled = false;
+				
 				} else {
-					// Invalid array value:
-					throw( "Binding 'options' requires a list value." );
+					// Try to populate default option and options list:
+				
+					// Configure list with a default first option, if defined:
+					if ( optionsDefault ) {
+						options = [ optionsDefault ].concat( options );
+					}
+				
+					// Create all option items:
+					_.each(options, function( option, index ) {
+						html += self.opt( option, numOptions, selection );
+					});
 				}
+
+				// Set new HTML to the element and toggle disabled status:
+				$element.html( html ).prop( "disabled", !enabled );
+
+				// Pull revised value with new options selection state:
+				var revisedValue = $element.val();
+
+				// Test if the current value was successfully applied:
+				// if not, set the new selection state into the model. 
+				if ( self.v && !_.isEqual(currentValue, revisedValue) ) {
+					self.v( revisedValue );
+				}
+			},
+			opt: function( option, numOptions, selection ) {
+				// Set both label and value as the raw option object by default:
+				var label = option;
+				var value = option;
+				var textAttr = bindingSettings.optionText;
+				var valueAttr = bindingSettings.optionValue;
+				
+				// Dig deeper into label/value settings for non-primitive values:
+				if ( isObject( option ) ) {
+					// Extract a label and value from each object:
+					// a model's "get" method is used to access potential observable values.
+					label = isModel( option ) ? option.get( textAttr ) : option[ textAttr ];
+					value = isModel( option ) ? option.get( valueAttr ) : option[ valueAttr ];
+				}
+				
+				// Configure selection-state option fragment:
+				// option should be selected if it's the only item (default/empty), or exists in the selection:
+				var select = (!numOptions || _.contains(selection, value)) ? "' selected='selected'>" : "'>";
+				
+				return "<option value='"+ value + select + label +"</option>";
+			},
+			clean: function() {
+				this.d = this.e = this.v = null;
 			}
 		},
-
+		
+		// Template: write-only. Renders the bound element with an Underscore template.
+		template: {
+			init: function( $element, value, context ) {
+				var raw = $element.find("script,template");
+				this.tmpl = _.template( raw.length ? raw.html() : $element.html() );
+				
+				// If an array of template attributes was provided,
+				// then replace array with a compiled hash of attribute accessors:
+				if ( isArray(value) ) {
+					return _.pick(context, value);
+				}
+			},
+			set: function( $element, value ) {
+				value = isModel(value) ? value.toJSON({obs:true}) : value;
+				$element.html( this.tmpl(value) );
+			},
+			clean: function() {
+				this.tmpl = null;
+			}
+		},
+		
 		// Text: write-only. Sets the text value of an element.
 		text: {
 			set: function( $element, value ) {
@@ -949,212 +814,419 @@
 				return $element.val();
 			},
 			set: function( $element, value ) {
-				if ( $element.val() != value ) $element.val( value );
+				try {
+					if ( $element.val() != value ) $element.val( value );
+				} catch (error) {
+					// Error setting value in IE6: IGNORE.
+					// This occurs in IE6 while attempting to set an undefined multi-select option.
+					// unfortuantely, jQuery doesn't gracefully handle this error for us.
+					// remove this try/catch block when IE6 is officially deprecated!
+				}
 			}
 		}
 	};
+
 	
-	
-	// binding operators
-	// -----------------
-	// Operators are special binding handlers that may be invoked while binding;
+	// Binding Filters
+	// ---------------
+	// Filters are special binding handlers that may be invoked while binding;
 	// they will return a wrapper function used to modify how accessors are read.
 	
-	// Partial application wrapper for creating binding operators:
-	var makeOperator = function( handler ) {
+	// Partial application wrapper for creating binding filters:
+	function makeFilter( handler ) {
 		return function() {
 			var params = arguments;
-			return function() {
-				return handler( params );
+			return function( input ) {
+				return handler.apply(this, readFilterParams(params, input));
 			};
 		};
-	};
+	}
 	
-	// IMPORTANT:
-	// Binding operators must access ALL of their dependent params while running,
-	// otherwise accessor params become unreachable and will not provide binding hooks.
-	// Therefore, assessment loops must NOT exit early... so do not optimize!
+	// Reads a list of cached filter params:
+	// this makes sure all params are accessed (for mapping purposes),
+	// and also unpacks the current value of each parameter for use within the handler.
+	function readFilterParams( params, input ) {
+		if ( input ) throw("binding error: filtered values are read-only.");
+		
+		var args = [];
+		for (var i=0, len=params.length; i < len; i++) {
+			args.push( readAccessor(params[i]) );
+		}
+		return args;
+	}
 	
-	var bindingOperators = {
+	var bindingFilters = {
 		// Tests if all of the provided accessors are truthy (and):
-		all: makeOperator(function( params ) {
-			var result = true;
+		all: makeFilter(function() {
+			var params = arguments;
 			for ( var i=0, len=params.length; i < len; i++ ) {
-				if ( !readAccessor(params[i]) ) result = false;
+				if ( !params[i] ) return false;
 			}
-			return result;
+			return true;
 		}),
 	
 		// Tests if any of the provided accessors are truthy (or):
-		any: makeOperator(function( params ) {
-			var result = false;
+		any: makeFilter(function() {
+			var params = arguments;
 			for ( var i=0, len=params.length; i < len; i++ ) {
-				if ( readAccessor(params[i]) ) result = true;
+				if ( params[i] ) return true;
 			}
-			return result;
+			return false;
 		}),
 		
 		// Reads the length of the accessed property:
 		// assumes accessor value to be an Array or Collection; defaults to 0.
-		length: makeOperator(function( params ) {
-			return readAccessor( params[0] ).length || 0;
+		length: makeFilter(function( value ) {
+			return value.length || 0;
 		}),
 		
 		// Tests if none of the provided accessors are truthy (and not):
-		none: makeOperator(function( params ) {
-			var result = true;
+		none: makeFilter(function() {
+			var params = arguments;
 			for ( var i=0, len=params.length; i < len; i++ ) {
-				if ( readAccessor(params[i]) ) result = false;
+				if ( params[i] ) return false;
 			}
-			return result;
+			return true;
 		}),
 	
 		// Negates an accessor's value:
-		not: makeOperator(function( params ) {
-			return !readAccessor( params[0] );
+		not: makeFilter(function( value ) {
+			return !value;
 		}),
 	
 		// Formats one or more accessors into a text string:
 		// ("$1 $2 did $3", firstName, lastName, action)
-		format: makeOperator(function( params ) {
-			var str = readAccessor(params[0]);
+		format: makeFilter(function( str ) {
+			var params = arguments;
 			
 			for ( var i=1, len=params.length; i < len; i++ ) {
 				// TODO: need to make something like this work: (?<!\\)\$1
-				str = str.replace( new RegExp("\\$"+i, "g"), readAccessor(params[i]) );
+				str = str.replace( new RegExp("\\$"+i, "g"), params[i] );
 			}
 			return str;
 		}),
 		
 		// Provides one of two values based on a ternary condition:
 		// uses first param (a) as condition, and returns either b (truthy) or c (falsey).
-		select: makeOperator(function( params ) {
-			var a = readAccessor(params[0]);
-			var b = readAccessor(params[1]);
-			var c = readAccessor(params[2]);
-			return a ? b : c;
+		select: makeFilter(function( condition, truthy, falsey ) {
+			return condition ? truthy : falsey;
 		})
 	};
 	
 	
-	// Defines special handler params made available to the binding:
-	// these params are used by handler functions, but are not actually handlers themselves.
-	// Params will be extracted from the binding context and stored directly on the binding.
-	var handlerParams = [ "events", "optionsDefault", "optionsEmpty" ];
+	// Define binding API:
+	Epoxy.binding = {
+		addHandler: function( name, handler ) {
+			bindingHandlers[ name ] = isFunction( handler ) ? {set:handler} : handler;
+		},
+		addFilter: function( name, handler ) {
+			bindingFilters[ name ] = makeFilter( handler );
+		},
+		config: function( settings ) {
+			_.extend( bindingSettings, settings );
+		}
+	};
 	
 	
-	// Epoxy.View -> Binding
-	// ---------------------
-	// The binding object connects an element to its binding declarations,
-	// as applied to the view's compiled binding context and its handler methods.
-	var EpoxyBinding = function( $element, bindings, context, handlers ) {
+	// Epoxy.View
+	// ----------
+	var viewMap;
+	var viewSuper = superClass( Backbone.View );
+	
+	Epoxy.View = Backbone.View.extend({
 		
-		// Store the element, and create namespace for managed subviews:
-		this.$el = $element;
-		this.v = {}; // << Views namespace for managed subview.
-		//this.h = {}; // << Handlers namespace for managed handlers.
+		// Backbone.View constructor override:
+		// sets up binding controls around call to super.
+		constructor: function( options ) {
+			// Create bindings list:
+			this._bind = [];
+			viewSuper( this, "constructor", arguments );
+			this.applyBindings();
+		},
+		
+		// Bindings definition:
+		// this setting defines a DOM attribute name used to query for bindings.
+		// Alternatively, this be replaced with a hash table of key/value pairs,
+		// where "key" is a DOM query and "value" is its binding declaration.
+		bindings: "data-bind",
+		
+		// Compiles a model context, then applies bindings to the view:
+		// All Model->View relationships will be baked at the time of applying bindings;
+		// changes in configuration to source attributes or view bindings will require a complete re-bind.
+		applyBindings: function() {
+			this.removeBindings();
+			
+			// Abort if no data sources are provided:
+			if (!this.model && !this.collection && !this.bindingSources) return;
+			
+			var self = this;
+			var sources = self.bindingSources;
+			var declarations = self.bindings;
+			var handlers = _.clone( bindingHandlers );
+			var filters = _.clone( bindingFilters );
+			var context = {};
+			
+			// Compile a complete set of binding handlers for the view:
+			// mixes all custom handlers into a copy of default handlers.
+			// Custom handlers defined as plain functions are registered as read-only setters.
+			_.each(self.bindingHandlers||{}, function( handler, name ) {
+			    handlers[ name ] = isFunction(handler) ? {set: handler} : handler;
+			});
+			
+			// Compile a complete set of binding filters for the view:
+			// mixes all custom filters into a copy of default filters.
+			_.each(self.bindingFilters||{}, function( filter, name ) {
+			    filters[ name ] = makeFilter( filter );
+			});
+			
+			// Add native "model" and "collection" data sources:
+			self.model = addSourceToViewContext( self.model, context );
+			self.collection = addSourceToViewContext( self.collection, context );
+			
+			// Add all additional data sources:
+			_.each(sources, function( source, sourceName ) {
+				sources[ sourceName ] = addSourceToViewContext( source, context, sourceName );
+			});
+			
+			// Create all bindings:
+			// bindings are created from an object hash of query/binding declarations,
+			// OR based on queried DOM attributes.
+			if ( isObject(declarations) ) {
 				
-		// Determine bound element type and its support for two-way bindings:
-		var self = this;
-		var tag = ($element[0].tagName).toLowerCase();
-		var changable = (tag == "input" || tag == "select" || tag == "textarea");
+				// Object declaration method:
+				// {"span.my-element": "text:attribute"}
+				
+				_.each(declarations, function( elementDecs, selector ) {
+					// Get DOM jQuery reference:
+					var $element = queryViewForSelector( self, selector );
+
+					// Ignore empty DOM queries (without errors):
+					if ( $element.length ) {
+						bindElementToView( self, $element, elementDecs, context, handlers, filters );
+					}
+				});
+				
+			} else {
+				
+				// DOM attributes declaration method:
+				// <span data-bind="text:attribute"></span>
+				
+				// Create bindings for each matched element:
+				queryViewForSelector( self, "["+declarations+"]" ).each(function() {
+					var $element = $(this);
+					bindElementToView( self, $element, $element.attr(declarations), context, handlers, filters );
+				});
+			}
+		},
 		
-		// Construct and invoke parser function:
-		// provided declarations string is constructed into a new function body.
-		// Parsing is invoked with "operator" and "context" properties made available,
-		// and will yeild a native context object with element-specific bindings defined.
-		// (Borrows heavily from the Knockout.js method... thank you Steve & the KO team!)
-		var parser = new Function("$o", "$c", "with($o){with($c){return{"+ bindings +"}}}");
-		bindings = parser( bindingOperators, context );
+		// Disposes of all view bindings:
+		removeBindings: function() {
+			while( this._bind.length ) {
+				this._bind.pop().dispose();
+			}
+		},
+	
+		// Backbone.View.remove() override:
+		// unbinds the view before performing native removal tasks.
+		remove: function() {
+			this.removeBindings();
+			viewSuper( this, "remove" );
+		}
+	});
+	
+	// Epoxy.View -> Private
+	// ---------------------
+	
+	// Adds a data source to a view:
+	// Data sources are Backbone.Model and Backbone.Collection instances.
+	// @param source: a source instance, or a function that returns a source.
+	// @param context: the working binding context. All bindings in a view share a context.
+	function addSourceToViewContext( source, context, name ) {
 		
-		// Resulting binding now looks like this after parsing:
-		// {text: accessorFunct, classes: {active: accessorFunct}}
+		// Ignore missing sources, and invoke non-instances:
+		if (!source) return;
+		else if (isFunction(source)) source = source();
 		
-		// Copy all handler params onto the binding while omitting them from the binding context.
-		_.each(handlerParams, function( paramName ) {
-			self[ paramName ] = bindings[ paramName ];
-			delete bindings[ paramName ];
-		});
+		// Add Backbone.Model source instance:
+		if ( isModel(source) ) {
+			
+			// Establish source prefix:
+			var prefix = name ? name+"_" : "";
+			
+			// Create a read-only accessor for the model instance:
+			context[ "$"+(name||"model") ] = function() {
+				viewMap && viewMap.push([source, "change"]);
+				return source;
+			};
+			
+			// Compile all model attributes as accessors within the context:
+			_.each(source.toJSON({obs:true}), function(value, attribute) {
+				
+				// Create named accessor functions:
+				// -> Attributes from "view.model" use their normal names.
+				// -> Attributes from additional sources are named as "source_attribute".
+				context[ prefix+attribute ] = function( value ) {
+					return accessViewDataAttribute( source, attribute, value );
+				};
+			});
+			
+		}
+		// Add Backbone.Collection source instance:
+		else if ( isCollection(source) ) {
+			
+			// Create a read-only accessor for the collection instance:
+			context[ "$"+(name||"collection") ] = function() {
+				viewMap && viewMap.push([source, "reset add remove sort update"]);
+				return source;
+			};
+		}
 		
-		// Format the binding's "events" param:
-		// an events array may have been provided in the binding declaration;
-		// use all declared DOM events, and merge in a default "change" event trigger.
-		// After establishing the events array, format all event names with a ".epoxy" namespace,
-		// and then merge all events into a space-separated string for binding with jQuery.
-		this.events = _.map( _.union(this.events || [], ["change"]), function(name) {
+		// Return original object, or newly constructed data source:
+		return source;
+	}
+	
+	// Attribute data accessor:
+	// exchanges individual attribute values with model sources.
+	// This function is broken out from the accessor creation process for performance.
+	// @param source: the model data source to interact with.
+	// @param attribute: the model attribute to read/write.
+	// @param value: the value to set, or "undefined" to get the current value.
+	function accessViewDataAttribute( source, attribute, value ) {
+		// Register the attribute to the bindings map, if enabled:
+		viewMap && viewMap.push([source, "change:"+attribute]);
+
+		// Set attribute value when accessor is invoked with an argument:
+		if ( !isUndefined(value) ) {
+			
+			// Set Object (non-null, non-array) hashtable value:
+			if ( isObject(value) && !isArray(value) ) {
+				return source.set( value );
+			}
+			
+			// Set single attribute/value pair:
+			return source.set( attribute, value );
+		}
+		
+		// Get the attribute value by default:
+		return source.get( attribute );
+	}
+	
+	// Queries element selectors within a view:
+	// matches elements within the view, and the view's container element.
+	function queryViewForSelector( view, selector ) {
+		var $elements = view.$( selector );
+		
+		// Include top-level view in bindings search:
+		if ( view.$el.is(selector) ) {
+			$elements = $elements.add( view.$el );
+		}
+		
+		return $elements;
+	}
+	
+	// Binds an element into a view:
+	// The element's declarations are parsed, then a binding is created for each declared handler.
+	// @param view: the parent View to bind into.
+	// @param $element: the target element (as jQuery) to bind.
+	// @param declarations: the string of binding declarations provided for the element.
+	// @param context: a compiled binding context with all availabe view data.
+	// @param handlers: a compiled handlers table with all native/custom handlers.
+	function bindElementToView( view, $element, declarations, context, handlers, filters ) {
+
+		// Parse localized binding context:
+		// parsing function is invoked with "filters" and "context" properties made available,
+		// yeilds a native context object with element-specific bindings defined.
+		try {
+		 	var bindings = new Function("$f","$c","with($f){with($c){return{"+ declarations +"}}}")(filters, context);
+		} catch ( error ) {
+			throw( "Error parsing bindings: "+declarations );
+		}
+
+		// Format the "events" option:
+		// include events from the binding declaration along with a default "change" trigger,
+		// then format all event names with a ".epoxy" namespace.
+		var events = _.map( _.union(bindings.events || [], ["change"]), function(name) {
 			return name+".epoxy";
 		}).join(" ");
 		
 		// Apply bindings from native context:
-		// this will loop through all binding handlers defined for the object.
 		_.each(bindings, function( accessor, handlerName ) {
 			
-			// Loop through each defined handler attribute,
-			// and validate that a handler method with the same name exists:
+			// Validate that each defined handler method exists before binding:
 			if ( handlers.hasOwnProperty(handlerName) ) {
-				
-				// VALID handler. Proceed with binding...
-				
-				var handler = handlers[ handlerName ];
-				var triggers = [];
-				
-				// Create reset function for setting the binding's value to the display:
-				var reset = function( target ) {
-					handler.set.call(self, self.$el, readAccessor(accessor), target);
-				};
-				
-				// Set default binding, then initialize & map bindings:
-				// each binding handler is invoked to populate its initial value.
-				// While running a handler, all accessed attributes will be added to the handler's dependency map.
-				viewMap = triggers;
-				reset();
-				viewMap = null;
-				
-				// Configure READ/GET-able binding. Requires:
-				// => Form element.
-				// => Binding handler has a getter method.
-				// => Value accessor is a function.
-				if ( changable && handler.get && isFunction(accessor) ) {
-					self.$el.on(self.events, function() {
-						accessor( handler.get.call(self, self.$el, readAccessor(accessor)) );
-					});
-				}
-				
-				// Configure WRITE/SET-able binding. Requires:
-				// => One or more events triggers.
-				if ( triggers.length ) {
-					for (var i=0, len=triggers.length; i < len; i++) {
-						self.listenTo(triggers[i][0], triggers[i][1], reset);
-					}
-				}
-				
-			} else {
-				// INVALID handler. Abort binding and throw error...
-				// this means an invalid/undefined handler was declared,
-				// ie: <data-bind="sfoo:attribute"> -- "sfoo" does not exist.
-				throw( "invalid binding => "+handlerName );
+				// Create and add binding to the view's list of handlers:
+				view._bind.push( new EpoxyBinding($element, handlers[handlerName], accessor, events, context, bindings) );
 			}
 		});
-	};
+	}
+	
+	
+	// Epoxy.View -> Binding
+	// ---------------------
+	// The binding object connects an element to a bound handler.
+	// @param $element: the target element (as jQuery) to bind.
+	// @param handler: the handler object to apply (include all handler methods).
+	// @param accessor: an accessor method from the binding context that exchanges data with the model.
+	// @param options: a compiled set of binding options that was pulled from the declaration.
+	function EpoxyBinding( $element, handler, accessor, events, context, bindings ) {
+		
+		var self = this;
+		var tag = ($element[0].tagName).toLowerCase();
+		var changable = (tag == "input" || tag == "select" || tag == "textarea");
+		var triggers = [];
+		var reset = function( target ) {
+			self.set(self.$el, readAccessor(accessor), target);
+		};
+		
+		self.$el = $element;
+		self.evt = events;
+		_.extend( self, handler );
 
+		// Initialize the binding:
+		// allow the initializer to redefine/modify the attribute accessor if needed.
+		accessor = self.init( self.$el, readAccessor(accessor), context, bindings ) || accessor;
+		
+		// Set default binding, then initialize & map bindings:
+		// each binding handler is invoked to populate its initial value.
+		// While running a handler, all accessed attributes will be added to the handler's dependency map.
+		viewMap = triggers;
+		reset();
+		viewMap = null;
+		
+		// Configure READ/GET-able binding. Requires:
+		// => Form element.
+		// => Binding handler has a getter method.
+		// => Value accessor is a function.
+		if ( changable && handler.get && isFunction(accessor) ) {
+			self.$el.on(events, function() {
+				accessor( self.get(self.$el, readAccessor(accessor)) );
+			});
+		}
+		
+		// Configure WRITE/SET-able binding. Requires:
+		// => One or more events triggers.
+		if ( triggers.length ) {
+			for (var i=0, len=triggers.length; i < len; i++) {
+				self.listenTo(triggers[i][0], triggers[i][1], reset);
+			}
+		}
+	}
+	
 	_.extend(EpoxyBinding.prototype, Backbone.Events, {
 		
-		// Empties all stored sub-views from the binding:
-		empty: function() {
-			for (var id in this.v) {
-				if ( this.v.hasOwnProperty(id) ) {
-					this.v[ id ].remove();
-					delete this.v[ id ];
-				}
-			}
-		},
+		// Pass-through binding methods:
+		// for override by actual implementations.
+		init: blankMethod,
+		get: blankMethod,
+		set: blankMethod,
+		clean: blankMethod,
 		
 		// Destroys the binding:
 		// all events and managed sub-views are killed.
 		dispose: function() {
-			this.empty();
+			this.clean();
 			this.stopListening();
-			this.$el.off( this.events );
+			this.$el.off( this.evt );
 			this.$el = null;
 		}
 	});
