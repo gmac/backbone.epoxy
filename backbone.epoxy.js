@@ -473,6 +473,11 @@
 	// Epoxy.binding -> Binding API
 	// ----------------------------
 	
+	var bindingSettings = {
+		optionText: "label",
+		optionValue: "value"
+	};
+	
 	// Reads value from an accessor:
 	// Accessors come in three potential forms:
 	// => A function to call for the requested value.
@@ -726,7 +731,7 @@
 
 				// Pull revised value with new options selection state:
 				var revisedValue = $element.val();
-				
+
 				// Test if the current value was successfully applied:
 				// if not, set the new selection state into the model. 
 				if ( self.v && !_.isEqual(currentValue, revisedValue) ) {
@@ -737,13 +742,15 @@
 				// Set both label and value as the raw option object by default:
 				var label = option;
 				var value = option;
+				var textAttr = bindingSettings.optionText;
+				var valueAttr = bindingSettings.optionValue;
 				
 				// Dig deeper into label/value settings for non-primitive values:
 				if ( isObject( option ) ) {
 					// Extract a label and value from each object:
 					// a model's "get" method is used to access potential observable values.
-					label = isModel( option ) ? option.get( "label" ) : option.label;
-					value = isModel( option ) ? option.get( "value" ) : option.value;
+					label = isModel( option ) ? option.get( textAttr ) : option[ textAttr ];
+					value = isModel( option ) ? option.get( valueAttr ) : option[ valueAttr ];
 				}
 				
 				// Configure selection-state option fragment:
@@ -798,7 +805,14 @@
 				return $element.val();
 			},
 			set: function( $element, value ) {
-				if ( $element.val() != value ) $element.val( value );
+				try {
+					if ( $element.val() != value ) $element.val( value );
+				} catch (error) {
+					// Error setting value in IE6: IGNORE.
+					// This occurs in IE6 while attempting to set an undefined multi-select option.
+					// unfortuantely, jQuery doesn't gracefully handle this error for us.
+					// remove this try/catch block when IE6 is officially deprecated!
+				}
 			}
 		}
 	};
@@ -896,6 +910,9 @@
 		},
 		addOperator: function( name, handler ) {
 			bindingOperators[ name ] = makeOperator( handler );
+		},
+		config: function( settings ) {
+			_.extend( bindingSettings, settings );
 		}
 	};
 	

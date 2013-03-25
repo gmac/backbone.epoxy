@@ -114,6 +114,7 @@
 					<ul>
 						<li><a href="#bindingapi-add-handler">addHandler</a></li>
 						<li><a href="#bindingapi-add-operator">addOperator</a></li>
+						<li><a href="#bindingapi-config">config</a></li>
 					</ul>
 				</div>
 			</div>
@@ -915,7 +916,17 @@ var view = new ListView();</code></pre>
 <pre><code class="js">Backbone.Epoxy.binding.addOperator("select", function(condition, truthy, falsey) {
     return condition ? truthy : falsey;
 });</code></pre>
+			</div>
+			
+			<div class="section">
+				<h3 id="bindingapi-config">config</h3>
+				<code>Backbone.Epoxy.binding.config( settings )</code>
+				<p>Merges a settings object into the bindings API configuration. The following settings may be passed:</p>
 				
+				<ul>
+					<li><tt>optionText</tt> : configures the <b>options</b> binding. Specifies an attribute name to pick from objects and/or models as the text written into <tt>option</tt> elements. Default is <tt>"label"</tt>.</li>
+					<li><tt>optionValue</tt> : configures the <b>options</b> binding. Specifies an attribute name to pick from objects and/or models as the value written into <tt>option</tt> elements. Default is <tt>"value"</tt>.</li>
+				</ul>	
 			</div>
 			
 			<div class="footer" role="contentinfo">

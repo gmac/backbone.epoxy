@@ -410,7 +410,6 @@ describe("Backbone.Epoxy.View", function() {
 	
 	
 	// Basic bindings test view:
-	
 	var domView = new (Backbone.Epoxy.View.extend({
 		el: "#dom-view",
 		model: bindingModel,
@@ -430,7 +429,6 @@ describe("Backbone.Epoxy.View", function() {
 			}
 		}
 	}));
-	
 	
 	// Modifiers / Collections testing view:
 	
