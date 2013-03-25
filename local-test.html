@@ -1,0 +1,73 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+  "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>Backbone.Epoxy</title>
+	<style>
+	body {
+		margin-bottom: 50px;
+	}
+	.test-view {
+		border: 1px solid #ccc;
+		display: inline-block;
+		margin: 15px;
+		padding: 15px;
+		width: 200px;
+	}
+	.test-view p {
+		margin: 5px 0;
+	}
+	.test-view .section {
+		border-top: 1px solid #ccc;
+		margin-top: 15px;
+		padding-top: 10px;
+	}
+	.test-classes {
+		color: #999;
+	}
+	.active {
+		color: #000;
+	}
+	.hilite {
+		color: #1ec900;
+	}
+	.error {
+		color: #f00;
+	}
+	</style>
+</head>
+<body>
+	
+	<div id="epoxy-view" class="test-view">
+		<div class="section">
+			<p><label>First name:</label></p>
+			<p><input type="text" data-bind="value:name(firstName),events:['keyup']"></p>
+			<p><label>Last name:</label></p>
+			<p><input type="text" data-bind=""></p>
+			<p data-bind="text:name(firstName)"></p>
+		</div>
+	</div>
+
+	<script src="www/js/json2.js"></script>
+	<script src="www/js/jquery.js"></script>
+	<script src="www/js/underscore.js"></script>
+	<script src="www/js/backbone.js"></script>
+	<script src="backbone.epoxy.js"></script>
+	<script src="backbone.epoxy-extras.js"></script>
+	
+	<script>
+	var TestView = Backbone.Epoxy.View.extend({
+		el: "#epoxy-view",
+		bindingFilters: {
+			name: function( firstName ) {
+				return "Your Name: "+ firstName;
+			}
+		}
+	});
+	
+	var view = new TestView({
+		model: new Backbone.Model({firstName: "X"})
+	})
+	</script>
+</body>
+</html>

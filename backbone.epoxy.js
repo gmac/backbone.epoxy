@@ -5,15 +5,25 @@
 // For usage and documentation:
 // http://epoxyjs.org
 
-(function(root, factory) {
-  if (typeof exports !== 'undefined') {
-  	module.exports = factory(require('underscore'), require('backbone'));
-  } else if (typeof define === 'function' && define.amd) {
-    define(['underscore', 'backbone'], factory);
-  } else {
-  	factory(root._, root.Backbone);
-  }
-}(this, function(_, Backbone) {
+(function( root, factory ) {
+	
+	var backbone = "backbone";
+	var underscore = "underscore";
+	
+	if ( typeof exports !== "undefined" ) {
+		// Define as CommonJS export:
+		module.exports = factory( require(underscore), require(backbone) );
+		
+	} else if ( typeof define === "function" && define.amd ) {
+		// Define as AMD:
+		define( [underscore, backbone], factory );
+		
+	} else {
+		// Just run it:
+		factory( root._, root.Backbone );
+	}
+	
+}(this, function( _, Backbone ) {
 	
 	// Epoxy namespace:
 	var Epoxy = Backbone.Epoxy = {};
@@ -1150,5 +1160,4 @@
 	});
 
 	return Epoxy;
-
 }));
