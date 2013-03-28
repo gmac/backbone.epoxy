@@ -826,6 +826,11 @@
 		}
 	};
 
+	// Formatting function for defining new handler objects:
+	function makeHandler( handler ) {
+		return isFunction( handler ) ? {set: handler} : handler;
+	}
+	
 	
 	// Binding Filters
 	// ---------------
@@ -917,7 +922,7 @@
 	// Define binding API:
 	Epoxy.binding = {
 		addHandler: function( name, handler ) {
-			bindingHandlers[ name ] = isFunction( handler ) ? {set:handler} : handler;
+			bindingHandlers[ name ] = makeHandler( handler );
 		},
 		addFilter: function( name, handler ) {
 			bindingFilters[ name ] = makeFilter( handler );
@@ -964,13 +969,13 @@
 			var declarations = self.bindings;
 			var handlers = _.clone( bindingHandlers );
 			var filters = _.clone( bindingFilters );
-			var context = {};
+			var context = self._ctx = {};
 			
 			// Compile a complete set of binding handlers for the view:
 			// mixes all custom handlers into a copy of default handlers.
 			// Custom handlers defined as plain functions are registered as read-only setters.
 			_.each(self.bindingHandlers||{}, function( handler, name ) {
-			    handlers[ name ] = isFunction(handler) ? {set: handler} : handler;
+			    handlers[ name ] = makeHandler( handler );
 			});
 			
 			// Compile a complete set of binding filters for the view:
@@ -986,6 +991,14 @@
 			// Add all additional data sources:
 			_.each(sources, function( source, sourceName ) {
 				sources[ sourceName ] = addSourceToViewContext( source, context, sourceName );
+			});
+			
+			// Add all computed view properties:
+			_.each(self.bindingComputeds||{}, function( computed, name ) {
+				computed.id = name;
+				context[ name ] = function() {
+					return computed.call( self );
+				};
 			});
 			
 			// Create all bindings:
@@ -1019,8 +1032,16 @@
 			}
 		},
 		
+		// Gets a value from the binding context:
+		get: function( attribute ) {
+			if ( arguments.callee.caller.id === attribute ) throw( "recursive access error: "+attribute );
+			return this._ctx && this._ctx.hasOwnProperty(attribute) ? readAccessor( this._ctx[attribute] ) : null;
+		},
+		
 		// Disposes of all view bindings:
 		removeBindings: function() {
+			this._ctx = null;
+			
 			while( this._bind.length ) {
 				this._bind.pop().dispose();
 			}
