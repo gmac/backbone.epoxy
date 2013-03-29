@@ -974,13 +974,13 @@
 			// Compile a complete set of binding handlers for the view:
 			// mixes all custom handlers into a copy of default handlers.
 			// Custom handlers defined as plain functions are registered as read-only setters.
-			_.each(self.bindingHandlers||{}, function( handler, name ) {
+			_.each(_.result(self, "bindingHandlers")||{}, function( handler, name ) {
 			    handlers[ name ] = makeHandler( handler );
 			});
 			
 			// Compile a complete set of binding filters for the view:
 			// mixes all custom filters into a copy of default filters.
-			_.each(self.bindingFilters||{}, function( filter, name ) {
+			_.each(_.result(self, "bindingFilters")||{}, function( filter, name ) {
 			    filters[ name ] = makeFilter( filter );
 			});
 			
@@ -994,9 +994,11 @@
 			});
 			
 			// Add all computed view properties:
-			_.each(_.result(self, "bindingComputeds")||{}, function( computed, name ) {
+			_.each(_.result(self, "computeds")||{}, function( computed, name ) {
 				computed.id = name;
-				context[ name ] = _.isFunction(computed) ? _.bind(computed, self) : computed;
+				context[ name ] = function( value ) {
+					computed.call( self, value );
+				};
 			});
 			
 			// Create all bindings:
