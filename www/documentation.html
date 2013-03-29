@@ -76,6 +76,8 @@
 						<li><a href="#view-binding-handlers">bindingHandlers</a></li>
 						<li><a href="#view-bindings">bindings</a></li>
 						<li><a href="#view-binding-sources">bindingSources</a></li>
+						<li><a href="#view-computeds">computeds</a></li>
+						<li><a href="#view-get">get</a></li>
 						<li><a href="#view-remove">remove</a></li>
 						<li><a href="#view-remove-bindings">removeBindings</a></li>
 					</ul>
@@ -372,15 +374,24 @@ alert( model.get("wordsDict").hasOwnProperty("deathstar") );</code>
 			
 			<div class="section">
 				<h3 id="view-binding-context">binding context</h3>
-				<code>{$model:model, $collection:collection, [*attributes]}</code>
-				<p>To establish bindings, an Epoxy view generates a <i>binding context</i> with routes pointing to all available <i>data sources</i> and their attributes. Data sources are instances of <tt>Backbone.Model</tt> and/or <tt>Backbone.Collection</tt> that provide themselves and their attributes to the view for binding. By default, an Epoxy view looks for two potential data sources: the view's <b>model</b> property, and its <b>collection</b> property. References to these data sources are automatically configured in the binding context as <tt>$model</tt> and <tt>$collection</tt>. Aliases to all <tt>$model</tt> attributes are also created.</p>
-				<p>Additional <tt>Model</tt> and <tt>Collection</tt> data sources may be added to the binding context using the <b><a href="#view-binding-sources">bindingSources</a></b> property.</p>
+				<code>{$model:model, $collection:collection, [*attributes], [*computeds]}</code>
+				<p>To establish bindings, an Epoxy view generates a <i>binding context</i> with routers mapping all available data sources, model attributes, and computed properties of the view. This compiled binding context serves as a ViewModel for staging data exchange between data sources and the view. Live values may be read from the binding context using the view's <b><a href="#view-get">get</a></b> method.</p>
+				
+				<p>As noted above, a binding context includes three sets of resources:</p>
+				
+				<ul>
+					<li><b>Data Sources</b>: these are instances of <tt>Backbone.Model</tt> and/or <tt>Backbone.Collection</tt> that provide themselves and their attributes to the view for binding. By default, an Epoxy view looks for two potential data sources: the view's <b>model</b> property, and its <b>collection</b> property. References to these data sources are automatically configured in the binding context as <tt>$model</tt> and <tt>$collection</tt>. Additional models and collections may be added through the <b><a href="#view-binding-sources">bindingSources</a></b> hash, and will be added to the context as <tt>"$sourceName"</tt>.</li>
+					
+					<li><b>Model Attributes</b>: all <tt>Backbone.Model</tt> data sources will have their model attributes added to the binding context as well. For the view's primary <b>model</b> property, all model attributes will be added using their normal names (ie: <tt>"attribute"</tt>). For named models defined through <b>bindingSources</b>, the model's attributes will be aliased as <tt>"source_attribute"</tt>. Note that instances of <tt>Epoxy.Model</tt> will provide aliases to ALL attributes, including their observables and computeds.</li>
+					
+					<li><b>Computed View Properties</b>: all computed property functions defined in the view's <tt>computeds</tt> hash are the final values added into the binding context. Computed view properties are defined using their normal names; therefore naming conflicts with model attributes should be considered.</li>
+				</ul>
 			</div>
 			
 			<div class="section">
 				<h3 id="view-apply-bindings">applyBindings</h3>
 				<code>view.applyBindings()</code>
-				<p>Removes any existing view bindings, then applies all bindings defined within the view's <b>bindings</b> object. All bindings are established using the view's <b>$el</b> as the display target, and the view's <b>model</b>, <b>collection</b>, and/or <b>bindingSources</b> properties as the data sources (see <b><a href="#view-binding-context">binding context</a></b> and <b><a href="#view-binding-sources">bindingSources</a></b> for more information). A view with invalid display or data targets will apply no bindings. If the <b>bindings</b> object is a string, that string will be used as an attribute selector query for extracting bindings from the view's <b>$el</b> container.</p>
+				<p>Removes any existing view bindings, then applies all bindings defined within the view's <b>bindings</b> object. All bindings are established using the view's <b>$el</b> as the display target, and the view's <b>model</b>, <b>collection</b>, and/or <b>bindingSources</b> properties as the data sources (see <b><a href="#view-binding-context">binding context</a></b> for more information). A view with invalid display or data targets will apply no bindings. If the <b>bindings</b> object is a string, that string will be used as an attribute selector query for extracting bindings from the view's <b>$el</b> container.</p>
 
 				<p>The <b>applyBindings</b> method is automatically called by the view constructor <i>after</i> the view's <b>initialize</b> method runs. This allows the <b>initialize</b> step to make adjustments within the view prior to bindings being applied. You generally shouldn't need to call <b>applyBindings</b> manually.</p>
 
@@ -390,9 +401,9 @@ alert( model.get("wordsDict").hasOwnProperty("deathstar") );</code>
 			<div class="section">
 				<h3 id="view-binding-filters">bindingFilters</h3>
 				<code>view.bindingFilters</code>
-				<p>A hash table defining a view's custom binding filters. Binding filters are used to format model data for display within the view. While Epoxy includes a <a href="#binding-filters">core set</a> of basic binding filters for common formatting operations, developers are encouraged to extend their views with customized binding filters.</p>
+				<p>A hash table defining a view's custom binding filters. Binding filters are used to format model data for display within the view. While Epoxy includes a core set of basic <a href="#binding-filters">binding filters</a> for common formatting operations, developers are encouraged to extend their views with customized binding filters as needed.</p>
 
-				<p>To declare binding filters, define a new property on the <b>bindingFilters</b> hash with a formatting function that receives data arguments and returns a formatted value:</p>
+				<p>To declare custom binding filters, define a new property on the <b>bindingFilters</b> hash with a formatting function that receives data arguments and returns a formatted value:</p>
 
 <pre><code class="js">var BindingView = Backbone.Epoxy.View.extend({
     bindingFilters: {
@@ -408,13 +419,13 @@ alert( model.get("wordsDict").hasOwnProperty("deathstar") );</code>
 
 				<p>Binding filter functions are called anonymously and operate in global scope. Note that filters generate read-only values, therefore may only be applied to one-way binding handlers. Filters applied to two-way handlers will throw an error when data is submitted back into the filter.</p>
 				
-				<p>Also of note – unlike computed model properties, you may safely use conditional logic in filter functions without creating holes in the dependency graph. Epoxy has enough information about filter functions to pre-process their arguments and guarantee their dependency mapping.</p>
+				<p>Unlike computed properties, you may safely use conditional logic in filter functions without risking holes in their dependency graph (filter functions have exposed arguments, which allows them to be pre-processed for mapping purposes).</p>
 			</div>
 			
 			<div class="section">
 				<h3 id="view-binding-handlers">bindingHandlers</h3>
 				<code>view.bindingHandlers</code>
-				<p>A hash table defining a view's custom binding handlers. Binding handlers are used to interchange model data with elements in the view. While Epoxy includes a <a href="#binding-handlers">core set</a> of basic binding handlers for managing an element's content and formatting, developers are encouraged to extend their views with customized binding handlers.</p>
+				<p>A hash table defining a view's custom binding handlers. Binding handlers are used to apply binding data to elements in the view. While Epoxy includes a core set of basic <a href="#binding-handlers">binding handlers</a> for managing an element's content and formatting, developers are encouraged to extend their views with customized binding handlers as needed.</p>
 					
 				<p>To declare binding handlers, define a new property on the <b>bindingHandlers</b> hash with a params object defining <b>set</b> and <b>get</b> function properties:</p>
 
@@ -455,19 +466,12 @@ alert( model.get("wordsDict").hasOwnProperty("deathstar") );</code>
 			<div class="section">
 				<h3 id="view-bindings">bindings</h3>
 				<code>view.bindings</code>
-				<p>A hash declaring the view's element-to-attribute binding scheme, or a string defining an element attribute to query from the view's DOM. All bindings are established using the view's <b>$el</b> reference as the display target, and the view's <b>model</b> reference as the data target. A view missing its <b>$el</b> and/or <b>model</b> properties will apply no bindings.</p>
+				<p>A hash declaring the view's element-to-attribute binding scheme, or a string defining an element attribute to query from the view's DOM. All bindings are established using the view's <b>$el</b> reference as the display target, and the view's <a href="#view-binding-context">binding context</a> as the data provider. A view missing its <b>$el</b> property and/or valid binding data will apply no bindings.</p>
 				
 				<p>The bindings hash syntax keeps all binding declarations within the view. The <b>bindings</b> object declares a set of key/value pairs, where the key defines an element query, and the value defines the element's model bindings:</p>
 <pre>
-<code class="js">var BindingModel = Backbone.Model.extend({
-    defaults: {
-        firstName: "Luke",
-        lastName: "Skywalker"
-    }
-});
-	
-var BindingView = Backbone.Epoxy.View.extend({
-    model: new BindingModel(),
+<code class="js">var BindingView = Backbone.Epoxy.View.extend({
+    model: new Backbone.Model({firstName:"Luke", lastName:"Skywalker"}),
     bindings: {
         "input.first-name": "value:firstName,events:['keyup']",
         "input.last-name": "value:lastName,events:['keyup']"
@@ -475,26 +479,21 @@ var BindingView = Backbone.Epoxy.View.extend({
 });</code>
 </pre>
 				<p>Alternatively, you may choose to follow the popular convention of declaring bindings directly within the DOM using element attributes, at which time the <b>bindings</b> property should define the attribute name to query for. Epoxy specifies <tt>"data-bind"</tt> by default. All philosophical opinions aside, this technique works just as well as view-based declarations. Getting into philosophy, this method creates a bizarre (albeit handy) relationship between JavaScript mechanics and raw display. Ultimately, the choice is yours as to which method works best for your purposes.</p>
-
-<pre>
-<code class="js">var BindingModel = Backbone.Model.extend({
-    defaults: {
-        firstName: "Luke",
-        lastName: "Skywalker"
-    }
-});
-
-var BindingView = Backbone.Epoxy.View.extend({
+				
+				<p>View for attribute binding declarations:</p>
+				
+<pre><code class="js">var BindingView = Backbone.Epoxy.View.extend({
     el: "#binding-view"
-    model: new BindingModel(),
+    model: new Backbone.Model({firstName:"Luke", lastName:"Skywalker"}),
     bindings: "data-bind"
-});
-
-&lt;div id="binding-view"&gt;
+});</code></pre>
+				
+				<p>DOM for attribute binding declarations:</p>
+				
+<pre><code class="html">&lt;div id="binding-view"&gt;
     &lt;p&gt;First: &lt;input type="text" data-bind="value:firstName,events:['keyup']"&gt;&lt;/p&gt;
     &lt;p&gt;Last: &lt;input type="text" data-bind="value:lastName,events:['keyup']"&gt;&lt;/p&gt;
-&lt;/div&gt;</code>
-</pre>
+&lt;/div&gt;</code></pre>
 			</div>
 			
 			<div class="section">
@@ -531,6 +530,18 @@ var BindingView = Backbone.Epoxy.View.extend({
 </code>
 </pre>
 				<p>A note about Collection sources: Epoxy bindings do not register a <tt>"change"</tt> event on collection sources to avoid generally superfluous updates. Instead, you may manually trigger an <tt>"update"</tt> event on a collection source to refresh its bindings.</p>
+			</div>
+			
+			<div class="section">
+				<h3 id="view-computeds">computeds</h3>
+				<code>view.computeds</code>
+				<p>A hash table defining a view's computed properties. Computed view properties are defined with functions that <b>get</b> data from the view's <a href="#view-binding-context">binding context</a>, and return an assembled value. Computed view properties are an excellent place to assemble view-specific values.</p>
+			</div>
+			
+			<div class="section">
+				<h3 id="view-get">get</h3>
+				<code>view.get(attribute)</code>
+				<p>Gets data from the view's <a href="#view-binding-context">binding context</a>. The <b>get</b> method may request any data attribute name available to binding declarations. This applies to data sources (referenced as <tt>"$source"</tt>), model attributes (referenced as <tt>"attribute"</tt> or <tt>"source_attribute"</tt>), and <a href="#view-computeds">computed view properties</a>.</p>
 			</div>
 			
 			<div class="section">
