@@ -55,35 +55,42 @@
 		// Backbone.Model constructor override:
 		// configures observable model attributes around the underlying native Backbone model.
 		constructor: function() {
-			this.obs = {};
 			modelSuper( this, "constructor", arguments );
+			this.epoxyInit();
+		},
+		
+		// Observable namespace manager:
+		// Allows the model to operate as a mixin.
+		_o: function() {
+			return (this.o = this.o || {});
+		},
+		
+		// Initializes the Epoxy model:
+		// called automatically by the native constructor,
+		// or may be called manually when adding Epoxy as a mixin.
+		epoxyInit: function() {
+			var self = this;
 			
 			// Flag "init" status to delay observables from self-initializing:
 			// we'll need to hold off initializing observables until all presets are constructed.
-			this._init = true;
+			self._init = 1;
 			
 			// Add all default observable attributes:
-			if ( this.observableDefaults ) {
-				_.each(this.observableDefaults, function( value, attribute ) {
-					this.addObservable( attribute, isFunction(value) ? value() : copyModelValue(value) );
-				}, this);
-			}
+			_.each(_.result(self, "observableDefaults")||{}, function( value, attribute ) {
+				self.addObservable( attribute, isFunction(value) ? value() : copyModelValue(value) );
+			});
 			
 			// Add all computed observables:
-			if ( this.computeds ) {
-				_.each(this.computeds, function( params, attribute ) {
-					this.addComputed( attribute, params );
-				}, this);
-			}
+			_.each(_.result(self, "computeds")||{}, function( params, attribute ) {
+				self.addComputed( attribute, params );
+			});
 			
 			// Initialize all observable attributes:
 			// all presets have been constructed and may reference each other now.
-			_.each(this.obs, function( observable ) {
-				observable.init();
-			});
+			_.invoke(self._o(), "init");
 			
 			// Unflag "init"; observables will now self-initialize.
-			delete this._init;
+			delete self._init;
 		},
 		
 		// Backbone.Model.get() override:
@@ -96,7 +103,7 @@
 			
 			// Return an observable property value, if available:
 			if ( this.hasObservable(attribute) ) {
-				return this.obs[ attribute ].get();
+				return this._o()[ attribute ].get();
 			}
 			
 			// Default to native Backbone.Model get operation:
@@ -145,7 +152,7 @@
 			var json = modelSuper( this, "toJSON", arguments );
 
 			if ( options && options.obs ) {
-				_.each(this.obs, function( observable, attribute ) {
+				_.each(this._o(), function( observable, attribute ) {
 					json[ attribute ] = observable.value;
 				});
 			}
@@ -164,7 +171,7 @@
 		// observable attribute values may store any object type.
 		addObservable: function( attribute, value ) {
 			this.removeObservable( attribute );
-			this.obs[ attribute ] = new EpoxyObservable( this, attribute, {value: value} );
+			this._o()[ attribute ] = new EpoxyObservable( this, attribute, {value: value} );
 			return this;
 		},
 		
@@ -198,27 +205,27 @@
 			}
 			
 			// Create a new computed attribute:
-			this.obs[ attribute ] = new EpoxyObservable( this, attribute, params );
+			this._o()[ attribute ] = new EpoxyObservable( this, attribute, params );
 			return this;
 		},
 		
 		// Tests the model for a observable attribute definition:
 		hasObservable: function( attribute ) {
-			return this.obs.hasOwnProperty( attribute );
+			return this._o().hasOwnProperty( attribute );
 		},
 		
 		// Removes an observable attribute from the model:
 		removeObservable: function( attribute ) {
 			if ( this.hasObservable(attribute) ) {
-				this.obs[ attribute ].dispose();
-				delete this.obs[ attribute ];
+				this._o()[ attribute ].dispose();
+				delete this._o()[ attribute ];
 			}
 			return this;
 		},
 
 		// Removes all observable attributes:
 		clearObservables: function() {
-			for ( var attribute in this.obs ) {
+			for ( var attribute in this._o() ) {
 				this.removeObservable( attribute );
 			}
 			return this;
@@ -301,7 +308,7 @@
 						
 						// Non-recursive:
 						// set and collect value from observable attribute. 
-						value = model.obs[attribute].set(value);
+						value = model._o()[attribute].set(value);
 						
 						// Recursively set new values for a returned params object:
 						// creates a new copy of the stack trace for each new search branch.

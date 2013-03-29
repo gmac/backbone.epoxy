@@ -90,11 +90,11 @@ describe("Backbone.Epoxy.Model", function() {
 		expect( model.get("isSelected") ).toBe( true );
 	});
 	
-	
+	/*
 	it("should allow direct access to observable objects through the '.obs' namespace.", function() {
 		expect( !!model.obs.isSelected ).toBe( true );
 	});
-	
+	*/
 	
 	it("should get native model attributes using '.toJSON()'.", function() {
 		var json = model.toJSON();
@@ -111,7 +111,7 @@ describe("Backbone.Epoxy.Model", function() {
 	
 	// Deprecating this feature within the published API...
 	it("should allow direct access to observable property values using their own getters and setters.", function() {
-		var sel = model.obs[ "isSelected" ];
+		var sel = model._o()[ "isSelected" ];
 		expect( sel.get() ).toBe( false );
 		sel.set( true );
 		expect( sel.get() ).toBe( true );
@@ -132,7 +132,7 @@ describe("Backbone.Epoxy.Model", function() {
 	
 	
 	it("should assume computed properties defined as functions to be getters.", function() {
-		var obsGetter = model.obs.fullName._get;
+		var obsGetter = model._o().fullName._get;
 		var protoGetter = TestModel.prototype.computeds.fullName;
 		expect( obsGetter === protoGetter ).toBe( true );
 	});
