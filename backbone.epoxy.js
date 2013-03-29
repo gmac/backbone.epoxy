@@ -994,11 +994,9 @@
 			});
 			
 			// Add all computed view properties:
-			_.each(self.bindingComputeds||{}, function( computed, name ) {
+			_.each(_.result(self, "bindingComputeds")||{}, function( computed, name ) {
 				computed.id = name;
-				context[ name ] = function() {
-					return computed.call( self );
-				};
+				context[ name ] = _.isFunction(computed) ? _.bind(computed, self) : computed;
 			});
 			
 			// Create all bindings:
