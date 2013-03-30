@@ -46,22 +46,23 @@
 			</ul>
 			<div class="nav-toc">
 				<div class="nav-toc-content">
+					<p><b><a href="#upgrading">Upgrading</a></b></p>
+					
 					<b><a href="#model">Epoxy.Model</a></b>
 					<ul>
 						<li><b><a href="#model-extend">extend</a></b></li>
 						<li><b><a href="#model-constructor">constructor</a></b></li>
 						<li><a href="#model-add-computed">addComputed</a></li>
-						<li><a href="#model-add-observable">addObservable</a></li>
-						<li><a href="#model-clear-observables">clearObservables</a></li>
+						<li><a href="#model-clear-computeds">clearComputeds</a></li>
 						<li><a href="#model-computeds">computeds</a></li>
 						<li><a href="#model-destroy">destroy</a></li>
 						<li><a href="#model-get">get</a></li>
 						<li><a href="#model-get-copy">getCopy</a></li>
-						<li><a href="#model-has-observable">hasObservable</a></li>
+						<li><a href="#model-has-computed">hasComputed</a></li>
+						<li><a href="#model-init-computeds">initComputeds</a></li>
 						<li><a href="#model-modify-array">modifyArray</a></li>
 						<li><a href="#model-modify-object">modifyObject</a></li>
-						<li><a href="#model-observable-defaults">observableDefaults</a></li>
-						<li><a href="#model-remove-observable">removeObservable</a></li>
+						<li><a href="#model-remove-computed">removeComputed</a></li>
 						<li><a href="#model-set">set</a></li>
 						<li><a href="#model-tojson">toJSON</a></li>
 					</ul>
@@ -77,9 +78,11 @@
 						<li><a href="#view-bindings">bindings</a></li>
 						<li><a href="#view-binding-sources">bindingSources</a></li>
 						<li><a href="#view-computeds">computeds</a></li>
-						<li><a href="#view-get">get</a></li>
+						<li><a href="#view-get-binding">getBinding</a></li>
 						<li><a href="#view-remove">remove</a></li>
 						<li><a href="#view-remove-bindings">removeBindings</a></li>
+						<li><a href="#view-set-binding">setBinding</a></li>
+						<li><a href="#view-view-model">viewModel</a></li>
 					</ul>
 			
 					<b><a href="#binding-handlers">View Binding Handlers</a></b>
@@ -126,13 +129,24 @@
 			<h1>Documentation</h1>
 			
 			<div class="section">
+				<h2 id="upgrading">Upgrading from 0.11.x</h2>
+				
+				<p>Epoxy 0.12.0 makes some significant alterations to the library API, and therefore may require existing projects to refactor while upgrading. These API changes are a result of assessing practical use-cases for the library, and tailoring APIs to better suit application designs and practical workflows.</p>
+				
+				<ul>
+					<li><b>Removed:</b> <tt>model.observableDefaults</tt>. All references to the former Model "observables" API has been removed (computeds ARE still included). Observables referred to extraneous data attributes stored on a model, intended for storing view-specific data. In practice these offered little value as features of a model, plus they confused the use of computed attributes. View-specific data should now be stored in the sanctioned <b>viewModel</b> property of a view.</li>
+					<li><b>Renamed:</b> model <tt>hasObservable</tt>, <tt>removeObservable</tt>, and <tt>clearObservables</tt> have been renamed to <tt>hasComputed</tt>, <tt>removeComputed</tt>, and <tt>clearComputeds</tt>. For the above stated reasons, the entire "observables" API has been deprecated. All former observable methods have been renamed to more succinctly express their purpose.</li>
+					
+					<li><b>Mixin:</b> the process of using Epoxy as a mixin library has been simplified. See the Epoxy <a href="#model-constructor">model constructor</a> and <a href="#view-constructor">view constructor</a> articles for information about mixing Epoxy components into other objects classes.</li>
+				</ul>
+			</div>
+			
+			<div class="section">
 				<h2 id="model">Epoxy.Model</h2>
 			
 				<p>The Epoxy Model object extends <tt>Backbone.Model</tt>, providing a new model abstract to be extended into your application.</p>
 
-				<p>The Epoxy model introduces observable attributes on top of Backbone's native model attributes. Observable attributes are virtualized properties of the model: they may be <b>get</b> and <b>set</b> just like normal model attributes, and will trigger <tt>"change"</tt> events on the model when modified, however they do not exist within the model's <b>attributes</b> table, nor will they be saved with model data. Observable model attributes exist only in memory for the lifespan of a model instance. The goal of observable attributes is to provide an intermediary layer between a model's data and its display; allowing stateful view data (such as view selection states) to be managed within the model, yet not be retained by data stores.</p>
-
-				<p>Additionally, Epoxy's observable attributes may be <i>computed</i>. Computed attributes operate as accessors and mutators, where a computed attribute will <b>get</b> an assembled value derived from other model attributes, and will <b>set</b> one more more mutated values derived from an input. Computed observables bind themselves to their dependency model attributes and will update themselves in response to any of their dependencies changing, then in turn trigger their own <tt>"change:attributeName"</tt> event on the model.</p>
+				<p>The Epoxy model introduces computed attributes on top of Backbone's native model attributes. Computed attributes operate as accessors and mutators, where a computed attribute will <b>get</b> an assembled value derived from other model attributes, and will <b>set</b> one more more mutated values derived from an input. Computed attributes are virtualized properties of the model: they may be <b>get</b> and <b>set</b> just like normal model attributes, and will trigger <tt>"change"</tt> events on the model when modified, however they do not exist within the model's <b>attributes</b> table, nor will they be saved with model data. Computed model attributes exist only in memory for the lifespan of a model instance. Computed attributes bind themselves to their dependencies and will update themselves in response to any of their dependencies changing, and then in turn trigger their own <tt>"change:attribute"</tt> event on the model.</p>
 			</div>
 			<div class="section">
 				<h3 id="model-extend">extend</h3>
@@ -143,39 +157,25 @@
 			<div class="section">
 				<h3 id="model-constructor">constructor</h3>
 				<code>new Backbone.Epoxy.Model([attributes], [options])</code>
-				<p>Creates a new <tt>Epoxy.Model</tt> instance.</p>
-			</div>
-			
-			<div class="section">
-				<h3 id="model-add-observable">addObservable</h3>
-				<code>model.addObservable(name, value)</code>
-				<p>Adds an observable attribute to the model. Observable attributes are virtualized properties of the model: they may be <b>get</b> and <b>set</b> just like normal model attributes, and will trigger <tt>"change"</tt> events on the model when modified, however they do not exist within the model's <b>attributes</b> table, nor will they be saved with model data. Observable model attributes exist only in memory for the lifespan of a model instance. The goal of observable attributes is to provide an intermediary layer between a model's data and its display; allowing stateful view data (such as view selection states) to be managed within the model, yet not be retained by data stores.</p>
-
-				<p>Observable attributes may store any type of data, and will trigger normal <tt>"change:attributeName"</tt> events when set through the model's standard <b>set</b> method.</p>
+				<p>Creates a new <tt>Epoxy.Model</tt> instance. When constructed, <tt>computeds</tt> may be passed as an options property for direct assignment to the model. A constructed model will automatically initialize all computed property definitions.</p>
 				
-				<p>Observable attributes storing object values (<tt>Object</tt> or <tt>Array</tt>) will trigger <tt>"change"</tt> events in response to changes in object composition, rather than object identity (this differs from the base Backbone Model, which will only trigger <tt>"change"</tt> events when a unique object instance replaces another within the model). Object comparison checks are performed using Underscore's <b>isEqual</b> method, which will compare the composition of objects and the contents of arrays. Performance should be considered when managing large objects.</p>
-				
-<pre><button class="run">Run</button><code class="js">var model = new Backbone.Epoxy.Model();
-model.addObservable("isSelected", false);
-alert( model.get("isSelected") );</code>	
-</pre>
-				<p>Use the <b><a href="#model-observable-defaults">observableDefaults</a></b> hash to automatically construct observables on your model instances.</p>
+				<p>If you choose to mixin the Epoxy Model configuration onto another class prototype, you'll need to manually resolve the model's <b>computeds</b> property and then call <b>initComputeds</b> to reproduce Epoxy's model setup.</p>
 			</div>
 			
 			<div class="section">
 				<h3 id="model-add-computed">addComputed</h3><br>
 				<code>model.addComputed(name, params) or...</code><br>
 				<code>model.addComputed(name, getter, [setter], [*deps])</code>
-				<p>Adds a computed observable attribute to the model. Computed attributes operate as accessors and mutators, where a computed attribute will <b>get</b> an assembled value derived from other model attributes, and will <b>set</b> one more more mutated values derived from an input. Computed observables bind themselves to their dependency attributes and will update themselves in response to any of their dependencies changing, then in turn trigger their own <tt>"change:attributeName"</tt> event on the model.</p>
+				<p>Adds a computed attribute to the model. Computed attributes operate as accessors and mutators, where a computed attribute will <b>get</b> an assembled value derived from other model attributes, and will <b>set</b> one more more mutated values derived from an input. Computeds bind themselves to their dependency attributes and will update themselves in response to any of their dependencies changing, then in turn trigger their own <tt>"change:attribute"</tt> event on the model.</p>
 
 				<p id="model-computed-params">The <b>addComputed</b> method is called with an attribute name and a params object defining the following:</p>
 				
 				<ul>
-					<li><b>get:</b> <i>Required function; invoked in context of the model</i>. This getter function assembles its value based on other model properties (attributes, observables, or other computeds), then returns the generated value. Note that a getter function should always reference other model values using the model's <b>get</b> method (for <a href="#model-computed-deps">automatic dependency mapping</a>).</li>
+					<li><b>get:</b> <i>Required function; invoked in context of the model</i>. This getter function assembles its value based on other model properties (attributes, computeds, or other computeds), then returns the generated value. Note that a getter function should always reference other model values using the model's <b>get</b> method (for <a href="#model-computed-deps">automatic dependency mapping</a>).</li>
                     
 					<li><b>[deps]:</b> <i>Optional array</i>. An array of attribute names that the getter function depends on. This manual property mapping is only required if your getter contains unreachable values that would be missed by automatic dependency mapping (discussed below).</li>
                     					
-					<li><b>[set]:</b> <i>Optional function; invoked in context of the model</i>. A mutator function which receives a raw input value, and returns an object defining new key/value pairs to be merged into the model. Computed observables declared without a <b>set</b> function are read-only.</li>
+					<li><b>[set]:</b> <i>Optional function; invoked in context of the model</i>. A mutator function which receives a raw input value, and returns an object defining new key/value pairs to be merged into the model. Computed attributes declared without a <b>set</b> function are read-only.</li>
 				</ul>
 				
 				<p>Note that the <b>get</b> and <b>set</b> functions are invoked in the context of their parent model, so referencing <tt>this</tt> within their scopes refers to the model.</p>
@@ -231,19 +231,19 @@ model.addComputed("displayName", function() {
     return this.get("active") ? fullName : shortName;
 });</code>	
 </pre>
-				<p>Use the <b><a href="#model-computeds">computeds</a></b> hash to automatically construct computed observables on your model instances.</p>
+				<p>Use the <b><a href="#model-computeds">computeds</a></b> hash to automatically initialize computed attributes on your model instances.</p>
 			</div>
 			
 			<div class="section">
-				<h3 id="model-clear-observables">clearObservables</h3>
-				<code>model.clearObservables()</code>
-				<p>Removes all observable properties on the model and cleans up their bound events. Cleared observables will no longer exist on the model, so will no longer be accessible or trigger events. Be sure to call <b>clearObservables</b> when deprecating an Epoxy model without specifically calling its <b>destroy</b> method.</p>
+				<h3 id="model-clear-computeds">clearComputeds</h3>
+				<code>model.clearComputeds()</code>
+				<p>Removes all computed properties on the model and cleans up their bound events. Cleared computeds will no longer exist on the model, so will no longer be accessible or trigger events. Be sure to call <b>clearComputeds</b> when deprecating an Epoxy model without specifically calling its <b>destroy</b> method.</p>
 			</div>
 			
 			<div class="section">
 				<h3 id="model-computeds">computeds</h3>
 				<code>model.computeds</code>
-				<p>A hash table declaring computed observable attributes to be automatically added to a model instance by the constructor. Uses <b><a href="#model-add-computed">addComputed</a></b> to create observable attributes. Computed observables may be declared with a <a href="#model-computed-params">computed params</a> object, or as a getter function (uses <a href="#model-computed-deps">automatic dependency mapping</a>).</p>	
+				<p>A hash table declaring computed attributes to be automatically added to a model instance by <b>initComputeds</b>. Uses <b><a href="#model-add-computed">addComputed</a></b> to create computed attributes. Computeds may be declared with a <a href="#model-computed-params">computed params</a> object, or as a getter function (uses <a href="#model-computed-deps">automatic dependency mapping</a>).</p>	
 <pre>
 <code class="js">var ComputedModel = Backbone.Epoxy.Model.extend({
     defaults: {
@@ -273,32 +273,39 @@ model.addComputed("displayName", function() {
 			<div class="section">
 				<h3 id="model-destroy">destroy</h3>
 				<code>model.destroy([options])</code>
-				<p>Override wrapper for the Backbone Model's native <b>destroy</b> method. This wrapper cleans up Epoxy model configuration, then defers to the Backbone Model's native <b>destroy</b> method. If you'd like to clean up a model without completely destroying it, use the <b>clearObservables</b> method.</p>
+				<p>Override wrapper for the Backbone Model's native <b>destroy</b> method. This wrapper cleans up Epoxy model configuration, then defers to the Backbone Model's native <b>destroy</b> method. If you'd like to clean up a model without completely destroying it, use the <b>clearComputeds</b> method.</p>
 			</div>
 			
 			<div class="section">
 				<h3 id="model-get">get</h3>
 				<code>model.get(attribute)</code>
-				<p>Override wrapper for the Backbone Model's native <b>get</b> method. This override allows basic model attributes and Epoxy observable/computed attributes to be accessed through a common API.</p>
-				<p>The Epoxy <b>get</b> method will first check for an observable attribute, then defers to the Backbone Model's native <b>get</b> method if no observable was found. Remember that an observable attribute overrides a native attribute with the same name, so be mindful of naming collisions.</p>
+				<p>Override wrapper for the Backbone Model's native <b>get</b> method. This override allows native model attributes and Epoxy computed attributes to be accessed through a common API.</p>
+				
+				<p>The Epoxy <b>get</b> method will first check for a computed attribute, then defers to the Backbone Model's native <b>get</b> method if no computed value was found. Remember that a computed attribute overrides a native attribute with the same name, so be mindful of naming collisions.</p>
 			</div>
 			
 			<div class="section">
 				<h3 id="model-get-copy">getCopy</h3>
 				<code>model.getCopy(attribute)</code>
-				<p>Gets a model attribute value (native, observable, or computed), and performs a shallow copy on any non-primitive values returned. This is useful for getting copies of <tt>Object</tt> and <tt>Array</tt> values that you plan to modify outside of the model, then resubmit with changes (remember that <tt>"change"</tt> events only trigger for non-primitive values when their identity changes). The <b><a href="#model-modify-array">modifyArray</a></b> and <b><a href="#model-modify-object">modifyObject</a></b> methods may also be used to perform object changes internally within the model.</p>
+				<p>Gets a model attribute value (native or computed), and performs a shallow copy on any non-primitive values returned. This is useful for getting copies of <tt>Object</tt> and <tt>Array</tt> values that you plan to modify outside of the model, then resubmit with changes (remember that <tt>"change"</tt> events only trigger for non-primitive values when their identity changes). The <b><a href="#model-modify-array">modifyArray</a></b> and <b><a href="#model-modify-object">modifyObject</a></b> methods may also be used to perform object changes internally within the model.</p>
 			</div>
 			
 			<div class="section">
-				<h3 id="model-has-observable">hasObservable</h3>
-				<code>model.hasObservable(attribute)</code>
-				<p>Returns <tt>true</tt> if the model has an observable or computed observable attribute with the specified name. Note that the Backbone Model's native <b>has</b> method is NOT modified by Epoxy, so will still only report on the presence of Backbone-native model attributes.</p>
+				<h3 id="model-has-computed">hasComputed</h3>
+				<code>model.hasComputed(attribute)</code>
+				<p>Returns <tt>true</tt> if the model has a computed attribute with the specified name. Note that the Backbone Model's native <b>has</b> method is NOT modified by Epoxy, so will still only report on the presence of Backbone-native model attributes.</p>
+			</div>
+			
+			<div class="section">
+				<h3 id="model-init-computeds">initComputeds</h3>
+				<code>model.initComputeds()</code>
+				<p>Clears all computed model attributes, then builds all computed attributes defined in the model's <b>computeds</b> hash. This method is automatically called by the Epoxy model constructor after initializing the model, therefore you should only need to call this manually when using Epoxy as a mixin library.</p>
 			</div>
 			
 			<div class="section">
 				<h3 id="model-modify-array">modifyArray</h3>
 				<code>model.modifyArray(attribute, arrayMethod, [*args])</code>
-				<p>Performs an internal update on a stored <tt>Array</tt> model attribute (native or observable) using a standard JavaScript array modifier (<tt>pop</tt>, <tt>push</tt>, <tt>reverse</tt>, <tt>shift</tt>, <tt>slice</tt>, <tt>sort</tt>, <tt>splice</tt>, and <tt>unshift</tt>), then triggers a change event for the modified model attribute. Invoke with the model attribute name to modify, a string of the array method name to call, and any additional arguments to be passed into the array method. Returns any results from the array method. Calling <b>modifyArray</b> on a non-array attribute will take no action.</p>
+				<p>Performs an internal update on a stored <tt>Array</tt> model attribute (native or computed) using a standard JavaScript array modifier (<tt>pop</tt>, <tt>push</tt>, <tt>reverse</tt>, <tt>shift</tt>, <tt>slice</tt>, <tt>sort</tt>, <tt>splice</tt>, and <tt>unshift</tt>), then triggers a change event for the modified model attribute. Invoke with the model attribute name to modify, a string of the array method name to call, and any additional arguments to be passed into the array method. Returns any results from the array method. Calling <b>modifyArray</b> on a non-array attribute will take no action.</p>
 				
 <pre><button class="run">Run</button><code class="js">var model = new Backbone.Epoxy.Model({wordList:[]});
 model.modifyArray("wordList", "push", "deathstar");
@@ -309,7 +316,7 @@ alert( model.get("wordList").length );</code>
 			<div class="section">
 				<h3 id="model-modify-object">modifyObject</h3>
 				<code>model.modifyObject(attribute, objectProperty, value)</code>
-				<p>Performs an internal update on a stored <tt>Object</tt> model attribute (native or observable), then triggers a change event for the modified model attribute. Invoke with the model attribute name to modify, a property name to set on the object, and a value to set as the object property. Setting <tt>undefined</tt> to a property will delete it from the object. Returns the modified object. Calling <b>modifyObject</b> will only take action on model attributes with an assessed type of <tt>"object"</tt>.</p>
+				<p>Performs an internal update on a stored <tt>Object</tt> model attribute (native or computed), then triggers a change event for the modified model attribute. Invoke with the model attribute name to modify, a property name to set on the object, and a value to set as the object property. Setting <tt>undefined</tt> to a property will delete it from the object. Returns the modified object. Calling <b>modifyObject</b> will only take action on model attributes with an assessed type of <tt>"object"</tt>.</p>
 				
 <pre><button class="run">Run</button><code class="js">var model = new Backbone.Epoxy.Model({ wordsDict:{} });
 model.modifyObject("wordsDict", "deathstar", true);
@@ -318,46 +325,33 @@ alert( model.get("wordsDict").hasOwnProperty("deathstar") );</code>
 			</div>
 			
 			<div class="section">
-				<h3 id="model-observable-defaults">observableDefaults</h3>
-				<code>model.observableDefaults</code>
-				<p>A hash table declaring observable attributes to be automatically added to a model instance by the constructor. Uses <b><a href="#model-add-observable">addObservable</a></b> to create the specified observable attributes. After a model instance has been constructed, observable values are managed through the model's <b>get</b> and <b>set</b> methods. Any observable values declared as a function will be invoked while getting added to the model; this is useful for creating unique Object/Array values for each model instance.</p>
-<pre>
-<code class="js">var ComputedModel = Backbone.Epoxy.Model.extend({
-    observableDefaults: {
-        isSelected: false,
-        keysList: function() { return ["a", "b"]; }
-    }
-});</code>
-</pre>	
-			</div>
-			
-			<div class="section">
-				<h3 id="model-remove-observable">removeObservable</h3>
-				<code>model.removeObservable(attribute)</code>
-				<p>Removes an observable attribute by name, and cleans up all bound listeners. A removed observable property will no longer exist within the model, so may no longer be accessed or trigger events.</p>
+				<h3 id="model-remove-computed">removeComputed</h3>
+				<code>model.removeComputed(attribute)</code>
+				<p>Removes a computed attribute by name, and cleans up all bound listeners. A removed computed property will no longer exist within the model, so may no longer be accessed or trigger events.</p>
 			</div>
 			
 			<div class="section">
 				<h3 id="model-set">set</h3>
 				<code>model.set(attributes, [options])</code>
-				<p>Override wrapper for the Backbone Model's native <b>set</b> method. This override allows basic model attributes and Epoxy observable/computed attributes to be accessed through a common API.</p>
-				<p>The Epoxy <b>set</b> method will first check for an observable attribute, then defers to the Backbone Model's native <b>set</b> method if no observable was found. Remember that an observable attribute overrides a native attribute with the same name, so be mindful of naming collisions.</p>
+				<p>Override wrapper for the Backbone Model's native <b>set</b> method. This override allows basic model attributes and Epoxy computed/computed attributes to be accessed through a common API.</p>
+				
+				<p>The Epoxy <b>set</b> method will first check for a computed attribute, then defers to the Backbone Model's native <b>set</b> method if no computed was found. Remember that a computed attribute overrides a native attribute with the same name, so be mindful of naming collisions.</p>
 			</div>
 			
 			<div class="section">
 				<h3 id="model-tojson">toJSON</h3>
 				<code>model.toJSON([options])</code>
-				<p>Override wrapper for the Backbone Model's native <b>toJSON</b> method. Allows an optional <tt>{obs:true}</tt> param to be passed, specifying that observable/computed attribute values should be included in the returned data.</p>
+				<p>Override wrapper for the Backbone Model's native <b>toJSON</b> method. Allows an optional <tt>{computed:true}</tt> param to be passed, specifying that computed attribute values should be included in the returned data.</p>
 			</div>
 			
 			<div class="section">
 				<h2 id="view">Epoxy.View</h2>
 
-				<p>The Epoxy View object extends <tt>Backbone.View</tt>, providing a new view abstract to be extended into your application.</p>
+				<p>The Epoxy View object extends <tt>Backbone.View</tt>, providing a new view abstract to be extended or mixed into your application.</p>
 
-				<p>The Epoxy View provides elegant and extensible hooks for binding a data source (<tt>Backbone.Model</tt> and/or <tt>Backbone.Collection</tt> instances) directly to DOM elements. When data attributes change, they will automatically trigger refresh of all bound view elements; seamlessly updating the view without requiring a complete render pass.</p>
+				<p>The Epoxy View provides elegant and extensible hooks for binding data sources (<tt>Backbone.Model</tt> and/or <tt>Backbone.Collection</tt> instances) directly to DOM elements. When data attributes change, they will automatically trigger refresh of all bound view elements; seamlessly updating the view without requiring a complete render pass.</p>
 
-				<p>Also note that an Epoxy view may bind to a native <tt>Backbone.Model</tt> instance, or to an <tt>Epoxy.Model</tt> with specialized observable attributes. Because both model types operate with a common API, the Epoxy View does not depend on its <tt>Epoxy.Model</tt> counterpart to support model bindings. Therefore, you're free to exclude <tt>Epoxy.Model</tt> resources from your project if you just want view binding features.</p>
+				<p>Also note that an Epoxy view may bind to a native <tt>Backbone.Model</tt> instance, or to an <tt>Epoxy.Model</tt> with specialized computed attributes. Because both model types operate with a common API, the Epoxy View does not depend on its <tt>Epoxy.Model</tt> counterpart to support model bindings. Therefore, you're free to exclude <tt>Epoxy.Model</tt> resources from your project if you just want view binding features.</p>
 			</div>
 			
 			<div class="section">
@@ -369,23 +363,27 @@ alert( model.get("wordsDict").hasOwnProperty("deathstar") );</code>
 			<div class="section">
 				<h3 id="view-constructor">constructor</h3>
 				<code>new Backbone.Epoxy.View([options])</code>
-				<p>Creates a new <tt>Epoxy.View</tt> instance.</p>
+				<p>Creates a new <tt>Epoxy.View</tt> instance. The following attributes may be passed as options for direct assignment to the view instance: <tt>viewModel</tt>, <tt>bindingFilters</tt>, <tt>bindingHandlers</tt>, <tt>bindingSources</tt>, and/or <tt>computeds</tt>.</p>
+				
+				<p>Note that when mixing Epoxy view configuration into another class prototype, you'll need to manually resolve definitions for the above listed properties, and then call <b>applyBindings</b> to reproduce view setup.</p>
 			</div>
 			
 			<div class="section">
 				<h3 id="view-binding-context">binding context</h3>
 				<code>{$model:model, $collection:collection, [*attributes], [*computeds]}</code>
-				<p>To establish bindings, an Epoxy view generates a <i>binding context</i> with routers mapping all available data sources, model attributes, and computed properties of the view. This compiled binding context serves as a ViewModel for staging data exchange between data sources and the view. Live values may be read from the binding context using the view's <b><a href="#view-get">get</a></b> method.</p>
+				<p>To establish bindings, an Epoxy view generates a <i>binding context</i> with routers mapping all available data sources, model attributes, and computed properties of the view. This compiled binding context serves as a router table for exchanging values between data sources and the view. Live values may be read and written through the binding context using the view's <b><a href="#view-get-binding">getBinding</a></b> and <b><a href="#view-set-binding">setBinding</a></b> methods.</p>
 				
 				<p>As noted above, a binding context includes three sets of resources:</p>
 				
 				<ul>
-					<li><b>Data Sources</b>: these are instances of <tt>Backbone.Model</tt> and/or <tt>Backbone.Collection</tt> that provide themselves and their attributes to the view for binding. By default, an Epoxy view looks for two potential data sources: the view's <b>model</b> property, and its <b>collection</b> property. References to these data sources are automatically configured in the binding context as <tt>$model</tt> and <tt>$collection</tt>. Additional models and collections may be added through the <b><a href="#view-binding-sources">bindingSources</a></b> hash, and will be added to the context as <tt>"$sourceName"</tt>.</li>
+					<li><b>Data Sources</b>: these are instances of <tt>Backbone.Model</tt> and/or <tt>Backbone.Collection</tt> that provide themselves and their attributes to the view for binding. By default, an Epoxy view looks for three potential data sources: the view's <b>model</b> property, <b>viewModel</b> property, and its <b>collection</b> property. References to these data sources are automatically configured in the binding context as <tt>$model</tt>, <tt>$viewModel</tt>, and <tt>$collection</tt>. Additional models and collections may be added through the <b><a href="#view-binding-sources">bindingSources</a></b> hash, and will be added to the context as <tt>"$sourceName"</tt>.</li>
 					
-					<li><b>Model Attributes</b>: all <tt>Backbone.Model</tt> data sources will have their model attributes added to the binding context as well. For the view's primary <b>model</b> property, all model attributes will be added using their normal names (ie: <tt>"attribute"</tt>). For named models defined through <b>bindingSources</b>, the model's attributes will be aliased as <tt>"source_attribute"</tt>. Note that instances of <tt>Epoxy.Model</tt> will provide aliases to ALL attributes, including their observables and computeds.</li>
+					<li><b>Model Attributes</b>: all <tt>Backbone.Model</tt> data sources will have their model attributes added to the binding context as well. For the view's primary <b>model</b> and <b>viewModel</b> properties, all attributes will be added using their normal names (ie: <tt>"attribute"</tt>). For additional models defined through <b>bindingSources</b>, each model's attributes will be aliased as <tt>"source_attribute"</tt>. Note that instances of <tt>Epoxy.Model</tt> will provide aliases to ALL attributes, including their computeds.</li>
 					
-					<li><b>Computed View Properties</b>: all computed property functions defined in the view's <tt>computeds</tt> hash are the final values added into the binding context. Computed view properties are defined using their normal names; therefore naming conflicts with model attributes should be considered.</li>
+					<li><b>Computed View Properties</b>: all computed property functions defined in the view's <tt>computeds</tt> hash are the final values added into the binding context.</li>
 				</ul>
+				
+				<p>Be mindful of naming conflicts within the binding context. Attributes of the <b>model</b>, <b>viewModel</b>, and view <b>computeds</b> are all aliased with their normal names. Therefore, specificity in naming is strongly encouraged.</p>
 			</div>
 			
 			<div class="section">
@@ -535,13 +533,15 @@ var BindingView = Backbone.Epoxy.View.extend({
 			<div class="section">
 				<h3 id="view-computeds">computeds</h3>
 				<code>view.computeds</code>
-				<p>A hash table defining a view's computed properties. Computed view properties are defined with functions that <b>get</b> data from the view's <a href="#view-binding-context">binding context</a>, and return an assembled value. Computed view properties are an excellent place to assemble view-specific values.</p>
+				<p>A hash table defining a view's computed properties. Computed view properties act as custom data routers: they assemble custom values from available source data, and route formatted values back to sources. While this is conceptually similar to computed model attributes, computed view properties are significantly different in that they do not store their own data, nor do they trigger any events.</p>
+					
+				<p>Computed view properties are defined with functions that get data from the view's <a href="#view-binding-context">binding context</a>, and return an assembled value. Computed view properties are an excellent place to assemble view-specific values.</p>
 			</div>
 			
 			<div class="section">
-				<h3 id="view-get">get</h3>
-				<code>view.get(attribute)</code>
-				<p>Gets data from the view's <a href="#view-binding-context">binding context</a>. The <b>get</b> method may request any data attribute name available to binding declarations. This applies to data sources (referenced as <tt>"$source"</tt>), model attributes (referenced as <tt>"attribute"</tt> or <tt>"source_attribute"</tt>), and <a href="#view-computeds">computed view properties</a>.</p>
+				<h3 id="view-get-binding">getBinding</h3>
+				<code>view.getBinding(attribute)</code>
+				<p>Gets data through the view's <a href="#view-binding-context">binding context</a>. The <b>getBinding</b> method may request any data attribute name available to binding declarations. This applies to data sources (referenced as <tt>"$source"</tt>), model attributes (referenced as <tt>"attribute"</tt> or <tt>"source_attribute"</tt>), and <a href="#view-computeds">computed view properties</a>.</p>
 			</div>
 			
 			<div class="section">
@@ -554,6 +554,18 @@ var BindingView = Backbone.Epoxy.View.extend({
 				<h3 id="view-remove-bindings">removeBindings</h3>
 				<code>view.removeBindings()</code>
 				<p>Removes and cleans up all bindings applied to the view. All binding hooks will be nullified, leaving the view's DOM elements formatted in their final bound state. The <b>removeBindings</b> method is automatically called with the <b>remove</b> method. Be mindful that you should manually call <b>removeBindings</b> when deprecating an Epoxy view without specifically calling its <b>remove</b> method.</p>
+			</div>
+			
+			<div class="section">
+				<h3 id="view-set-binding">setBinding</h3>
+				<code>view.setBinding(attribute, value)</code>
+				<p>Sets data through the view's <a href="#view-binding-context">binding context</a>. The <b>setBinding</b> method may submit data to any model attribute name available to binding declarations. The submitted data value will pass through binding context routers for storage in the connected data model.</p>
+			</div>
+			
+			<div class="section">
+				<h3 id="view-view-model">viewModel</h3>
+				<code>view.viewModel</code>
+				<p>References a model for storing view-specific data. This may be an instance of <tt>Backbone.Model</tt> or <tt>Epoxy.Model</tt>, and may be passed into the view through constructor options. A view model instance and all of its attributes will be added to the view's <a href="#view-binding-context">binding context</a> for use in bindings. While there is nothing exceptionally unique about this model instance, it offers a compositional benefit for organizing stateful and operational data within a view structure.</p>
 			</div>
 			
 			<div class="section">
@@ -586,7 +598,7 @@ var BindingView = Backbone.Epoxy.View.extend({
 				<ul>
 					<li><b>Radios:</b> a bound <tt>radio</tt> element will become checked when the element's <tt>value</tt> matches the bound model attribute. Checking a radio will set its <tt>value</tt> to the bound model attribute.</li>
 
-					<li><b>Checkbox arrays:</b> when a <tt>checkbox</tt> element is bound to an <tt>Array</tt> model attribute, the element will be checked while its <tt>value</tt> exists within the value array, and unchecked while its <tt>value</tt> is absent from the array. Likewise, toggling the element's <tt>checked</tt> property will add and remove its value from the bound array. Keep in mind that arrays modified within a native <tt>Backbone.Model</tt> will NOT trigger a <tt>"change"</tt> event unless the array <i>instance</i> is changed. Using an <tt>Epoxy.Model</tt> observable will help here by managing object copies, and by performing array comparisons by content.</li>
+					<li><b>Checkbox arrays:</b> when a <tt>checkbox</tt> element is bound to an <tt>Array</tt> model attribute, the element will be checked while its <tt>value</tt> exists within the value array, and unchecked while its <tt>value</tt> is absent from the array. Likewise, toggling the element's <tt>checked</tt> property will add and remove its value from the bound array. Keep in mind that arrays modified within a native <tt>Backbone.Model</tt> will NOT trigger a <tt>"change"</tt> event unless the array <i>instance</i> is changed. Using an <tt>Epoxy.Model</tt> computed will help here by managing object copies, and by performing array comparisons by content.</li>
 
 				 	<li><b>Checkbox toggles:</b> when a <tt>checkbox</tt> element is bound to a primitive model attribute (types <tt>String</tt>, <tt>Boolean</tt>, or <tt>Number</tt>), the element will be checked based on a loosely-typed assessment of the model attribute's truthiness. When the element's <tt>"checked"</tt> status is toggled, it will submit a <tt>Boolean</tt> value back to the model attribute.</li>
 				</ul>
@@ -687,10 +699,10 @@ var view = new ListView();</code></pre>
 					
 					<li><tt>[{label:"Luke", value:"1"}, {label:"Leia", value:"2"}]</tt> : Label/value pairs. Given an array of objects, options will be created using each object's <b>label</b> and <b>value</b> properties as the text and value of each option. These property names may be adjusted globally through <a href="#binding-config">binding config</a>.</li>
 					
-					<li><tt>Backbone.Collection</tt> : Models list. The collection's <b>models</b> array will be used as the array source. Options will be created using each model's <b>label</b> and <b>value</b> attributes as the text and value of each option. These attribute names may be adjusted globally through <a href="#binding-config">binding config</a>. An <tt>Epoxy.Model</tt> may be used to virtualize these values as observable/computed attributes if needed. Note that the <b>options</b> binding does not register a <tt>"change"</tt> event on its collection to avoid generally superfluous updates. Instead, you may manually trigger an <tt>"update"</tt> event on the collection to refresh its bindings.</li>
+					<li><tt>Backbone.Collection</tt> : Models list. The collection's <b>models</b> array will be used as the array source. Options will be created using each model's <b>label</b> and <b>value</b> attributes as the text and value of each option. These attribute names may be adjusted globally through <a href="#binding-config">binding config</a>. An <tt>Epoxy.Model</tt> may be used to virtualize these values as computed/computed attributes if needed. Note that the <b>options</b> binding does not register a <tt>"change"</tt> event on its collection to avoid generally superfluous updates. Instead, you may manually trigger an <tt>"update"</tt> event on the collection to refresh its bindings.</li>
 				</ul>
 				
-<pre><code class="js">observableDefaults: {
+<pre><code class="js">computedDefaults: {
     list1: ["Luke"],
     list2: [{label:"Luke", value:"0"}],
     list3: new Backbone.Collection( {models:[{label:"Luke", value:"0"}]} )
@@ -715,10 +727,10 @@ var view = new ListView();</code></pre>
 					
 					<li><tt>{label:"Default", value:""}</tt> : Given an object, the default option will be created using the object's <b>label</b> and <b>value</b> properties as the text and value of the option.</li>
 					
-					<li><tt>Backbone.Model</tt> : Given a Backbone Model, the default option will be created using the model's <b>label</b> and <b>value</b> attributes as the text and value of the option. An <tt>Epoxy.Model</tt> may be used to virtualize these as observable/computed attributes if needed.</li>
+					<li><tt>Backbone.Model</tt> : Given a Backbone Model, the default option will be created using the model's <b>label</b> and <b>value</b> attributes as the text and value of the option. An <tt>Epoxy.Model</tt> may be used to virtualize these as computed/computed attributes if needed.</li>
 				</ul>
 				
-<pre><code class="js">observableDefaults: {
+<pre><code class="js">computedDefaults: {
     default1: "Choose...",
     default2: {label:"Choose...", value:""},
     default3: new Backbone.Model({label:"Choose...", value:""})
@@ -742,10 +754,10 @@ var view = new ListView();</code></pre>
 					
 					<li><tt>{label:"None", value:""}</tt> : Given an object, the placeholder option will be created using the object's <b>label</b> and <b>value</b> properties as the text and value of the option.</li>
 					
-					<li><tt>Backbone.Model</tt> : Given a Backbone Model, the placeholder option will be created using the model's <b>label</b> and <b>value</b> attributes as the text and value of the option. An <tt>Epoxy.Model</tt> may be used to virtualize these as observable/computed attributes if needed.</li>
+					<li><tt>Backbone.Model</tt> : Given a Backbone Model, the placeholder option will be created using the model's <b>label</b> and <b>value</b> attributes as the text and value of the option. An <tt>Epoxy.Model</tt> may be used to virtualize these as computed/computed attributes if needed.</li>
 				</ul>
 				
-<pre><code class="js">observableDefaults: {
+<pre><code class="js">computedDefaults: {
     empty1: "None",
     empty2: {label:"None", value:""},
     empty3: new Backbone.Model({label:"None", value:""})

@@ -49,48 +49,23 @@
 	// -----------
 	var modelMap;
 	var modelSuper = superClass( Backbone.Model );
+	var modelProps = ["computeds"];
 	
 	Epoxy.Model = Backbone.Model.extend({
 		
 		// Backbone.Model constructor override:
 		// configures observable model attributes around the underlying native Backbone model.
-		constructor: function() {
+		constructor: function( attributes, options ) {
+			_.extend( this, _.pick(options||{}, modelProps) );
 			modelSuper( this, "constructor", arguments );
-			this.epoxyInit();
+			this.initComputeds();
 		},
 		
-		// Observable namespace manager:
-		// Allows the model to operate as a mixin.
-		_o: function() {
-			return (this.o = this.o || {});
-		},
-		
-		// Initializes the Epoxy model:
-		// called automatically by the native constructor,
-		// or may be called manually when adding Epoxy as a mixin.
-		epoxyInit: function() {
-			var self = this;
-			
-			// Flag "init" status to delay observables from self-initializing:
-			// we'll need to hold off initializing observables until all presets are constructed.
-			self._init = 1;
-			
-			// Add all default observable attributes:
-			_.each(_.result(self, "observableDefaults")||{}, function( value, attribute ) {
-				self.addObservable( attribute, isFunction(value) ? value() : copyModelValue(value) );
-			});
-			
-			// Add all computed observables:
-			_.each(_.result(self, "computeds")||{}, function( params, attribute ) {
-				self.addComputed( attribute, params );
-			});
-			
-			// Initialize all observable attributes:
-			// all presets have been constructed and may reference each other now.
-			_.invoke(self._o(), "init");
-			
-			// Unflag "init"; observables will now self-initialize.
-			delete self._init;
+		// Gets a copy of a model attribute value:
+		// Array and Object values will return a shallow copy,
+		// primitive values will be returned directly.
+		getCopy: function( attribute ) {
+			return copyModelValue( this.get(attribute) );
 		},
 		
 		// Backbone.Model.get() override:
@@ -102,19 +77,12 @@
 			modelMap && modelMap.push( [attribute, this] );
 			
 			// Return an observable property value, if available:
-			if ( this.hasObservable(attribute) ) {
-				return this._o()[ attribute ].get();
+			if ( this.hasComputed(attribute) ) {
+				return this.c()[ attribute ].get();
 			}
 			
 			// Default to native Backbone.Model get operation:
 			return modelSuper( this, "get", arguments );
-		},
-		
-		// Gets a copy of a model attribute value:
-		// Array and Object values will return a shallow copy,
-		// primitive values will be returned directly.
-		getCopy: function( attribute ) {
-			return copyModelValue( this.get(attribute) );
 		},
 		
 		// Backbone.Model.set() override:
@@ -151,9 +119,9 @@
 		toJSON: function( options ) {
 			var json = modelSuper( this, "toJSON", arguments );
 
-			if ( options && options.obs ) {
-				_.each(this._o(), function( observable, attribute ) {
-					json[ attribute ] = observable.value;
+			if ( options && options.computed ) {
+				_.each(this.c(), function( computed, attribute ) {
+					json[ attribute ] = computed.value;
 				});
 			}
 			
@@ -163,16 +131,31 @@
 		// Backbone.Model.destroy() override:
 		// clears all observable attributes before destroying.
 		destroy: function() {
-			this.clearObservables();
+			this.clearComputeds();
 			return modelSuper( this, "destroy", arguments );
 		},
 		
-		// Adds an observable attribute to the model:
-		// observable attribute values may store any object type.
-		addObservable: function( attribute, value ) {
-			this.removeObservable( attribute );
-			this._o()[ attribute ] = new EpoxyObservable( this, attribute, {value: value} );
-			return this;
+		// Computed namespace manager:
+		// Allows the model to operate as a mixin.
+		c: function() {
+			return this._c || (this._c = {});
+		},
+		
+		// Initializes the Epoxy model:
+		// called automatically by the native constructor,
+		// or may be called manually when adding Epoxy as a mixin.
+		initComputeds: function() {
+			this.clearComputeds();
+			
+			// Add all computed observables:
+			_.each(_.result(this, "computeds")||{}, function( params, attribute ) {
+				params._init = 1;
+				this.addComputed( attribute, params );
+			}, this);
+
+			// Initialize all observable attributes:
+			// all presets have been constructed and may reference each other now.
+			_.invoke( this.c(), "init" );
 		},
 		
 		// Adds a computed observable attribute to the model:
@@ -182,9 +165,10 @@
 		// @param [setter (function)]
 		// @param [dependencies ...]
 		addComputed: function( attribute, getter, setter ) {
-			this.removeObservable( attribute );
+			this.removeComputed( attribute );
 			
 			var params = getter;
+			var delayInit = params._init;
 			
 			// Test if getter and/or setter are provided:
 			if ( isFunction(getter) ) {
@@ -205,28 +189,28 @@
 			}
 			
 			// Create a new computed attribute:
-			this._o()[ attribute ] = new EpoxyObservable( this, attribute, params );
+			this.c()[ attribute ] = new EpoxyComputedModel( this, attribute, params, delayInit );
 			return this;
 		},
 		
 		// Tests the model for a observable attribute definition:
-		hasObservable: function( attribute ) {
-			return this._o().hasOwnProperty( attribute );
+		hasComputed: function( attribute ) {
+			return this.c().hasOwnProperty( attribute );
 		},
 		
 		// Removes an observable attribute from the model:
-		removeObservable: function( attribute ) {
-			if ( this.hasObservable(attribute) ) {
-				this._o()[ attribute ].dispose();
-				delete this._o()[ attribute ];
+		removeComputed: function( attribute ) {
+			if ( this.hasComputed(attribute) ) {
+				this.c()[ attribute ].dispose();
+				delete this.c()[ attribute ];
 			}
 			return this;
 		},
 
 		// Removes all observable attributes:
-		clearObservables: function() {
-			for ( var attribute in this._o() ) {
-				this.removeObservable( attribute );
+		clearComputeds: function() {
+			for ( var attribute in this.c() ) {
+				this.removeComputed( attribute );
 			}
 			return this;
 		},
@@ -300,7 +284,7 @@
 				// Pull each setter value:
 				var value = toSet[ attribute ];
 				
-				if ( model.hasObservable(attribute) ) {
+				if ( model.hasComputed(attribute) ) {
 					
 					// Has a observable attribute:
 					// comfirm attribute does not already exist within the stack trace.
@@ -308,7 +292,7 @@
 						
 						// Non-recursive:
 						// set and collect value from observable attribute. 
-						value = model._o()[attribute].set(value);
+						value = model.c()[attribute].set(value);
 						
 						// Recursively set new values for a returned params object:
 						// creates a new copy of the stack trace for each new search branch.
@@ -345,12 +329,12 @@
 	}
 	
 	
-	// Epoxy.Model -> Observable
-	// -------------------------
-	// Observable objects store model values independently from the model's attributes table.
-	// Observables may store flat values, or define custom getter/setter functions to manage their value.
+	// Epoxy.Model -> Computed
+	// -----------------------
+	// Computed objects store model values independently from the model's attributes table.
+	// Computeds define custom getter/setter functions to manage their value.
 	
-	function EpoxyObservable( model, name, params ) {
+	function EpoxyComputedModel( model, name, params, delayInit ) {
 		params = params || {};
 		
 		// Rewrite getter param:
@@ -377,10 +361,10 @@
 		// Model will initialize in two passes...
 		// the first pass sets up all observable attributes,
 		// then the second pass initializes all bindings.
-		if ( !model._init ) this.init();
+		if ( !delayInit ) this.init();
 	}
 	
-	_.extend(EpoxyObservable.prototype, Backbone.Events, {
+	_.extend(EpoxyComputedModel.prototype, Backbone.Events, {
 		
 		// Initializes the observable's value and bindings:
 		// this method is called independently from the object constructor,
@@ -456,7 +440,7 @@
 		set: function( val ) {
 			if ( this._get ) {
 				if ( this._set ) return this._set.apply( this.model, arguments );
-				else throw( "Cannot set read-only computed observable." );
+				else throw( "Cannot set read-only computed attribute." );
 			}
 			this.change( val );
 			return null;
@@ -793,7 +777,7 @@
 				}
 			},
 			set: function( $element, value ) {
-				value = isModel(value) ? value.toJSON({obs:true}) : value;
+				value = isModel(value) ? value.toJSON({computed:true}) : value;
 				$element.html( this.tmpl(value) );
 			},
 			clean: function() {
@@ -944,16 +928,22 @@
 	// ----------
 	var viewMap;
 	var viewSuper = superClass( Backbone.View );
+	var viewProps = ["viewModel", "bindingFilters", "bindingHandlers", "bindingSources", "computeds"];
+	
 	
 	Epoxy.View = Backbone.View.extend({
 		
 		// Backbone.View constructor override:
 		// sets up binding controls around call to super.
 		constructor: function( options ) {
-			// Create bindings list:
-			this._bind = [];
+			_.extend( this, _.pick(options||{}, viewProps) );
 			viewSuper( this, "constructor", arguments );
 			this.applyBindings();
+		},
+		
+		// Bindings list accessor:
+		b: function() {
+			return this._b || (this._b = []);
 		},
 		
 		// Bindings definition:
@@ -976,7 +966,7 @@
 			var declarations = self.bindings;
 			var handlers = _.clone( bindingHandlers );
 			var filters = _.clone( bindingFilters );
-			var context = self._ctx = {};
+			var context = self._c = {};
 			
 			// Compile a complete set of binding handlers for the view:
 			// mixes all custom handlers into a copy of default handlers.
@@ -992,12 +982,13 @@
 			});
 			
 			// Add native "model" and "collection" data sources:
-			self.model = addSourceToViewContext( self.model, context );
-			self.collection = addSourceToViewContext( self.collection, context );
+			self.model = addSourceToViewContext( self, context, "model" );
+			self.viewModel = addSourceToViewContext( self, context, "viewModel" );
+			self.collection = addSourceToViewContext( self, context, "collection" );
 			
 			// Add all additional data sources:
 			_.each(sources, function( source, sourceName ) {
-				sources[ sourceName ] = addSourceToViewContext( source, context, sourceName );
+				sources[ sourceName ] = addSourceToViewContext( sources, context, sourceName, sourceName );
 			});
 			
 			// Add all computed view properties:
@@ -1040,17 +1031,23 @@
 		},
 		
 		// Gets a value from the binding context:
-		get: function( attribute ) {
-			if ( arguments.callee.caller.id === attribute ) throw( "recursive access error: "+attribute );
-			return this._ctx && this._ctx.hasOwnProperty(attribute) ? readAccessor( this._ctx[attribute] ) : null;
+		getBinding: function( attribute ) {
+			return accessViewContext( this._c, arguments, attribute );
+		},
+		
+		// Sets a value to the binding context:
+		setBinding: function( attribute, value ) {
+			return accessViewContext( this._c, arguments, attribute, value );
 		},
 		
 		// Disposes of all view bindings:
 		removeBindings: function() {
-			this._ctx = null;
+			this._c = null;
 			
-			while( this._bind.length ) {
-				this._bind.pop().dispose();
+			if ( this._b ) {
+				while ( this._b.length ) {
+					this._b.pop().dispose();
+				}
 			}
 		},
 	
@@ -1065,30 +1062,42 @@
 	// Epoxy.View -> Private
 	// ---------------------
 	
+	// Gets and sets view context data, guards against recursive access.
+	function accessViewContext( context, args, attribute, value ) {
+		if ( args.callee.caller.id === attribute ) {
+			throw( "recursive access error: "+attribute );
+		} else if ( context && context.hasOwnProperty(attribute) ) {
+			return value ? context[attribute](value) : readAccessor( context[attribute] );
+		}
+		return null;
+	}
+	
 	// Adds a data source to a view:
 	// Data sources are Backbone.Model and Backbone.Collection instances.
 	// @param source: a source instance, or a function that returns a source.
 	// @param context: the working binding context. All bindings in a view share a context.
-	function addSourceToViewContext( source, context, name ) {
+	function addSourceToViewContext( source, context, name, prefix ) {
+		
+		// Resolve source instance:
+		source = _.result(source, name);
 		
 		// Ignore missing sources, and invoke non-instances:
 		if (!source) return;
-		else if (isFunction(source)) source = source();
 		
 		// Add Backbone.Model source instance:
 		if ( isModel(source) ) {
 			
 			// Establish source prefix:
-			var prefix = name ? name+"_" : "";
+			prefix = prefix ? prefix+"_" : "";
 			
 			// Create a read-only accessor for the model instance:
-			context[ "$"+(name||"model") ] = function() {
+			context[ "$"+ name ] = function() {
 				viewMap && viewMap.push([source, "change"]);
 				return source;
 			};
 			
 			// Compile all model attributes as accessors within the context:
-			_.each(source.toJSON({obs:true}), function(value, attribute) {
+			_.each(source.toJSON({computed:true}), function(value, attribute) {
 				
 				// Create named accessor functions:
 				// -> Attributes from "view.model" use their normal names.
@@ -1103,7 +1112,7 @@
 		else if ( isCollection(source) ) {
 			
 			// Create a read-only accessor for the collection instance:
-			context[ "$"+(name||"collection") ] = function() {
+			context[ "$"+ name ] = function() {
 				viewMap && viewMap.push([source, "reset add remove sort update"]);
 				return source;
 			};
@@ -1183,7 +1192,7 @@
 			// Validate that each defined handler method exists before binding:
 			if ( handlers.hasOwnProperty(handlerName) ) {
 				// Create and add binding to the view's list of handlers:
-				view._bind.push( new EpoxyBinding($element, handlers[handlerName], accessor, events, context, bindings) );
+				view.b().push( new EpoxyBinding($element, handlers[handlerName], accessor, events, context, bindings) );
 			}
 		});
 	}

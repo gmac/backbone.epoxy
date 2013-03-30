@@ -10,10 +10,7 @@ describe("Backbone.Epoxy.Model", function() {
 		defaults: {
 			firstName: "Charlie",
 			lastName: "Brown",
-			payment: 100
-		},
-		
-		observableDefaults: {
+			payment: 100,
 			isSelected: false,
 			testArray: []
 		},
@@ -75,46 +72,27 @@ describe("Backbone.Epoxy.Model", function() {
 	
 	// Teardown
 	afterEach(function() {
-		model.clearObservables();
+		model.clearComputeds();
 		model = null;
 	});
 	
 	
-	it("should use '.observableDefaults' to define basic virtual properties.", function() {
-		expect( model.get("isSelected") ).toBe( false );
-	});
-	
-	
-	it("should use .get() and .set() to modify virtual properties.", function() {
+	it("should use .get() and .set() to modify native properties.", function() {
 		model.set( "isSelected", true );
 		expect( model.get("isSelected") ).toBe( true );
 	});
 	
-	/*
-	it("should allow direct access to observable objects through the '.obs' namespace.", function() {
-		expect( !!model.obs.isSelected ).toBe( true );
-	});
-	*/
 	
 	it("should get native model attributes using '.toJSON()'.", function() {
 		var json = model.toJSON();
-		expect( _.size(json) ).toBe( 3 );
+		expect( _.size(json) ).toBe( 5 );
 	});
 	
 	
-	it("should get native and observable model attributes using '.toJSON({obs:true})'.", function() {
-		var json = model.toJSON({obs:true});
+	it("should get native and computed model attributes using '.toJSON({computed:true})'.", function() {
+		var json = model.toJSON({computed:true});
 		expect( _.size(json) ).toBe( 9 );
 		expect( json.fullName ).toBe( "Charlie Brown" );
-	});
-	
-	
-	// Deprecating this feature within the published API...
-	it("should allow direct access to observable property values using their own getters and setters.", function() {
-		var sel = model._o()[ "isSelected" ];
-		expect( sel.get() ).toBe( false );
-		sel.set( true );
-		expect( sel.get() ).toBe( true );
 	});
 	
 	
@@ -132,15 +110,15 @@ describe("Backbone.Epoxy.Model", function() {
 	
 	
 	it("should assume computed properties defined as functions to be getters.", function() {
-		var obsGetter = model._o().fullName._get;
+		var obsGetter = model._c.fullName._get;
 		var protoGetter = TestModel.prototype.computeds.fullName;
 		expect( obsGetter === protoGetter ).toBe( true );
 	});
 	
 	
 	it("should use '.computeds' to automatically construct computed properties.", function() {
-		var hasFullName = model.hasObservable("fullName");
-		var hasDonation = model.hasObservable("paymentCurrency");
+		var hasFullName = model.hasComputed("fullName");
+		var hasDonation = model.hasComputed("paymentCurrency");
 		expect( hasFullName && hasDonation ).toBe( true );
 	});
 	
@@ -245,7 +223,7 @@ describe("Backbone.Epoxy.Model", function() {
 		expect( model.get("percentAvgPayment") ).toBe( 0.5 );
 		averages.set("avgPayment", 400);
 		expect( model.get("percentAvgPayment") ).toBe( 0.25 );
-		averages.clearObservables();
+		averages.clearComputeds();
 	});
 	
 	
@@ -266,7 +244,7 @@ describe("Backbone.Epoxy.Model", function() {
 		// Change unreachable value
 		foreign.set("avgPayment", 400);
 		expect( model.get("unreachable") ).toBe( 400 );
-		foreign.clearObservables();
+		foreign.clearComputeds();
 	});
 
 	
@@ -344,6 +322,7 @@ describe("Backbone.Epoxy.Model", function() {
 	});
 });
 
+
 // Epoxy.View
 // ----------
 describe("Backbone.Epoxy.View", function() {
@@ -365,23 +344,12 @@ describe("Backbone.Epoxy.View", function() {
 	
 	// Test model:
 	
-	window.bindingModel = new (Backbone.Epoxy.Model.extend({
+	window.dataModel = new (Backbone.Epoxy.Model.extend({
 		defaults: {
 			firstName: "Luke",
 			lastName: "Skywalker",
 			preference: "b",
-			active: true
-		},
-		
-		observableDefaults: {
-			checkList: ["b"],
-			optionsList: [
-				{value: "0", label: "Luke Skywalker"},
-				{value: "1", label: "Han Solo"},
-				{value: "2", label: "Obi-Wan Kenobi"}
-			],
-			optDefault: "default",
-			optEmpty: "empty",
+			active: true,
 			valOptions: "1",
 			valDefault: "1",
 			valEmpty: "1",
@@ -408,11 +376,24 @@ describe("Backbone.Epoxy.View", function() {
 		}
 	}));
 	
+	window.viewModel = new (Backbone.Epoxy.Model.extend({
+		defaults: {
+			checkList: ["b"],
+			optionsList: [
+				{value: "0", label: "Luke Skywalker"},
+				{value: "1", label: "Han Solo"},
+				{value: "2", label: "Obi-Wan Kenobi"}
+			],
+			optDefault: "default",
+			optEmpty: "empty"
+		}
+	}));
 	
 	// Basic bindings test view:
 	var domView = new (Backbone.Epoxy.View.extend({
 		el: "#dom-view",
-		model: bindingModel,
+		model: dataModel,
+		viewModel: viewModel,
 		bindings: "data-bind",
 		
 		bindingHandlers: {
@@ -434,7 +415,8 @@ describe("Backbone.Epoxy.View", function() {
 	
 	var modView = new (Backbone.Epoxy.View.extend({
 		el: "#mod-view",
-		model: bindingModel,
+		model: dataModel,
+		viewModel: viewModel,
 		collection: new TestCollection(),
 		bindings: "data-bind",
 
@@ -465,7 +447,8 @@ describe("Backbone.Epoxy.View", function() {
 	
 	var tmplView = new (Backbone.Epoxy.View.extend({
 		el: $("#tmpl-view-tmpl").html(),
-		model: bindingModel,
+		model: dataModel,
+		viewModel: viewModel,
 		
 		bindings: {
 			".user-first": "text:firstName",
@@ -484,12 +467,12 @@ describe("Backbone.Epoxy.View", function() {
 	
 	// Teardown
 	afterEach(function() {
-		var defaults = _.clone( bindingModel.observableDefaults );
+		var defaults = _.clone( viewModel.defaults );
 		defaults.checkList = _.clone( defaults.checkList );
 		defaults.optionsList = _.clone( defaults.optionsList );
 		
-		bindingModel.set( bindingModel.defaults );
-		bindingModel.set( defaults );
+		dataModel.set( dataModel.defaults );
+		viewModel.set( defaults );
 		modView.collection.reset();
 	});
 	
@@ -510,13 +493,13 @@ describe("Backbone.Epoxy.View", function() {
 		
 		var view1 = new (Backbone.Epoxy.View.extend({
 			el: "<span data-bind='text:firstName'></span>",
-			model: bindingModel,
+			model: dataModel,
 			bindings: "data-bind"
 		}));
 		
 		var view2 = new (Backbone.Epoxy.View.extend({
 			el: "<span class='first-name'></span>",
-			model: bindingModel,
+			model: dataModel,
 			bindings: {
 				".first-name": "text:firstName"
 			}
@@ -530,7 +513,7 @@ describe("Backbone.Epoxy.View", function() {
 		
 		var ErrorView = Backbone.Epoxy.View.extend({
 			el: "<div><span data-bind='text:undefinedProp'></span></div>",
-			model: bindingModel,
+			model: dataModel,
 			bindings: "data-bind"
 		});
 		
@@ -545,7 +528,7 @@ describe("Backbone.Epoxy.View", function() {
 	it("should allow custom bindings to set data into the view.", function() {
 		var $els = $(".test-custom-binding");
 		expect( $els.text() ).toBe( "b" );
-		bindingModel.set("checkList", ["c","a"]);
+		viewModel.set("checkList", ["c","a"]);
 		expect( $els.text() ).toBe( "a, c" );
 	});
 	
@@ -555,12 +538,25 @@ describe("Backbone.Epoxy.View", function() {
 		expect( $el.val() ).toBe( "Y" );
 		
 		// Change through model, look for view change:
-		bindingModel.set("active", false);
+		dataModel.set("active", false);
 		expect( $el.val() ).toBe( "N" );
 		
 		// Change through view, look for model change:
 		$el.val( "Y" ).trigger( "change" );
-		expect( bindingModel.get("active") ).toBe( true );
+		expect( dataModel.get("active") ).toBe( true );
+	});
+	
+	
+	it("should use '.getBinding()' to read data from binding sources.", function() {
+		expect( modView.getBinding("firstName") ).toBe( "Luke" );
+	});
+	
+	
+	it("should use '.setBinding()' to write data into binding sources.", function() {
+		var $el = $(".test-text-first");
+		modView.setBinding( "firstName", "Leia" );
+		expect( dataModel.get("firstName") ).toBe( "Leia" );
+		expect( $el.text() ).toBe( "Leia" );
 	});
 	
 	
@@ -614,7 +610,7 @@ describe("Backbone.Epoxy.View", function() {
 		var $el = $(".test-attr-multi");
 		expect( $el.attr("href") ).toBe( "b" );
 		expect( $el.attr("title") ).toBe( "b" );
-		bindingModel.set("preference", "c");
+		dataModel.set("preference", "c");
 		expect( $el.attr("href") ).toBe( "c" );
 		expect( $el.attr("title") ).toBe( "c" );
 	});
@@ -623,7 +619,7 @@ describe("Backbone.Epoxy.View", function() {
 	it("binding 'attr:' should allow string property definitions.", function() {
 		var $el = $(".test-attr");
 		expect( $el.attr("data-active") ).toBe( "true" );
-		bindingModel.set("active", false);
+		dataModel.set("active", false);
 		expect( $el.attr("data-active") ).toBe( "false" );
 	});
 	
@@ -634,7 +630,7 @@ describe("Backbone.Epoxy.View", function() {
 		expect( $a.prop("checked") ).toBe( false );
 		expect( $b.prop("checked") ).toBe( true );
 		$a.prop("checked", true).trigger("change");
-		expect( bindingModel.get("preference") ).toBe( "a" );
+		expect( dataModel.get("preference") ).toBe( "a" );
 	});
 	
 	
@@ -642,7 +638,7 @@ describe("Backbone.Epoxy.View", function() {
 		var $el = $(".test-checked-boolean");
 		expect( $el.prop("checked") ).toBe( true );
 		$el.prop("checked", false).trigger("change");
-		expect( bindingModel.get("active") ).toBe( false );
+		expect( dataModel.get("active") ).toBe( false );
 	});
 	
 	
@@ -654,7 +650,7 @@ describe("Backbone.Epoxy.View", function() {
 		expect( !!$els.filter("[value='c']" ).prop("checked") ).toBe( false );
 		
 		// Add new selection to the checkbox group:
-		bindingModel.set("checkList", ["b", "c"]);
+		viewModel.set("checkList", ["b", "c"]);
 		expect( !!$els.filter("[value='b']" ).prop("checked") ).toBe( true );
 		expect( !!$els.filter("[value='c']" ).prop("checked") ).toBe( true );
 	});
@@ -666,7 +662,7 @@ describe("Backbone.Epoxy.View", function() {
 		// Add new selection to the checkbox group:
 		expect( !!$els.filter("[value='b']" ).prop("checked") ).toBe( true );
 		expect( !!$els.filter("[value='c']" ).prop("checked") ).toBe( false );
-		bindingModel.modifyArray("checkList", "push", "c");
+		viewModel.modifyArray("checkList", "push", "c");
 		expect( !!$els.filter("[value='b']" ).prop("checked") ).toBe( true );
 		expect( !!$els.filter("[value='c']" ).prop("checked") ).toBe( true );
 	});
@@ -674,12 +670,12 @@ describe("Backbone.Epoxy.View", function() {
 	
 	it("binding 'checked:' should get a checkbox series formatted as a model array.", function() {
 		var $els = $(".check-list");
-		bindingModel.set("checkList", ["b"]);
+		dataModel.set("checkList", ["b"]);
 		
 		// Default: populate based on intial setting:
 		expect( !!$els.filter("[value='b']" ).prop("checked") ).toBe( true );
 		$els.filter("[value='a']").prop("checked", true).trigger("change");
-		expect( bindingModel.get("checkList").join(",") ).toBe( "b,a" );
+		expect( viewModel.get("checkList").join(",") ).toBe( "b,a" );
 	});
 	
 	
@@ -687,7 +683,7 @@ describe("Backbone.Epoxy.View", function() {
 		var $el = $(".test-classes").eq(0);
 		expect( $el.hasClass("error") ).toBe( false );
 		expect( $el.hasClass("active") ).toBe( true );
-		bindingModel.set({
+		dataModel.set({
 			firstName: "",
 			active: false
 		});
@@ -757,7 +753,7 @@ describe("Backbone.Epoxy.View", function() {
 	it("binding 'css:' should establish a one-way binding with an element's css styles.", function() {
 		var $el = $(".test-css");
 		expect( $el.css("display") ).toBe( "none" );
-		bindingModel.set( "lastName", "" );
+		dataModel.set( "lastName", "" );
 		expect( $el.css("display") ).toBe( "block" );
 	});
 	
@@ -765,7 +761,7 @@ describe("Backbone.Epoxy.View", function() {
 	it("binding 'disabled:' should establish a one-way binding with an element's disabled state.", function() {
 		var $el = $(".test-disabled");
 		expect( $el.prop("disabled") ).toBeTruthy();
-		bindingModel.set( "active", false );
+		dataModel.set( "active", false );
 		expect( $el.prop("disabled") ).toBeFalsy();
 	});
 	
@@ -773,7 +769,7 @@ describe("Backbone.Epoxy.View", function() {
 	it("binding 'enabled:' should establish a one-way binding with an element's inverted disabled state.", function() {
 		var $el = $(".test-enabled");
 		expect( $el.prop("disabled") ).toBeFalsy();
-		bindingModel.set( "active", false );
+		dataModel.set( "active", false );
 		expect( $el.prop("disabled") ).toBeTruthy();
 	});
 	
@@ -782,7 +778,7 @@ describe("Backbone.Epoxy.View", function() {
 		var $el = $(".test-input-first");
 		expect( $el.val() ).toBe( "Luke" );
 		$el.val( "Anakin" ).trigger("keyup");
-		expect( bindingModel.get("firstName") ).toBe( "Anakin" );
+		expect( dataModel.get("firstName") ).toBe( "Anakin" );
 	});
 	
 	
@@ -790,14 +786,14 @@ describe("Backbone.Epoxy.View", function() {
 		var $el = $(".test-html");
 		// Compare markup as case insensitive to accomodate variances in browser DOM styling:
 		expect( $el.html() ).toMatch( /<strong>Skywalker<\/strong>, Luke/i );
-		bindingModel.set("firstName", "Anakin");
+		dataModel.set("firstName", "Anakin");
 		expect( $el.html() ).toMatch( /<strong>Skywalker<\/strong>, Anakin/i );
 	});
 	
 
 	it("binding 'options:' should bind an array of strings to a select element's options.", function() {
 		var $el = $(".test-select");
-		bindingModel.set("optionsList", ["Luke", "Leia"]);
+		viewModel.set("optionsList", ["Luke", "Leia"]);
 		expect( $el.children().length ).toBe( 2 );
 		expect( $el.find(":first-child").attr("value") ).toBe( "Luke" );
 		expect( $el.find(":first-child").text() ).toBe( "Luke" );
@@ -806,7 +802,7 @@ describe("Backbone.Epoxy.View", function() {
 	
 	it("binding 'options:' should bind an array of label/value pairs to a select element's options.", function() {
 		var $el = $(".test-select");
-		bindingModel.set("optionsList", [
+		viewModel.set("optionsList", [
 			{label:"Luke", value:"a"},
 			{label:"Leia", value:"b"}
 		]);
@@ -825,13 +821,13 @@ describe("Backbone.Epoxy.View", function() {
 		]);
 		
 		expect( $el.children().length ).toBe( 2 );
-		expect( bindingModel.get("valCollect") ).toBe( "Luke" );
+		expect( dataModel.get("valCollect") ).toBe( "Luke" );
 	});
 	
 	
 	it("binding 'options:' should update selection when additional items are added/removed.", function() {
 		var $el = $(".test-select");
-		bindingModel.modifyArray("optionsList", "push", {label:"Leia", value:"3"});
+		viewModel.modifyArray("optionsList", "push", {label:"Leia", value:"3"});
 		
 		expect( $el.children().length ).toBe( 4 );
 		expect( $el.find(":last-child").attr("value") ).toBe( "3" );
@@ -841,7 +837,7 @@ describe("Backbone.Epoxy.View", function() {
 	
 	it("binding 'options:' should preserve previous selection state after binding.", function() {
 		var $el = $(".test-select");
-		bindingModel.modifyArray("optionsList", "push", {label:"Leia", value:"3"});
+		viewModel.modifyArray("optionsList", "push", {label:"Leia", value:"3"});
 		expect( $el.children().length ).toBe( 4 );
 		expect( $el.val() ).toBe( "1" );
 	});
@@ -849,9 +845,9 @@ describe("Backbone.Epoxy.View", function() {
 	
 	it("binding 'options:' should update the bound model value when the previous selection is no longer available.", function() {
 		var $el = $(".test-select-default");
-		expect( bindingModel.get("valDefault") ).toBe( "1" );
-		bindingModel.set("optionsList", []);
-		expect( bindingModel.get("valDefault") ).toBe( "default" );
+		expect( dataModel.get("valDefault") ).toBe( "1" );
+		viewModel.set("optionsList", []);
+		expect( dataModel.get("valDefault") ).toBe( "default" );
 	});
 	
 	
@@ -859,12 +855,12 @@ describe("Backbone.Epoxy.View", function() {
 		var $el = $(".test-select-multi");
 		
 		// Set two options as selected, and confirm they appear within the view:
-		bindingModel.set("valMulti", ["1", "2"]);
+		dataModel.set("valMulti", ["1", "2"]);
 		expect( $el.val().join(",") ).toBe( "1,2" );
 		
 		// Remove one option from the list, then confirm the model captures the revised selection:
-		bindingModel.modifyArray("optionsList", "splice", 1, 1);
-		expect( bindingModel.get("valMulti").join(",") ).toBe( "2" );
+		viewModel.modifyArray("optionsList", "splice", 1, 1);
+		expect( dataModel.get("valMulti").join(",") ).toBe( "2" );
 	});
 	
 	
@@ -877,7 +873,7 @@ describe("Backbone.Epoxy.View", function() {
 	
 	it("binding 'optionsDefault:' should bind the default option value to a model.", function() {
 		var $el = $(".test-select-default");
-		bindingModel.set("optDefault", {label:"choose...", value:""});
+		viewModel.set("optDefault", {label:"choose...", value:""});
 		expect( $el.find(":first-child").text() ).toBe( "choose..." );
 	});
 	
@@ -885,7 +881,7 @@ describe("Backbone.Epoxy.View", function() {
 	it("binding 'optionsEmpty:' should provide a placeholder option value for an empty select.", function() {
 		var $el = $(".test-select-empty");
 		expect( $el.children().length ).toBe( 3 );
-		bindingModel.set("optionsList", []);
+		viewModel.set("optionsList", []);
 		expect( $el.children().length ).toBe( 1 );
 		expect( $el.find(":first-child").text() ).toBe( "empty" );
 	});
@@ -893,15 +889,15 @@ describe("Backbone.Epoxy.View", function() {
 	
 	it("binding 'optionsEmpty:' should bind the empty placeholder option value to a model.", function() {
 		var $el = $(".test-select-empty");
-		bindingModel.set("optionsList", []);
-		bindingModel.set("optEmpty", {label:"---", value:""});
+		viewModel.set("optionsList", []);
+		viewModel.set("optEmpty", {label:"---", value:""});
 		expect( $el.find(":first-child").text() ).toBe( "---" );
 	});
 	
 	
 	it("binding 'optionsEmpty:' should disable an empty select menu.", function() {
 		var $el = $(".test-select-empty");
-		bindingModel.set("optionsList", []);
+		viewModel.set("optionsList", []);
 		expect( $el.prop("disabled") ).toBe( true );
 	});
 	
@@ -910,11 +906,11 @@ describe("Backbone.Epoxy.View", function() {
 		var $el = $(".test-select-both");
 		
 		// Empty the list, expect first option to still be the default:
-		bindingModel.set("optionsList", []);
+		viewModel.set("optionsList", []);
 		expect( $el.find(":first-child").text() ).toBe( "default" );
 		
 		// Empty the default, now expect the first option to be the empty placeholder.
-		bindingModel.set("optDefault", "");
+		viewModel.set("optDefault", "");
 		expect( $el.find(":first-child").text() ).toBe( "empty" );
 	});
 	
@@ -934,7 +930,7 @@ describe("Backbone.Epoxy.View", function() {
 	it("binding 'text:' should establish a one-way binding with an element's text contents.", function() {
 		var $el = $(".test-text-first");
 		expect( $el.text() ).toBe( "Luke" );
-		bindingModel.set("firstName", "Anakin");
+		dataModel.set("firstName", "Anakin");
 		expect( $el.text() ).toBe( "Anakin" );
 	});
 	
@@ -942,7 +938,7 @@ describe("Backbone.Epoxy.View", function() {
 	it("binding 'toggle:' should establish a one-way binding with an element's visibility.", function() {
 		var $el = $(".test-toggle");
 		expect( $el.is(":visible") ).toBe( true );
-		bindingModel.set("active", false);
+		dataModel.set("active", false);
 		expect( $el.is(":visible") ).toBe( false );
 	});
 	
@@ -956,7 +952,7 @@ describe("Backbone.Epoxy.View", function() {
 	it("binding 'value:' should set an array value from the model to a multiselect list.", function() {
 		var $el = $(".test-select-multi");
 		expect( $el.val().length ).toBe( 1 );
-		bindingModel.set("valMulti", ["1", "2"]);
+		dataModel.set("valMulti", ["1", "2"]);
 		expect( $el.val().length ).toBe( 2 );
 		expect( $el.val().join(",") ).toBe( "1,2" );
 	});
@@ -965,14 +961,14 @@ describe("Backbone.Epoxy.View", function() {
 	it("binding 'value:' should set a value from the view into the model.", function() {
 		var $el = $(".test-input-first");
 		$el.val( "Anakin" ).trigger("change");
-		expect( bindingModel.get("firstName") ).toBe( "Anakin" );
+		expect( dataModel.get("firstName") ).toBe( "Anakin" );
 	});
 	
 	
 	it("operating with not() should negate a binding value.", function() {
 		var $el = $(".test-mod-not");
 		expect( $el.is(":visible") ).toBe( false );
-		bindingModel.set("active", false);
+		dataModel.set("active", false);
 		expect( $el.is(":visible") ).toBe( true );
 	});
 	
@@ -980,7 +976,7 @@ describe("Backbone.Epoxy.View", function() {
 	it("operating with all() should bind true when all bound values are truthy.", function() {
 		var $el = $(".test-mod-all");
 		expect( $el.hasClass("hilite") ).toBe( true );
-		bindingModel.set("firstName", "");
+		dataModel.set("firstName", "");
 		expect( $el.hasClass("hilite") ).toBe( false );
 	});
 	
@@ -988,7 +984,7 @@ describe("Backbone.Epoxy.View", function() {
 	it("operating with none() should bind true when all bound values are falsy.", function() {
 		var $el = $(".test-mod-none");
 		expect( $el.hasClass("hilite") ).toBe( false );
-		bindingModel.set({
+		dataModel.set({
 			firstName: "",
 			lastName: ""
 		});
@@ -999,9 +995,9 @@ describe("Backbone.Epoxy.View", function() {
 	it("operating with any() should bind true when any bound value is truthy.", function() {
 		var $el = $(".test-mod-any");
 		expect( $el.hasClass("hilite") ).toBe( true );
-		bindingModel.set("firstName", "");
+		dataModel.set("firstName", "");
 		expect( $el.hasClass("hilite") ).toBe( true );
-		bindingModel.set("lastName", "");
+		dataModel.set("lastName", "");
 		expect( $el.hasClass("hilite") ).toBe( false );
 	});
 	
@@ -1009,7 +1005,7 @@ describe("Backbone.Epoxy.View", function() {
 	it("operating with format() should bind true when any bound value is truthy.", function() {
 		var $el = $(".test-mod-format");
 		expect( $el.text() ).toBe( "Name: Luke Skywalker" );
-		bindingModel.set({
+		dataModel.set({
 			firstName: "Han",
 			lastName: "Solo"
 		});
@@ -1020,7 +1016,7 @@ describe("Backbone.Epoxy.View", function() {
 	it("operating with select() should perform a ternary return from three values.", function() {
 		var $el = $(".test-mod-select");
 		expect( $el.text() ).toBe( "Luke" );
-		bindingModel.set("active", false);
+		dataModel.set("active", false);
 		expect( $el.text() ).toBe( "Skywalker" );
 	});
 	
@@ -1028,7 +1024,7 @@ describe("Backbone.Epoxy.View", function() {
 	it("operating with length() should assess the length of an array/collection.", function() {
 		var $el = $(".test-mod-length");
 		expect( $el.hasClass("hilite") ).toBe( true );
-		bindingModel.set("checkList", []);
+		viewModel.set("checkList", []);
 		expect( $el.hasClass("hilite") ).toBe( false );
 	});
 });
