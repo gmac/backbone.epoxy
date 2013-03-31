@@ -27,6 +27,18 @@ For all complete information and documentation, visit the project's website at [
 
 ## Change Log
 
+**0.12.0** – *April, 2013* - [Diff](https://github.com/gmac/backbone.epoxy/compare/v0.11.0...v0.12.0 "Diff: v0.11.0/v0.12.0")
+
+Major reorganization of core features to improve workflow patterns.
+
+ - Removes `observableDefaults` and `addObservable` APIs.
+ - Renames former "observable" model methods to `hasComputed`, `removeComputed`, and `clearComputeds`.
+ - Adds `viewModel` property to view as sanctioned store for view-specific data.
+ - Adds `computeds` hash table to view for computed view properties.
+ - Configures class constructors to pull configuration out of passed options.
+ - Refactors Model and View components to be more mixin-friendly.
+ - Updated documentation.
+
 **0.11.0** – *March 25, 2013* – [Diff](https://github.com/gmac/backbone.epoxy/compare/v0.10.1...v0.11.0 "Diff: v0.10.1/v0.11.0")
 
 Adds final features planned for 1.0 release.

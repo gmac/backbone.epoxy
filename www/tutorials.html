@@ -49,7 +49,7 @@
 					<ol>
 						<li><a href="#installation">Installation</a></li>
 						<li><a href="#simple-bindings">Simple View Bindings</a></li>
-						<li><a href="#observables-computeds">Model Observables &amp; Computeds</a></li>
+						<li><a href="#computed-attributes">Computed Model Attributes</a></li>
 						<li><a href="#computed-dependencies">Managing Computed Dependencies</a></li>
 						<li><a href="#computed-get-set">Computed Getters and Setters</a></li>
 						<li><a href="#binding-filters">View Binding Filters</a></li>
@@ -115,6 +115,7 @@ var view = new BindingView({model: bindModel});</code></pre>
 </div>
 
 			<p>In this example, we create a new instance of <tt>Epoxy.View</tt>, provide it a native Backbone model, then use the view's <b>bindings</b> hash to declare bindings between view selectors and model attributes.</p>
+			
 			<p>Binding declarations are formatted as <tt>"handler:dataSource"</tt>. Basically, that's a key/value pair where the <tt>key</tt> defines a <i>handler method</i> to perform the binding, and the <tt>value</tt> is a <i>data source</i> to populate the binding with. Epoxy provides a base set of <a href="documentation.html#binding-handlers">binding handlers</a>, and you're welcome to <a href="documentation.html#view-binding-handlers">add your own</a>. Data sources reference attributes on the view's <b>model</b> in most common binding implementations.</p>
 	
 			<p>In the above example, <tt>value:firstName</tt> establishes a two-way binding between the text input's <b>value</b> property and the bound model's <b>firstName</b> attribute. Likewise, <tt>text:firstName</tt> establishes a one-way binding that populates the bound element's <b>text</b> with the model's <b>firstName</b> attribute. Lastly, <tt>events:['keyup']</tt> is used to specify DOM events that the binding should respond to in addition to the default <tt>"change"</tt> event.</p>
@@ -160,9 +161,9 @@ var view = new BindingView({model: bindModel});</code></pre>
 			
 			<p>Learn more about setting up view bindings in the <b><a href="documentation.html#view">Epoxy.View</a></b> documentation.</p>
 			
-			<h2 id="observables-computeds">Model Observables &amp; Computeds</h2>
-
-			<p>Now let's add an <tt>Epoxy.Model</tt> into the mix. An Epoxy model introduces <i>observable attributes</i>, which are virtualized attributes of the model: they may be <b>get</b> and <b>set</b> just like normal model attributes, and will trigger <tt>"change"</tt> events on the model when modified, however they do not exist within the model's <b>attributes</b> table, nor will they be saved with model data. Observable attributes are a great way to store view-specific data (such as selection state) without polluting your model data. Also, observable attributes may be <i>computed</i>, meaning that they can construct values using other model attributes.</p>
+			<h2 id="computed-attributes">Computed Model Attributes</h2>
+			
+			<p>Now let's add an <tt>Epoxy.Model</tt> into the mix. An Epoxy model introduces <i>computed attributes</i>, which operate as accessors and mutators. A computed attribute will get an assembled value derived from other model attributes, and will set one more more mutated values back to the model. Computed attributes may be <b>get</b> and <b>set</b> just like normal model attributes, and will trigger <tt>"change"</tt> events on the model when modified, however they do not exist within the model's <b>attributes</b> table, nor will they be saved with model data.</p>
 				
 			<p>Let's start by adding an Epoxy computed attribute, which will assemble its value using other model values:</p>
 
@@ -205,7 +206,7 @@ var view = new Backbone.Epoxy.View({
 
 			<p>However, what happens to the computed <tt>fullName</tt> attribute if the <tt>firstName</tt> or <tt>lastName</tt> attributes change? Good news: Epoxy can automatically map computed attribute dependencies, and will register model <tt>"change:attribute"</tt> events to keep the computed value in sync. We'll discuss computed dependency management in the next section.</p>
 			
-			<p>Learn more about observable and computed attributes in the <b><a href="documentation.html#model">Epoxy.Model</a></b> documentation.</p>
+			<p>Learn more about computed model attributes in the <b><a href="documentation.html#model">Epoxy.Model</a></b> documentation.</p>
 			
 			<h2 id="computed-dependencies">Managing Computed Dependencies</h2>
 
