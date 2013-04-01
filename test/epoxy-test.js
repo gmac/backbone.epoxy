@@ -225,27 +225,6 @@ describe("Backbone.Epoxy.Model", function() {
 		expect( model.get("percentAvgPayment") ).toBe( 0.25 );
 		averages.clearComputeds();
 	});
-	
-	
-	it("should support manual definition of foreign dependencies.", function() {
-		var foreign = new ForeignModel();
-		
-		model.addComputed("unreachable", function() {
-			return this.get("firstName") ? this.get("payment") : foreign.get("avgPayment");
-		}, "firstName", "payment", ["avgPayment", foreign]);
-		
-		// Test initial reachable value:
-		expect( model.get("unreachable") ).toBe( 100 );
-		
-		// Change conditional value to point at the originally unreachable value:
-		model.set("firstName", "");
-		expect( model.get("unreachable") ).toBe( 200 );
-		
-		// Change unreachable value
-		foreign.set("avgPayment", 400);
-		expect( model.get("unreachable") ).toBe( 400 );
-		foreign.clearComputeds();
-	});
 
 	
 	it("should manage extended graphs of computed dependencies.", function() {

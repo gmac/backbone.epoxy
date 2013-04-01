@@ -74,7 +74,7 @@
 		get: function( attribute ) {
 			
 			// Automatically register bindings while building out computed dependency graphs:
-			modelMap && modelMap.push( [attribute, this] );
+			modelMap && modelMap.push( ["change:"+attribute, this] );
 			
 			// Return an observable property value, if available:
 			if ( this.hasComputed(attribute) ) {
@@ -328,6 +328,15 @@
 		return value;
 	}
 	
+	// Maps an array of attribute names into model values:
+	function mapModelAttributes( model, attributes ) {
+		for (var i=0, len=attributes.length; i < len; i++) {
+			attributes[i] = model.get(attributes[i]);
+		}
+		return attributes;
+	}
+	
+	
 	// Epoxy.Model -> Computed
 	// -----------------------
 	// Computed objects store model values independently from the model's attributes table.
@@ -373,44 +382,31 @@
 			// Configure dependency map, then update the observable's value:
 			// All Epoxy.Model attributes accessed while getting the initial value
 			// will automatically register themselves within the model bindings map.
-			modelMap = this.deps;
+			var bindings = {};
+			var deps = modelMap = [];
 			this.get( true );
 			modelMap = null;
 			
 			// If the observable has dependencies, then proceed to binding it:
-			if ( this.deps.length ) {
+			if ( deps.length ) {
 				
 				// Compile normalized bindings table:
 				// Ultimately, we want a table of event types, each with an array of their associated targets:
 				// {"change:name":[<model1>], "change:status":[<model1>,<model2>]}
 				
-				// Create a bindings table:
-				var bindings = {};
-			
 				// Compile normalized bindings map:
-				_.each(this.deps, function( attribute ) {
-					var target = this.model;
-				
-					// Unpack any provided array attribute as: [propName, target].
-					if ( isArray(attribute) ) {
-						target = attribute[1];
-						attribute = attribute[0];
-					}
-					
-					// Normalize attribute names to include a "change:" prefix:
-					if ( !!attribute.indexOf("change:") ) {
-						attribute = "change:"+attribute;
-					}
+				_.each(deps, function( value ) {
+					var attribute = value[0];
+					var target = value[1];
 
 					// Populate event target arrays:
-					if ( !bindings.hasOwnProperty(attribute) ) {
+					if ( !bindings[attribute] ) {
 						bindings[attribute] = [ target ];
 					
 					} else if ( !_.contains(bindings[attribute], target) ) {
 						bindings[attribute].push( target );
 					}
-				
-				}, this);
+				});
 			
 				// Bind all event declarations to their respective targets:
 				_.each(bindings, function( targets, binding ) {
@@ -426,7 +422,7 @@
 		// Note: "update" is strongly checked as TRUE to prevent unintended arguments (handler events, etc) from qualifying.
 		get: function( update ) {
 			if ( update === true && this._get ) {
-				var val = this._get.call( this.model );
+				var val = this._get.apply( this.model, mapModelAttributes(this.model, this.deps.slice()) );
 				this.change( val );
 			}
 			return this.value;
