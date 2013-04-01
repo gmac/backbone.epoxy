@@ -328,7 +328,6 @@
 		return value;
 	}
 	
-	
 	// Epoxy.Model -> Computed
 	// -----------------------
 	// Computed objects store model values independently from the model's attributes table.
@@ -1026,10 +1025,13 @@
 			_.each(_.result(self, "computeds")||{}, function( computed, name ) {
 				var getter = isFunction( computed ) ? computed : computed.get;
 				var setter = computed.set;
+				var deps = computed.deps;
 				getter.id = name;
 				
 				context[ name ] = function( value ) {
-					return ( value && setter ? setter : getter ).call( self, value );
+					return ( value && setter ) ?
+						setter.call( self, value ) :
+						getter.apply( self, getDepsFromViewContext(self._c, deps) );
 				};
 			});
 			
@@ -1222,13 +1224,25 @@
 	}
 	
 	// Gets and sets view context data attributes:
-	// Commonly used by the implementations of "getBinding" and "setBinding".
+	// used by the implementations of "getBinding" and "setBinding".
 	function accessViewContext( context, args, attribute, value ) {
 		if ( args.callee.caller.id === attribute ) {
 			throw( "recursive access error: "+attribute );
 		} else if ( context && context.hasOwnProperty(attribute) ) {
-			return isUndefined(value) ? context[attribute](value) : readAccessor( context[attribute] );
+			return isUndefined(value) ? readAccessor( context[attribute] ) : context[attribute](value);
 		}
+	}
+	
+	// Accesses an array of dependency properties from a view context:
+	// used for mapping view dependencies by manual declaration.
+	function getDepsFromViewContext( context, attributes ) {
+		var values = [];
+		if ( attributes && context ) {
+			for (var i=0, len=attributes.length; i < len; i++) {
+				values.push( attributes[i] in context ? context[ attributes[i] ]() : null );
+			}
+		}
+		return values;
 	}
 	
 	

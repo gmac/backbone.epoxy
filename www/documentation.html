@@ -174,7 +174,7 @@
 				<p id="model-computed-params">The <b>addComputed</b> method is called with an attribute name and a params object defining the following:</p>
 				
 				<ul>
-					<li><b>get:</b> <i>Required function; invoked in context of the model</i>. This getter function assembles its value based on other model properties (attributes, computeds, or other computeds), then returns the generated value. Note that a getter function should always reference other model values using the model's <b>get</b> method (for <a href="#model-computed-deps">automatic dependency mapping</a>).</li>
+					<li><b>get:</b> <i>Required function; invoked in context of the model</i>. This getter function assembles its value based on other model properties (native attributes or computeds), then returns the generated value. Note that a getter function should always reference other model values using the model's <b>get</b> method (for <a href="#model-computed-deps">automatic dependency mapping</a>).</li>
                     
 					<li><b>[deps]:</b> <i>Optional array</i>. An array of attribute names that the getter function depends on. This manual property mapping is only required if your getter contains unreachable values that would be missed by automatic dependency mapping (discussed below).</li>
                     					
@@ -536,24 +536,48 @@ var BindingView = Backbone.Epoxy.View.extend({
 			<div class="section">
 				<h3 id="view-computeds">computeds</h3>
 				<code>view.computeds</code>
-				<p>A hash table defining a view's computed properties. Computed view properties act as custom data routers: they assemble custom values from available source data, and route formatted values back to sources. While this is conceptually similar to computed model attributes, computed view properties are unique in that they do not store their own data, nor do they trigger any events; they simply act as pass-throughs for assembling model data for the display. Computed view properties are an excellent place to assemble view-specific display text and/or markup.</p>
+				<p>A hash table defining a view's computed properties. Computed view properties act as custom data routers: they assemble custom values from data available in the <a href="#view-binding-context">binding context</a>, and route formatted values. While this is conceptually similar to computed model attributes, computed view properties are unique in that they do not store their own data, nor do they trigger any events; they simply act as pass-throughs for modifying context data using the view's <tt>getBinding</tt> and <tt>setBinding</tt> API methods. Computed view properties are an excellent place to assemble view-specific display values and/or markup.</p>
 				
-				<p>Computed view properties may be defined as raw getter functions:</p>
+				<p>Computed view properties may be declared with a <a href="#view-computed-params">computed params</a> object, or as a getter function (uses <a href="#view-computed-deps">automatic dependency mapping</a>). Computed view functions are called in the context of the view, so referencing <tt>this</tt> refers to the parent view.</p>
 				
 <pre><code class="js">var MyView = Backbone.Epoxy.View.extend({
     el: "#my-view",
     computeds: {
-        welcomeMessage: function() {
+        priceParams: {
+            deps: ["price"],
+            get: function( price ) {
+                return "$"+ price;
+            },
+            set: function( value ) {
+                this.setBinding("price", value.replace("$", ""));
+            }
+        },
+        welcomeGetter: function() {
             var name = this.getBinding("firstName");
             return name ? "Welcome back, "+name : "Hello!";
         }
     }	
 });</code></pre>
 				
-				<p>Computed view property functions are called in the context of the view, so referencing <tt>this</tt> refers to the parent view. Computed view properties <b>MUST</b> read and write all their view data using the view's <tt>getBinding</tt> and <tt>setBinding</tt> API methods. These methods will allow accessed data dependencies to be mapped, therefore allowing view bindings to update when their underlying model values change. Also, keep in mind that conditional logic can break automatic dependency mapping. See <a href="#automatic-dependency-mapping">dependency mapping</a> article for strategies to avoid problems.</p>
+				<p id="view-computed-params">When declaring a computed view property using a params object, the following options may be provided:</p>
 				
+				<ul>
+					<li><b>get:</b> <i>Required function; invoked in context of the view</i>. This getter function assembles its value based on other data in the view context, then returns the generated value. If a <tt>deps</tt> option is also specified, then the dependency values are mapped and injected as arguments into the getter function. If dependencies are not manually specified, then the <b>getBinding</b> method must be used for data access (for <a href="#view-computed-deps">automatic dependency mapping</a>).</li>
+                    
+					<li><b>[deps]:</b> <i>Optional array</i>. An array of context attribute names that the getter function depends on. When provided, these dependency values will be mapped and injected as arguments into the getter function.</li>
+					
+					<li><b>[set]:</b> <i>Optional function; invoked in context of the view</i>. A function that receives an input value for storage. The <b>set</b> method provides no protocol for data storage – storage is entirely dependent on your setter implementation. Use <b>setBinding</b> to write data into view sources. Computed view properties declared without a <b>set</b> function are read-only.</li>
+				</ul>
 				
-
+				<p id="view-computed-deps"><b>Automatic dependency mapping with computed views</b></p>
+				
+				<p>Like computed model attributes, computed view properties must map dependencies between view bindings and their underlying data values to keep the display in sync. You may manually declare dependencies using a params object (see above), or use the following guidelines for automatic dependency mapping:</p>
+				
+				<ul>
+					<li>When getting and/or setting data within a computed function, always use the <tt>getBinding</tt> and <tt>setBinding</tt> view methods to make sure context data is mapped while being accessed. Getting and setting data through other protocols (such as direct model access) with fail to map dependencies.</li>
+					
+					<li>Keep <tt>getBinding</tt> and <tt>setBinding</tt> calls outside of conditional logic blocks. Conditional logic may prevent mapping methods from being reached, therefore it's safest to collect mapped values into local variables before performing conditional logic with them.</li>
+				</ul>
 			</div>
 			
 			<div class="section">
@@ -720,7 +744,7 @@ var view = new ListView();</code></pre>
 					<li><tt>Backbone.Collection</tt> : Models list. The collection's <b>models</b> array will be used as the array source. Options will be created using each model's <b>label</b> and <b>value</b> attributes as the text and value of each option. These attribute names may be adjusted globally through <a href="#binding-config">binding config</a>. An <tt>Epoxy.Model</tt> may be used to virtualize these values as computed/computed attributes if needed. Note that the <b>options</b> binding does not register a <tt>"change"</tt> event on its collection to avoid generally superfluous updates. Instead, you may manually trigger an <tt>"update"</tt> event on the collection to refresh its bindings.</li>
 				</ul>
 				
-<pre><code class="js">computedDefaults: {
+<pre><code class="js">defaults: {
     list1: ["Luke"],
     list2: [{label:"Luke", value:"0"}],
     list3: new Backbone.Collection( {models:[{label:"Luke", value:"0"}]} )
@@ -748,7 +772,7 @@ var view = new ListView();</code></pre>
 					<li><tt>Backbone.Model</tt> : Given a Backbone Model, the default option will be created using the model's <b>label</b> and <b>value</b> attributes as the text and value of the option. An <tt>Epoxy.Model</tt> may be used to virtualize these as computed/computed attributes if needed.</li>
 				</ul>
 				
-<pre><code class="js">computedDefaults: {
+<pre><code class="js">defaults: {
     default1: "Choose...",
     default2: {label:"Choose...", value:""},
     default3: new Backbone.Model({label:"Choose...", value:""})
@@ -775,7 +799,7 @@ var view = new ListView();</code></pre>
 					<li><tt>Backbone.Model</tt> : Given a Backbone Model, the placeholder option will be created using the model's <b>label</b> and <b>value</b> attributes as the text and value of the option. An <tt>Epoxy.Model</tt> may be used to virtualize these as computed/computed attributes if needed.</li>
 				</ul>
 				
-<pre><code class="js">computedDefaults: {
+<pre><code class="js">defaults: {
     empty1: "None",
     empty2: {label:"None", value:""},
     empty3: new Backbone.Model({label:"None", value:""})
