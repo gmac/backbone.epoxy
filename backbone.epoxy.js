@@ -832,8 +832,11 @@
 	function makeFilter( handler ) {
 		return function() {
 			var params = arguments;
+			var read = isFunction( handler ) ? handler : handler.read;
+			var write = handler.write;
 			return function( input ) {
-				return handler.apply(this, readFilterParams(params, input));
+				if ( input && write ) params[0]( write.call(this, input) );
+				return read.apply( this, readFilterParams(params) );
 			};
 		};
 	}
@@ -841,9 +844,7 @@
 	// Reads a list of cached filter params:
 	// this makes sure all params are accessed (for mapping purposes),
 	// and also unpacks the current value of each parameter for use within the handler.
-	function readFilterParams( params, input ) {
-		if ( input ) throw("binding error: filtered values are read-only.");
-		
+	function readFilterParams( params ) {
 		var args = [];
 		for (var i=0, len=params.length; i < len; i++) {
 			args.push( readAccessor(params[i]) );
@@ -906,6 +907,16 @@
 		// uses first param (a) as condition, and returns either b (truthy) or c (falsey).
 		select: makeFilter(function( condition, truthy, falsey ) {
 			return condition ? truthy : falsey;
+		}),
+		
+		// Two-way filter for reading/writing CSV data.
+		csv: makeFilter({
+			read: function( value ) {
+				return String(value).split(",");
+			},
+			write: function( value ) {
+				return isArray(value) ? value.join(",") : value;
+			}
 		})
 	};
 	
@@ -993,9 +1004,13 @@
 			
 			// Add all computed view properties:
 			_.each(_.result(self, "computeds")||{}, function( computed, name ) {
-				computed.id = name;
+				var getter = isFunction( computed ) ? computed : computed.get;
+				var setter = computed.set;
+				
+				getter.id = name;
 				context[ name ] = function( value ) {
-					computed.call( self, value );
+					if ( value && setter ) setter.call( self );
+					else getter.call( self, value );
 				};
 			});
 			
