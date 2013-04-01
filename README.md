@@ -34,7 +34,8 @@ Major reorganization of core features to improve workflow patterns.
  - Removes `observableDefaults` and `addObservable` APIs.
  - Renames former "observable" model methods to `hasComputed`, `removeComputed`, and `clearComputeds`.
  - Adds `viewModel` property to view as sanctioned store for view-specific data.
- - Adds `computeds` hash table to view for computed view properties.
+ - Adds `computeds` hash table to view for defining computed view properties.
+ - Adds two-way data exchange to binding filters.
  - Configures class constructors to pull configuration out of passed options.
  - Refactors Model and View components to be more mixin-friendly.
  - Updated documentation.

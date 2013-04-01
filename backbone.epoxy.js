@@ -834,9 +834,10 @@
 			var params = arguments;
 			var read = isFunction( handler ) ? handler : handler.read;
 			var write = handler.write;
-			return function( input ) {
-				if ( input && write ) params[0]( write.call(this, input) );
-				return read.apply( this, readFilterParams(params) );
+			return function( value ) {
+				return isUndefined(value) ? 
+					read.apply( this, readFilterParams(params) ) :
+					params[0]( (write ? write : read).call(this, value) );
 			};
 		};
 	}
@@ -853,7 +854,8 @@
 	}
 	
 	var bindingFilters = {
-		// Tests if all of the provided accessors are truthy (and):
+		// Positive collection assessment [read-only]:
+		// Tests if all of the provided accessors are truthy (and).
 		all: makeFilter(function() {
 			var params = arguments;
 			for ( var i=0, len=params.length; i < len; i++ ) {
@@ -861,8 +863,9 @@
 			}
 			return true;
 		}),
-	
-		// Tests if any of the provided accessors are truthy (or):
+		
+		// Partial collection assessment [read-only]:
+		// tests if any of the provided accessors are truthy (or).
 		any: makeFilter(function() {
 			var params = arguments;
 			for ( var i=0, len=params.length; i < len; i++ ) {
@@ -871,13 +874,14 @@
 			return false;
 		}),
 		
-		// Reads the length of the accessed property:
+		// Collection length accessor [read-only]:
 		// assumes accessor value to be an Array or Collection; defaults to 0.
 		length: makeFilter(function( value ) {
 			return value.length || 0;
 		}),
 		
-		// Tests if none of the provided accessors are truthy (and not):
+		// Negative collection assessment [read-only]:
+		// tests if none of the provided accessors are truthy (and not).
 		none: makeFilter(function() {
 			var params = arguments;
 			for ( var i=0, len=params.length; i < len; i++ ) {
@@ -886,7 +890,7 @@
 			return true;
 		}),
 	
-		// Negates an accessor's value:
+		// Negation [read-only]:
 		not: makeFilter(function( value ) {
 			return !value;
 		}),
@@ -909,14 +913,25 @@
 			return condition ? truthy : falsey;
 		}),
 		
-		// Two-way filter for reading/writing CSV data.
+		// CSV array formatting [read-write]:
 		csv: makeFilter({
 			read: function( value ) {
-				return String(value).split(",");
+				value = String( value );
+				return value ? value.split(",") : [];
 			},
 			write: function( value ) {
 				return isArray(value) ? value.join(",") : value;
 			}
+		}),
+		
+		// Integer formatting [read-write]:
+		integer: makeFilter(function( value ) {
+			return value ? parseInt( value, 10 ) : 0;
+		}),
+		
+		// Float formatting [read-write]:
+		decimal: makeFilter(function( value ) {
+			return value ? parseFloat( value ) : 0;
 		})
 	};
 	
@@ -973,7 +988,7 @@
 			if (!this.model && !this.collection && !this.bindingSources) return;
 			
 			var self = this;
-			var sources = self.bindingSources;
+			var sources = _.clone(_.result(self, "bindingSources"));
 			var declarations = self.bindings;
 			var handlers = _.clone( bindingHandlers );
 			var filters = _.clone( bindingFilters );
@@ -998,19 +1013,23 @@
 			self.collection = addSourceToViewContext( self, context, "collection" );
 			
 			// Add all additional data sources:
-			_.each(sources, function( source, sourceName ) {
-				sources[ sourceName ] = addSourceToViewContext( sources, context, sourceName, sourceName );
-			});
+			if ( sources ) {
+				_.each(sources, function( source, sourceName ) {
+					sources[ sourceName ] = addSourceToViewContext( sources, context, sourceName, sourceName );
+				});
+				
+				// Reapply resulting sources to view instance.
+				self.bindingSources = sources;
+			}
 			
 			// Add all computed view properties:
 			_.each(_.result(self, "computeds")||{}, function( computed, name ) {
 				var getter = isFunction( computed ) ? computed : computed.get;
 				var setter = computed.set;
-				
 				getter.id = name;
+				
 				context[ name ] = function( value ) {
-					if ( value && setter ) setter.call( self );
-					else getter.call( self, value );
+					return ( value && setter ? setter : getter ).call( self, value );
 				};
 			});
 			
@@ -1076,16 +1095,6 @@
 	
 	// Epoxy.View -> Private
 	// ---------------------
-	
-	// Gets and sets view context data, guards against recursive access.
-	function accessViewContext( context, args, attribute, value ) {
-		if ( args.callee.caller.id === attribute ) {
-			throw( "recursive access error: "+attribute );
-		} else if ( context && context.hasOwnProperty(attribute) ) {
-			return value ? context[attribute](value) : readAccessor( context[attribute] );
-		}
-		return null;
-	}
 	
 	// Adds a data source to a view:
 	// Data sources are Backbone.Model and Backbone.Collection instances.
@@ -1210,6 +1219,16 @@
 				view.b().push( new EpoxyBinding($element, handlers[handlerName], accessor, events, context, bindings) );
 			}
 		});
+	}
+	
+	// Gets and sets view context data attributes:
+	// Commonly used by the implementations of "getBinding" and "setBinding".
+	function accessViewContext( context, args, attribute, value ) {
+		if ( args.callee.caller.id === attribute ) {
+			throw( "recursive access error: "+attribute );
+		} else if ( context && context.hasOwnProperty(attribute) ) {
+			return isUndefined(value) ? context[attribute](value) : readAccessor( context[attribute] );
+		}
 	}
 	
 	

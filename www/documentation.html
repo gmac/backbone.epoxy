@@ -109,7 +109,10 @@
 					<ul>
 						<li><a href="#filter-all">all</a></li>
 						<li><a href="#filter-any">any</a></li>
+						<li><a href="#filter-csv">csv</a></li>
+						<li><a href="#filter-decimal">decimal</a></li>
 						<li><a href="#filter-format">format</a></li>
+						<li><a href="#filter-integer">integer</a></li>
 						<li><a href="#filter-length">length</a></li>
 						<li><a href="#filter-none">none</a></li>
 						<li><a href="#filter-not">not</a></li>
@@ -533,9 +536,24 @@ var BindingView = Backbone.Epoxy.View.extend({
 			<div class="section">
 				<h3 id="view-computeds">computeds</h3>
 				<code>view.computeds</code>
-				<p>A hash table defining a view's computed properties. Computed view properties act as custom data routers: they assemble custom values from available source data, and route formatted values back to sources. While this is conceptually similar to computed model attributes, computed view properties are significantly different in that they do not store their own data, nor do they trigger any events.</p>
-					
-				<p>Computed view properties are defined with functions that get data from the view's <a href="#view-binding-context">binding context</a>, and return an assembled value. Computed view properties are an excellent place to assemble view-specific values.</p>
+				<p>A hash table defining a view's computed properties. Computed view properties act as custom data routers: they assemble custom values from available source data, and route formatted values back to sources. While this is conceptually similar to computed model attributes, computed view properties are unique in that they do not store their own data, nor do they trigger any events; they simply act as pass-throughs for assembling model data for the display. Computed view properties are an excellent place to assemble view-specific display text and/or markup.</p>
+				
+				<p>Computed view properties may be defined as raw getter functions:</p>
+				
+<pre><code class="js">var MyView = Backbone.Epoxy.View.extend({
+    el: "#my-view",
+    computeds: {
+        welcomeMessage: function() {
+            var name = this.getBinding("firstName");
+            return name ? "Welcome back, "+name : "Hello!";
+        }
+    }	
+});</code></pre>
+				
+				<p>Computed view property functions are called in the context of the view, so referencing <tt>this</tt> refers to the parent view. Computed view properties <b>MUST</b> read and write all their view data using the view's <tt>getBinding</tt> and <tt>setBinding</tt> API methods. These methods will allow accessed data dependencies to be mapped, therefore allowing view bindings to update when their underlying model values change. Also, keep in mind that conditional logic can break automatic dependency mapping. See <a href="#automatic-dependency-mapping">dependency mapping</a> article for strategies to avoid problems.</p>
+				
+				
+
 			</div>
 			
 			<div class="section">
@@ -862,53 +880,81 @@ var view = new ListView();</code></pre>
 			
 			<div class="section">
 				<h2 id="binding-filters">View Binding Filters</h2>
-				<p>Binding filters provide a layer of flexibility for formatting data attributes directly within a binding declaration; they allow values to be formatted for binding-specific implementations:</p>
+				<p>Binding filters provide a layer of flexibility for formatting data attributes directly within a binding declaration; they may perform read-only formatting on multiple input values, or perform read-write formatting on a single input value. Filters are intended to format raw values for binding-specific purposes:</p>
 
 <pre><code class="html">&lt;span data-bind="toggle:not(firstName)"&gt;Please enter a first name.&lt;/span&gt;</code></pre>
 				
-				<p>Binding filters may be parameterized with any data attribute(s) available in the <a href="#view-binding-context">binding context</a>, or with primitive values (<tt>String</tt>, <tt>Number</tt>, or <tt>Boolean</tt>). However, binding filters may <b>NOT</b> be nested within one another &mdash; this is very deliberate, and a principle on which Epoxy is opinionated: application logic does not belong within binding declarations. If you need to perform multi-pass value filtering, that work should either be done within your model or else through a single custom binding filter and/or handler.</p>
+				<p>Binding filters may be parameterized with any data attribute(s) available in the <a href="#view-binding-context">binding context</a>, or with primitive values (<tt>String</tt>, <tt>Number</tt>, or <tt>Boolean</tt>). However, binding filters may <b>NOT</b> be nested within one another &mdash; this is very deliberate: application logic does not belong within binding declarations. If you need to perform multi-pass value formatting, that work should be done in a computed property, or else applied as a custom binding handler.</p>
 				
-				<p>Also note: binding filters are <b>one-way</b> sources, meaning they can format data for the view, but can <b>not</b> submit it back to the model. Assigning a filter to a two-way binding will throw an error when data is passed back into the filter.</p>
+				<p>See view <a href="#view-binding-filters">bindingFilters</a> for process on defining your own custom filters.</p>
 			</div>
 			
 			<div class="section">
 				<h3 id="filter-all">all</h3>
+				<span class="alias">read-only</span>
 				<code>data-bind="toggle:all(dataAttribute,[...])"</code>
 				<p>Assesses one or more data attributes as <tt>true</tt> if <i>all</i> attributes are truthy.</p>
 			</div>
 			
 			<div class="section">
 				<h3 id="filter-any">any</h3>
+				<span class="alias">read-only</span>
 				<code>data-bind="toggle:any(dataAttribute,[...])"</code>
 				<p>Assesses one or more data attributes as <tt>true</tt> if <i>any</i> of the attributes are truthy.</p>
 			</div>
 			
 			<div class="section">
+				<h3 id="filter-csv">csv</h3>
+				<span class="alias">read-write</span>
+				<code>data-bind="checked:csv(dataList)"</code>
+				<p>Exchanges comma-separated values data between models and bindings. A string is parsed into a comma-separated array when read through the <b>csv</b> filter, and then is formatted as a comma-separated string when written back through the filter. This is handy for storing a primitive list value within a model, while using it as an array in view bindings. Note that this is only a simple <tt>split/join</tt> implementation of comma-separated values, so advanced CSV formatting (string closures, etc) will not apply.</p>
+			</div>
+			
+			<div class="section">
+				<h3 id="filter-decimal">decimal</h3>
+				<span class="alias">read-write</span>
+				<code>data-bind="checked:decimal(floatAttribute)"</code>
+				<p>Exchanges a floating-point decimal value between models and bindings. A string is parsed into a float when being read or written through the <b>decimal</b> filter. This is handy for preserving float data formatting when binding to input elements.</p>
+			</div>
+			
+			<div class="section">
 				<h3 id="filter-format">format</h3>
+				<span class="alias">read-only</span>
 				<code>data-bind="text:format('$1 of $2',dataAttribute,dataAttribute)"</code>
 				<p>Formats a string with a series of data attribute replacements. Operates the same as string replacement for <tt>RegExp</tt> capture groups, where field insertions are denoted as <tt>"$1,&nbsp;$2,&nbsp;...&nbsp;$n"</tt>. Escape intentional "$n" patterns within the template string as "\$n". Note that the first value insertion index is 1, not 0.</p>
 			</div>
 			
 			<div class="section">
+				<h3 id="filter-integer">integer</h3>
+				<span class="alias">read-write</span>
+				<code>data-bind="checked:integer(numberAttribute)"</code>
+				<p>Exchanges an integer value between models and bindings. A string is parsed into an integer when being read or written through the <b>integer</b> filter. This is handy for preserving numeric data formatting when binding to input elements.</p>
+			</div>
+			
+			<div class="section">
 				<h3 id="filter-length">length</h3>
+				<span class="alias">read-only</span>
 				<code>data-bind="toggle:length(dataAttribute)"</code>
 				<p>Returns the length of an <tt>Array</tt> or <tt>Collection</tt> data attribute, or <tt>0</tt> by default. Useful for loosely-typed assessments of a collection's content status.</p>
 			</div>
 			
 			<div class="section">
 				<h3 id="filter-none">none</h3>
+				<span class="alias">read-only</span>
 				<code>data-bind="toggle:none(dataAttribute,[...])"</code>
 				<p>Assesses one or more data attributes as <tt>true</tt> if <i>none</i> of the attributes are truthy.</p>
 			</div>
 			
 			<div class="section">
 				<h3 id="filter-not">not</h3>
+				<span class="alias">read-only</span>
 				<code>data-bind="toggle:not(dataAttribute)"</code>
 				<p>Inverts the loosely-typed boolean value of a data attribute.</p>
 			</div>
 			
 			<div class="section">
 				<h3 id="filter-select">select</h3>
+				<span class="alias">read-only</span>
 				<code>data-bind="text:select(conditionalValue,truthyValue,falseyValue)"</code>
 				<p>Performs a ternary operation using JavaScript's <tt>?:</tt> operator. The <b>select</b> operation receives three arguments: the first argument is assessed as a loosely-typed conditional; if truthy, the second argument is returned; if falsey, the third argument is returned.</p>
 			</div>
