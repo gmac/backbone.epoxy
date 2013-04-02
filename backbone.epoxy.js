@@ -949,7 +949,7 @@
 	// ----------
 	var viewMap;
 	var viewSuper = superClass( Backbone.View );
-	var viewProps = ["viewModel", "bindingFilters", "bindingHandlers", "bindingSources", "computeds"];
+	var viewProps = ["viewModel", "bindings", "bindingFilters", "bindingHandlers", "bindingSources", "computeds"];
 	
 	
 	Epoxy.View = Backbone.View.extend({

@@ -77,6 +77,17 @@ describe("Backbone.Epoxy.Model", function() {
 	});
 	
 	
+	it("should construct model with class options defined.", function() {
+		var obj = {};
+		
+		var model = new Backbone.Epoxy.Model({}, {
+			computeds: obj
+		});
+		
+		expect( model.computeds ).toBe( obj );
+	});
+	
+	
 	it("should use .get() and .set() to modify native properties.", function() {
 		model.set( "isSelected", true );
 		expect( model.get("isSelected") ).toBe( true );
@@ -474,6 +485,30 @@ describe("Backbone.Epoxy.View", function() {
 		dataModel.set( dataModel.defaults );
 		viewModel.set( defaults );
 		modView.collection.reset();
+	});
+	
+	
+	it("should construct view with class options defined.", function() {
+		var model = new Backbone.Model();
+		var obj = {};
+		
+		var view = new Backbone.Epoxy.View({
+			model: model,
+			viewModel: model,
+			computeds: obj,
+			bindings: "my-binding",
+			bindingFilters: obj,
+			bindingHandlers: obj,
+			bindingSources: obj
+		});
+		
+		expect( view.model ).toBe( model );
+		expect( view.viewModel ).toBe( model );
+		expect( view.computeds ).toBe( obj );
+		expect( view.bindings ).toBe( "my-binding" );
+		expect( view.bindingFilters ).toBe( obj );
+		expect( view.bindingHandlers ).toBe( obj );
+		expect( view.bindingSources ).toBeTruthy(); // << "obj" is copied, so has new identity.
 	});
 	
 	

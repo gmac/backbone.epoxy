@@ -162,7 +162,12 @@
 				<code>new Backbone.Epoxy.Model([attributes], [options])</code>
 				<p>Creates a new <tt>Epoxy.Model</tt> instance. When constructed, <tt>computeds</tt> may be passed as an options property for direct assignment to the model. A constructed model will automatically initialize all computed property definitions.</p>
 				
-				<p>If you choose to mixin the Epoxy Model configuration onto another class prototype, you'll need to manually resolve the model's <b>computeds</b> property and then call <b>initComputeds</b> to reproduce Epoxy's model setup.</p>
+				<p><b>Mixin</b></p>
+				<p>You may choose to mixin Epoxy Model behaviors onto your own <tt>Backbone.Model</tt> extensions rather than extending from <tt>Epoxy.Model</tt> directly. To do so, you'll need to do the following:</p>
+				
+<pre><code class="js">_.extend(MyModel.prototype, _.without(Backbone.Epoxy.Model.prototype, ["constructor"]));</code></pre>
+				
+				<p>Once your model has mixed in the Epoxy Model prototype (minus its constructor), you'll need to manually resolve your model's <b>computeds</b> property and then call <b>initComputeds</b> to reproduce Epoxy's model setup.</p>
 			</div>
 			
 			<div class="section">
@@ -365,9 +370,14 @@ alert( model.get("wordsDict").hasOwnProperty("deathstar") );</code>
 			<div class="section">
 				<h3 id="view-constructor">constructor</h3>
 				<code>new Backbone.Epoxy.View([options])</code>
-				<p>Creates a new <tt>Epoxy.View</tt> instance. The following attributes may be passed as options for direct assignment to the view instance: <tt>viewModel</tt>, <tt>bindingFilters</tt>, <tt>bindingHandlers</tt>, <tt>bindingSources</tt>, and/or <tt>computeds</tt>.</p>
+				<p>Creates a new <tt>Epoxy.View</tt> instance. The following attributes may be passed as options for direct assignment to the view instance: <tt>viewModel</tt>, <tt>bindings</tt>, <tt>bindingFilters</tt>, <tt>bindingHandlers</tt>, <tt>bindingSources</tt>, and/or <tt>computeds</tt>.</p>
 				
-				<p>Note that when mixing Epoxy view configuration into another class prototype, you'll need to manually resolve definitions for the above listed properties, and then call <b>applyBindings</b> to reproduce view setup.</p>
+				<p><b>Mixin</b></p>
+				<p>You may choose to mixin Epoxy View behaviors onto your own <tt>Backbone.View</tt> extensions rather than extending from <tt>Epoxy.View</tt> directly. To do so, you'll need to do the following:</p>
+				
+<pre><code class="js">_.extend(MyView.prototype, _.without(Backbone.Epoxy.View.prototype, ["constructor"]));</code></pre>
+				
+				<p>Once your view has mixed in the Epoxy View prototype (minus its constructor), you'll need to manually resolve Epoxy's constructor options (listed above), and then call <b>applyBindings</b> to reproduce view setup.</p>
 			</div>
 			
 			<div class="section">
