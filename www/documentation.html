@@ -51,6 +51,7 @@
 					<b><a href="#model">Epoxy.Model</a></b>
 					<ul>
 						<li><b><a href="#model-extend">extend</a></b></li>
+						<li><b><a href="#model-mixin">mixin</a></b></li>
 						<li><b><a href="#model-constructor">constructor</a></b></li>
 						<li><a href="#model-add-computed">addComputed</a></li>
 						<li><a href="#model-clear-computeds">clearComputeds</a></li>
@@ -70,6 +71,7 @@
 					<b><a href="#view">Epoxy.View</a></b>
 					<ul>
 						<li><b><a href="#view-extend">extend</a></b></li>
+						<li><b><a href="#view-mixin">mixin</a></b></li>
 						<li><b><a href="#view-constructor">constructor</a></b></li>
 						<li><b><a href="#view-binding-context">binding context</a></b></li>
 						<li><a href="#view-apply-bindings">applyBindings</a></li>
@@ -140,7 +142,7 @@
 					<li><b>Removed:</b> <tt>model.observableDefaults</tt> and <tt>model.addObservable()</tt>. All references to the former Model "observables" API has been removed (computeds ARE still included). Observables referred to extraneous data attributes stored on a model, intended for storing view-specific data. In practice these offered little value as features of a model, plus they confused the use of computed attributes. View-specific data should now be stored in the sanctioned <b>viewModel</b> property of a view.</li>
 					<li><b>Renamed:</b> model <tt>hasObservable</tt>, <tt>removeObservable</tt>, and <tt>clearObservables</tt> have been renamed to <tt>hasComputed</tt>, <tt>removeComputed</tt>, and <tt>clearComputeds</tt>. For the above stated reasons, the entire "observables" API has been deprecated. All former observable methods have been renamed to more succinctly express their purpose.</li>
 					
-					<li><b>Mixin:</b> the process of using Epoxy as a mixin library has been simplified. See the Epoxy <a href="#model-constructor">model constructor</a> and <a href="#view-constructor">view constructor</a> articles for information about mixing Epoxy components into other objects classes.</li>
+					<li><b>Mixin:</b> the process of using Epoxy as a mixin library has been simplified. The Model and View components now provide a static <tt>mixin</tt> function to generate a class abstract for mixin with your projects.</li>
 				</ul>
 			</div>
 			
@@ -158,16 +160,19 @@
 			</div>
 			
 			<div class="section">
+				<h3 id="model-mixin">mixin</h3>
+				<code>Backbone.Epoxy.Model.mixin()</code>
+				<p>Generates an abstract of <tt>Epoxy.Model</tt> methods for mixin with your Model classes.</p>
+				
+<pre><code class="js">_.extend( MyModel.prototype, Backbone.Epoxy.Model.mixin() );</code></pre>
+				
+				<p>When initializing your model instances, you'll need to manually resolve the Epoxy constructor options and then call <b>initComputeds</b> to reproduce Epoxy model setup.</p>
+			</div>
+			
+			<div class="section">
 				<h3 id="model-constructor">constructor</h3>
 				<code>new Backbone.Epoxy.Model([attributes], [options])</code>
 				<p>Creates a new <tt>Epoxy.Model</tt> instance. When constructed, <tt>computeds</tt> may be passed as an options property for direct assignment to the model. A constructed model will automatically initialize all computed property definitions.</p>
-				
-				<p><b>Mixin</b></p>
-				<p>You may choose to mixin Epoxy Model behaviors onto your own <tt>Backbone.Model</tt> extensions rather than extending from <tt>Epoxy.Model</tt> directly. To do so, you'll need to do the following:</p>
-				
-<pre><code class="js">_.extend(MyModel.prototype, _.without(Backbone.Epoxy.Model.prototype, ["constructor"]));</code></pre>
-				
-				<p>Once your model has mixed in the Epoxy Model prototype (minus its constructor), you'll need to manually resolve your model's <b>computeds</b> property and then call <b>initComputeds</b> to reproduce Epoxy's model setup.</p>
 			</div>
 			
 			<div class="section">
@@ -368,16 +373,19 @@ alert( model.get("wordsDict").hasOwnProperty("deathstar") );</code>
 			</div>
 			
 			<div class="section">
+				<h3 id="view-mixin">mixin</h3>
+				<code>Backbone.Epoxy.View.mixin()</code>
+				<p>Generates an abstract of <tt>Epoxy.View</tt> methods for mixin with your View classes.</p>
+
+<pre><code class="js">_.extend( MyView.prototype, Backbone.Epoxy.View.mixin() );</code></pre>
+
+				<p>When initializing your view instances, you'll need to manually resolve the Epoxy constructor options and then call <b>applyBindings</b> to reproduce Epoxy view setup.</p>
+			</div>
+						
+			<div class="section">
 				<h3 id="view-constructor">constructor</h3>
 				<code>new Backbone.Epoxy.View([options])</code>
 				<p>Creates a new <tt>Epoxy.View</tt> instance. The following attributes may be passed as options for direct assignment to the view instance: <tt>viewModel</tt>, <tt>bindings</tt>, <tt>bindingFilters</tt>, <tt>bindingHandlers</tt>, <tt>bindingSources</tt>, and/or <tt>computeds</tt>.</p>
-				
-				<p><b>Mixin</b></p>
-				<p>You may choose to mixin Epoxy View behaviors onto your own <tt>Backbone.View</tt> extensions rather than extending from <tt>Epoxy.View</tt> directly. To do so, you'll need to do the following:</p>
-				
-<pre><code class="js">_.extend(MyView.prototype, _.without(Backbone.Epoxy.View.prototype, ["constructor"]));</code></pre>
-				
-				<p>Once your view has mixed in the Epoxy View prototype (minus its constructor), you'll need to manually resolve Epoxy's constructor options (listed above), and then call <b>applyBindings</b> to reproduce view setup.</p>
 			</div>
 			
 			<div class="section">

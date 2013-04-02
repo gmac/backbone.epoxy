@@ -36,6 +36,20 @@
 	var isCollection = function(obj) { return obj instanceof Backbone.Collection; };
 	var blankMethod = function() {};
 	
+	// Static mixins API:
+	// applied to component classes for generating mixin attribute sets.
+	var mixins = {
+		mixin: function() {
+			var mixin = {};
+			var prototype = this.prototype;
+			for ( var i in prototype ) {
+				if ( prototype.hasOwnProperty(i) && i !== "constructor" ) {
+					mixin[i] = prototype[i];
+				}
+			}
+			return mixin;
+		}
+	};
 	
 	// Partial application for calling method implementations of a super-class object:
 	function superClass( sup ) {
@@ -261,7 +275,7 @@
 			}
 			return null;
 		}
-	});
+	}, mixins);
 
 	// Epoxy.Model -> Private
 	// ----------------------
@@ -1089,7 +1103,8 @@
 			this.removeBindings();
 			viewSuper( this, "remove" );
 		}
-	});
+		
+	}, mixins);
 	
 	// Epoxy.View -> Private
 	// ---------------------
@@ -1311,6 +1326,6 @@
 			this.$el = null;
 		}
 	});
-
+	
 	return Epoxy;
 }));
