@@ -27,7 +27,7 @@ For all complete information and documentation, visit the project's website at [
 
 ## Change Log
 
-**0.12.0** – *April, 2013* - [Diff](https://github.com/gmac/backbone.epoxy/compare/v0.11.0...v0.12.0 "Diff: v0.11.0/v0.12.0")
+**0.12.0** – *April 2, 2013* - [Diff](https://github.com/gmac/backbone.epoxy/compare/v0.11.0...v0.12.0 "Diff: v0.11.0/v0.12.0")
 
 Major reorganization of core features to improve workflow patterns.
 
@@ -35,10 +35,11 @@ Major reorganization of core features to improve workflow patterns.
  - Renames former "observable" model methods to `hasComputed`, `removeComputed`, and `clearComputeds`.
  - Adds `viewModel` property to view as sanctioned store for view-specific data.
  - Adds `computeds` hash table to view for defining computed view properties.
- - Adds two-way data exchange to binding filters.
+ - Adds static `mixin` APIs for applying Epoxy configuration to other base classes.
+ - Adds dependency injection to computed getters defining a `deps` array.
+ - Adds two-way data exchange to binding filters, and adds `integer`, `decimal`, and `csv` filters.
  - Configures class constructors to pull configuration out of passed options.
- - Refactors Model and View components to be more mixin-friendly.
- - Updated documentation.
+ - Revised documentation.
 
 **0.11.0** – *March 25, 2013* – [Diff](https://github.com/gmac/backbone.epoxy/compare/v0.10.1...v0.11.0 "Diff: v0.10.1/v0.11.0")
 
