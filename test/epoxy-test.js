@@ -142,6 +142,15 @@ describe("Backbone.Epoxy.Model", function() {
 	});
 	
 	
+	it("should inject manual dependency declarations as getter arguments.", function() {
+		model.addComputed("getterInjection", function(first, last) {
+			return first +" "+ last;
+		}, "firstName", "lastName");
+		
+		expect( model.get("getterInjection") ).toBe( "Charlie Brown" );
+	});
+	
+	
 	it("should use .addComputed() to define computed properties.", function() {
 		model.addComputed("nameReverse", function() {
 			return this.get("lastName") +", "+ this.get("firstName");
@@ -338,9 +347,6 @@ describe("Backbone.Epoxy.View", function() {
 		},
 		
 		computeds: {
-			nameDisplay: function() {
-				return "<strong>"+this.get("lastName")+"</strong>, "+this.get("firstName");
-			},
 			firstNameError: function() {
 				return !this.get( "firstName" );
 			},
@@ -385,6 +391,21 @@ describe("Backbone.Epoxy.View", function() {
 				},
 				set: function( $element, value ) {
 					$element.val( value ? "Y" : "N" );
+				}
+			}
+		},
+		
+		computeds: {
+			checkedCount: function() {
+				return "Checked items: "+ this.getBinding("checkList").length;
+			},
+			nameDisplay: {
+				deps: ["lastName", "firstName"],
+				get: function( lastName, firstName ) {
+					return "<strong>"+ lastName +"</strong>, "+ firstName;
+				},
+				set: function( value ) {
+					this.nameDisplaySetterValue = value;
 				}
 			}
 		}
@@ -536,6 +557,33 @@ describe("Backbone.Epoxy.View", function() {
 		modView.setBinding( "firstName", "Leia" );
 		expect( dataModel.get("firstName") ).toBe( "Leia" );
 		expect( $el.text() ).toBe( "Leia" );
+	});
+	
+	
+	it("should generate computed view properties based on '.computeds' hash.", function() {
+		expect( domView.getBinding("checkedCount") ).toBe( "Checked items: 1" );
+		domView.viewModel.modifyArray("checkList", "push", "c");
+		expect( domView.getBinding("checkedCount") ).toBe( "Checked items: 2" );
+	});
+	
+	
+	it("should allow view bindings to map through computed properties.", function() {
+		var $el = $(".test-view-computed");
+		expect( $el.text() ).toBe( "Checked items: 1" );
+		domView.viewModel.modifyArray("checkList", "push", "c");
+		expect( $el.text() ).toBe( "Checked items: 2" );
+	});
+	
+	
+	it("should inject manual dependency declarations as computed getter arguments.", function() {
+		expect( domView.getBinding("nameDisplay") ).toBe( "<strong>Skywalker</strong>, Luke" );
+	});
+	
+	
+	it("should allow computed view properties to recieve and store data.", function() {
+		expect( domView.nameDisplaySetterValue ).toBeUndefined();
+		domView.setBinding("nameDisplay", "hello");
+		expect( domView.nameDisplaySetterValue ).toBe( "hello" );
 	});
 	
 	
