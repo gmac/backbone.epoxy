@@ -174,9 +174,9 @@
 				<p id="model-computed-params">The <b>addComputed</b> method is called with an attribute name and a params object defining the following:</p>
 				
 				<ul>
-					<li><b>get:</b> <i>Required function; invoked in context of the model</i>. This getter function assembles its value based on other model properties (native attributes or computeds), then returns the generated value. Note that a getter function should always reference other model values using the model's <b>get</b> method (for <a href="#model-computed-deps">automatic dependency mapping</a>).</li>
+					<li><b>get:</b> <i>Required function; invoked in context of the model</i>. This getter function assembles its value based on other model attributes (native or computed), and then returns the generated value. If a <tt>deps</tt> param is also specified, then the dependency array will be mapped and injected as arguments into the getter function. Note that a getter function should always reference other model attributes using the model's <b>get</b> method (for <a href="#model-computed-deps">automatic dependency mapping</a>).</li>
                     
-					<li><b>[deps]:</b> <i>Optional array</i>. An array of attribute names that the getter function depends on. This manual property mapping is only required if your getter contains unreachable values that would be missed by automatic dependency mapping (discussed below).</li>
+					<li><b>[deps]:</b> <i>Optional array</i>. An array of attribute names that the getter function depends on. When defined, the dependency attributes will be mapped and injected as arguments into the getter function. Technically this manual property mapping is only required if your getter contains unreachable values that would be missed by automatic dependency mapping (discussed below).</li>
                     					
 					<li><b>[set]:</b> <i>Optional function; invoked in context of the model</i>. A mutator function which receives a raw input value, and returns an object defining new key/value pairs to be merged into the model. Computed attributes declared without a <b>set</b> function are read-only.</li>
 				</ul>
@@ -186,8 +186,8 @@
 <pre><button class="run">Run</button><code class="js">var model = new Backbone.Epoxy.Model({price:100});
 model.addComputed("formattedPrice", {
     deps: ["price"],
-    get: function() {
-        return "$"+ this.get("price");
+    get: function( price ) {
+        return "$"+ price;
     },
     set: function( value ) {
         return {price: parseInt(value.replace("$", ""))}
@@ -200,7 +200,7 @@ alert( model.get("price") ); // 150</code>
 </pre>
 				
 				<p><b id="model-computed-deps">Automatic Dependency Mapping</b></p>
-				<p>In the above example, <tt>["price"]</tt> is manually declared as a dependency of the computed getter (meaning the getter will need to update itself when <tt>"price"</tt> changes). While this manual declaration is a nice safety net, we could also exclude the <tt>"deps"</tt> param entirely in this case thanks to Epoxy's automatic dependency mapping.</p>
+				<p>In the above example, <tt>["price"]</tt> is manually declared as a dependency of the computed getter (meaning the getter will need to update itself when <tt>"price"</tt> changes). While this manual declaration is a nice safety net, we could also exclude the <tt>deps</tt> param and just <b>get</b> the <tt>price</tt> attribute instead, allowing automatic dependency mapping to discover attribute relationships.</p>
 				
 				<p>Automatic dependency mapping works using the <b>get</b> method wrapper of the <tt>Epoxy.Model</tt>. While generating a computed attribute's initial value, the <tt>Epoxy.Model</tt> registers all attribute names requested from <i>all</i> <tt>Epoxy.Model</tt> instances, and binds the computed attribute accordingly. Automatic mapping works great given the following:</p>
 				
@@ -224,7 +224,7 @@ model.addComputed("displayName", function() {
     return this.get("active") ? this.get("fullName") : this.get("shortName");
 });</code>	
 </pre>
-				<p>See the error in the above example? The <tt>"fullName"</tt> and <tt>"shortName"</tt> attributes are accessed conditionally, therefore one will be unreachable while mapping dependencies. To fix this, we could either manually declare dependencies, or else <b>get</b> all dependencies as local variables prior to conditional logic, like so:</p>
+				<p>See the error in the above example? The <tt>fullName</tt> and <tt>shortName</tt> attributes are accessed conditionally, therefore one will be unreachable while mapping dependencies. To fix this, we could either manually declare dependencies, or else <b>get</b> all dependencies as local variables prior to conditional logic, like so:</p>
 				
 <pre>
 <code class="js">// FIXED:
@@ -246,9 +246,9 @@ model.addComputed("displayName", function() {
 			<div class="section">
 				<h3 id="model-computeds">computeds</h3>
 				<code>model.computeds</code>
-				<p>A hash table declaring computed attributes to be automatically added to a model instance by <b>initComputeds</b>. Uses <b><a href="#model-add-computed">addComputed</a></b> to create computed attributes. Computeds may be declared with a <a href="#model-computed-params">computed params</a> object, or as a getter function (uses <a href="#model-computed-deps">automatic dependency mapping</a>).</p>	
-<pre>
-<code class="js">var ComputedModel = Backbone.Epoxy.Model.extend({
+				<p>A hash table declaring computed attributes to be automatically added to a model instance by <b>initComputeds</b>. Uses <b><a href="#model-add-computed">addComputed</a></b> to create computed attributes. Computeds may be declared with a <a href="#model-computed-params">computed params</a> object, or as a getter function (uses <a href="#model-computed-deps">automatic dependency mapping</a>).</p>
+
+<pre><code class="js">var ComputedModel = Backbone.Epoxy.Model.extend({
     defaults: {
         firstName: "Luke",
         lastName: "Skywalker"
@@ -256,8 +256,8 @@ model.addComputed("displayName", function() {
     computeds: {
         fullNameParams: {
             deps: ["firstName", "lastName"],
-            get: function() {
-                return this.get("firstName") +" "+ this.get("lastName");
+            get: function( firstName, lastName ) {
+                return firstName +" "+ lastName;
             },
             set: function( value ) {
                 var first = value.split(" ")[0];
@@ -269,8 +269,7 @@ model.addComputed("displayName", function() {
             return this.get("firstName") +" "+ this.get("lastName");
         }
     }
-});</code>
-</pre>
+});</code></pre>
 			</div>
 			
 			<div class="section">
