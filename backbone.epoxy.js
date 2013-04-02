@@ -39,15 +39,16 @@
 	// Static mixins API:
 	// applied to component classes for generating mixin attribute sets.
 	var mixins = {
-		mixin: function() {
-			var mixin = {};
+		mixin: function( extend ) {
 			var prototype = this.prototype;
+			extend = extend || {};
+			
 			for ( var i in prototype ) {
 				if ( prototype.hasOwnProperty(i) && i !== "constructor" ) {
-					mixin[i] = prototype[i];
+					extend[i] = prototype[i];
 				}
 			}
-			return mixin;
+			return extend;
 		}
 	};
 	

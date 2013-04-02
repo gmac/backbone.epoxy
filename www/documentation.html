@@ -161,10 +161,12 @@
 			
 			<div class="section">
 				<h3 id="model-mixin">mixin</h3>
-				<code>Backbone.Epoxy.Model.mixin()</code>
+				<code>Backbone.Epoxy.Model.mixin([target])</code>
 				<p>Generates an abstract of <tt>Epoxy.Model</tt> methods for mixin with your Model classes.</p>
 				
-<pre><code class="js">_.extend( MyModel.prototype, Backbone.Epoxy.Model.mixin() );</code></pre>
+<pre><code class="js">_.extend( MyModel.prototype, Backbone.Epoxy.Model.mixin() );
+// or:
+Backbone.Epoxy.Model.mixin( MyModel.prototype );</code></pre>
 				
 				<p>When initializing your model instances, you'll need to manually resolve the Epoxy constructor options and then call <b>initComputeds</b> to reproduce Epoxy model setup.</p>
 			</div>
@@ -374,10 +376,12 @@ alert( model.get("wordsDict").hasOwnProperty("deathstar") );</code>
 			
 			<div class="section">
 				<h3 id="view-mixin">mixin</h3>
-				<code>Backbone.Epoxy.View.mixin()</code>
+				<code>Backbone.Epoxy.View.mixin([target])</code>
 				<p>Generates an abstract of <tt>Epoxy.View</tt> methods for mixin with your View classes.</p>
 
-<pre><code class="js">_.extend( MyView.prototype, Backbone.Epoxy.View.mixin() );</code></pre>
+<pre><code class="js">_.extend( MyView.prototype, Backbone.Epoxy.View.mixin() );
+// or:
+Backbone.Epoxy.View.mixin( MyView.prototype );</code></pre>
 
 				<p>When initializing your view instances, you'll need to manually resolve the Epoxy constructor options and then call <b>applyBindings</b> to reproduce Epoxy view setup.</p>
 			</div>
