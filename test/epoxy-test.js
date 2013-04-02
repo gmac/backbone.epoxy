@@ -64,6 +64,24 @@ describe("Backbone.Epoxy.Model", function() {
 		}
 	});
 	
+	var MixinModel = Backbone.Model.extend({
+		defaults: {
+			avgPayment: 500
+		},
+		
+		initialize: function() {
+			this.initComputeds();
+		},
+		
+		computeds: {
+			avgPaymentDsp: function() {
+				return "$"+this.get( "avgPayment" );
+			}
+		}
+	});
+	
+	Backbone.Epoxy.Model.mixin( MixinModel.prototype );
+	
 	
 	// Setup
 	beforeEach(function() {
@@ -85,6 +103,12 @@ describe("Backbone.Epoxy.Model", function() {
 		});
 		
 		expect( model.computeds ).toBe( obj );
+	});
+	
+	
+	it("should allow Epoxy model configuration to mixin with another Backbone Model.", function() {
+		var model = new MixinModel();
+		expect( model.get("avgPaymentDsp") ).toBe( "$500" );
 	});
 	
 	
@@ -471,6 +495,18 @@ describe("Backbone.Epoxy.View", function() {
 		}
 	}));
 	
+	
+	var MixinView = Backbone.View.extend({
+		el: "<div data-bind='text:ship'></div>",
+		model: new Backbone.Model({ship:"Deathstar"}),
+		initialize: function() {
+			this.applyBindings();
+		}
+	});
+	
+	Backbone.Epoxy.View.mixin( MixinView.prototype );
+	
+	
 	// Setup
 	beforeEach(function() {
 		
@@ -509,6 +545,12 @@ describe("Backbone.Epoxy.View", function() {
 		expect( view.bindingFilters ).toBe( obj );
 		expect( view.bindingHandlers ).toBe( obj );
 		expect( view.bindingSources ).toBeTruthy(); // << "obj" is copied, so has new identity.
+	});
+	
+	
+	it("should allow Epoxy view configuration to mixin with another Backbone View.", function() {
+		var view = new MixinView();
+		expect( view.$el.text() ).toBe( "Deathstar" );
 	});
 	
 	
