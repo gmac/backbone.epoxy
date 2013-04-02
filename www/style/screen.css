@@ -57,6 +57,13 @@ strong {
 	width: 990px;
 }
 
+.news {
+	background-color: #f6e1db;
+	border: 1px solid #edc2b6;
+	border-radius: 6px;
+	padding: 20px;
+}
+
 .banner {
 	border-bottom: 1px solid #ccc;
 	float: left;
