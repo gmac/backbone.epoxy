@@ -1238,7 +1238,7 @@
 	// Gets and sets view context data attributes:
 	// used by the implementations of "getBinding" and "setBinding".
 	function accessViewContext( context, args, attribute, value ) {
-		if ( args.callee.caller.id === attribute ) {
+		if ( args.callee.caller && args.callee.caller.id === attribute ) {
 			throw( "recursive access error: "+attribute );
 		} else if ( context && context.hasOwnProperty(attribute) ) {
 			return isUndefined(value) ? readAccessor( context[attribute] ) : context[attribute](value);
