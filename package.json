@@ -32,5 +32,17 @@
   "devDependencies": {
     "grunt": "~0.4.1",
     "grunt-contrib-uglify": "~0.1.2"
+  },
+  "jam": {
+    "dependencies": {
+      "jquery": ">=1.7.0",
+      "underscore": ">=1.4.3",
+      "backbone": ">=0.9.9"
+    },
+    "main": "backbone.epoxy.js",
+    "include": [
+      "backbone.epoxy.js",
+      "readme.md"
+    ]
   }
 }
