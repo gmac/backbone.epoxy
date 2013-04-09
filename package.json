@@ -1,20 +1,33 @@
 {
   "name": "backbone.epoxy",
   "description": "Elegant data binding for Backbone.js",
+  "homepage": "http://epoxyjs.org",
   "url": "http://epoxyjs.org",
   "keywords": [
+    "backbone",
+    "plugin",
     "model",
     "view",
-    "data binding"
+    "binding",
+    "data"
   ],
-  "author": "Greg MacWilliam <greg.macwilliam@threespot.com>",
+  "author": {
+    "name": "Greg MacWilliam",
+    "email": "greg.macwilliam@threespot.com",
+    "web": "https://github.com/gmac"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gmac/backbone.epoxy.git"
+  },
+  "github": "https://github.com/gmac/backbone.epoxy",
   "license": "MIT",
   "dependencies": {
     "jquery": ">=1.7.0",
     "underscore": ">=1.4.3",
     "backbone": ">=0.9.9"
   },
-  "main": "backbone.epoxy.min.js",
+  "main": "backbone.epoxy.js",
   "version": "0.12.0",
   "devDependencies": {
     "grunt": "~0.4.1",

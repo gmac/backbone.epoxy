@@ -52,6 +52,7 @@
 						<li><a href="#computed-attributes">Computed Model Attributes</a></li>
 						<li><a href="#computed-dependencies">Managing Computed Dependencies</a></li>
 						<li><a href="#computed-get-set">Computed Getters and Setters</a></li>
+						<li><a href="#binding-computeds">Computed View Properties</a></li>
 						<li><a href="#binding-filters">View Binding Filters</a></li>
 						<li><a href="#binding-handlers">Custom Binding Handlers</a></li>
 						<li><a href="#binding-sources">Binding Collections &amp; Multiple Sources</a></li>
@@ -311,10 +312,10 @@ var view = new Backbone.Epoxy.View({
     &lt;input type="text" data-bind="value:displayPrice"&gt;
 
     &lt;b&gt;Display Price:&lt;/b&gt;
-    &lt;span data-bind="text:displayPrice">&lt;/span&gt;
+    &lt;span data-bind="text:displayPrice"&gt;&lt;/span&gt;
 
     &lt;b&gt;Model Price:&lt;/b&gt;
-    &lt;span data-bind="text:price">&lt;/span&gt;
+    &lt;span data-bind="text:price"&gt;&lt;/span&gt;
 &lt;/div&gt;</code></pre>
 </div>
 
@@ -324,9 +325,52 @@ var view = new Backbone.Epoxy.View({
 			
 			<p>Learn more about computed getters and setters in the <b><a href="documentation.html#model-add-computed">Model.addComputed</a></b> documentation.</p>
 			
+			
+			<h2 id="binding-computeds">Computed View Properties</h2>
+			
+			<p>If a model can compute values, then what's the point of a computation layer within the view? Well, computed model attributes are best suited for managing raw data; for example, computing a <tt>fullName</tt> attribute on a model from <tt>firstName</tt> and <tt>lastName</tt> fields makes sense, because the <tt>fullName</tt> string is still very primitive and beholden to the model.</p>
+			
+			<p>Where computed model attributes start to break down is when data needs to be formatted for specific display purposes; for example, when data needs to be formatted in an HTML tag structure for its presentation. These cases are very specific to the view, and therefore should be computed in the view.</p>
+			
+			<p>To accommodate view-specific formatting, an Epoxy view may define its own list of computed properties that will be made available to bindings. Let's try formatting a value for display using a computed view property:</p>
+	
+<div class="example">
+<ul class="tabs">
+	<li data-tab="js">JavaScript</li>
+	<li data-tab="html">HTML</li>
+</ul>		
+<pre><code class="js">var ComputedView = Backbone.Epoxy.View.extend({
+   el: "#app-view-computed",
+   computeds: {
+      nameDisplay: function() {
+         return "&lt;b&gt;"+ this.getBinding("lastName") +"&lt;/b&gt;, "+ this.getBinding("firstName");
+      }
+   }
+});
+
+var view = new ComputedView({
+   model: new Backbone.Model({firstName: "Mace", lastName: "Windu"})
+});</code></pre>
+
+<pre><code class="html">&lt;div id="app-view-computed"&gt;
+    &lt;label&gt;First:&lt;/label&gt;
+    &lt;input type="text" data-bind="value:firstName,events:['keyup']"&gt;
+
+    &lt;label&gt;Last:&lt;/label&gt;
+    &lt;input type="text" data-bind="value:lastName,events:['keyup']"&gt;
+
+    &lt;span data-bind="html:nameDisplay"&gt;&lt;/span&gt;
+&lt;/div&gt;</code></pre>
+</div>
+
+			<p>The computed view property in the above example should look familiar. View computeds follow a similar pattern to model computeds, but differ in their data access. For computed view properties, we use the parent view's <b>getBinding</b> method to access view data while mapping dependencies. Note that the same conditional logic caveats discussed in <a href="#computed-dependencies">Managing Computed Dependencies</a> applies to computed view properties as well.</p>
+			
+			<p>For more information on managing computed view properties and their dependencies, see <a href="documentation.html#view-computeds">computed view properties</a> documentation.</p>
+			
+
 			<h2 id="binding-filters">View Binding Filters</h2>
 
-			<p>Now let's turn our attention back to using bindings within an Epoxy view. Epoxy tries to strike a balance between robust binding options and clean binding definitions. While Epoxy uses a similar binding technique to <a href="http://knockoutjs.com/">Knockout.js</a>, it intentionally discourages some of Knockout's inline-javascript allowances.</p>
+			<p>Epoxy tries to strike a balance between robust binding options and clean binding definitions. While Epoxy uses a similar binding technique to <a href="http://knockoutjs.com/">Knockout.js</a>, it intentionally discourages some of Knockout's inline-javascript allowances.</p>
 
 			<p>Instead, Epoxy provides filtering wrappers for formatting data directly within your bindings. Notice how the <tt>not()</tt> and <tt>format()</tt> filters are used in the following binding scheme:</p>
 
