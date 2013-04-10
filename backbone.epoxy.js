@@ -994,9 +994,6 @@
 		applyBindings: function() {
 			this.removeBindings();
 			
-			// Abort if no data sources are provided:
-			if (!this.model && !this.collection && !this.bindingSources) return;
-			
 			var self = this;
 			var sources = _.clone(_.result(self, "bindingSources"));
 			var declarations = self.bindings;
