@@ -37,15 +37,15 @@
 	var blankMethod = function() {};
 	
 	// Static mixins API:
-	// applied to component classes for generating mixin attribute sets.
+	// added as a static member to Epoxy class objects (Model & View);
+	// generates a class attribute set for mixin with other objects.
 	var mixins = {
 		mixin: function( extend ) {
-			var prototype = this.prototype;
 			extend = extend || {};
 			
-			for ( var i in prototype ) {
-				if ( prototype.hasOwnProperty(i) && i !== "constructor" ) {
-					extend[i] = prototype[i];
+			for ( var i in this.prototype ) {
+				if ( this.prototype.hasOwnProperty(i) && i !== "constructor" ) {
+					extend[i] = this.prototype[i];
 				}
 			}
 			return extend;
@@ -69,7 +69,7 @@
 	Epoxy.Model = Backbone.Model.extend({
 		
 		// Backbone.Model constructor override:
-		// configures observable model attributes around the underlying native Backbone model.
+		// configures computed model attributes around the underlying native Backbone model.
 		constructor: function( attributes, options ) {
 			_.extend( this, _.pick(options||{}, modelProps) );
 			modelSuper( this, "constructor", arguments );
@@ -84,14 +84,14 @@
 		},
 		
 		// Backbone.Model.get() override:
-		// provides access to observable attributes,
+		// provides access to computed attributes,
 		// and maps computed dependency references while establishing bindings.
 		get: function( attribute ) {
 			
 			// Automatically register bindings while building out computed dependency graphs:
 			modelMap && modelMap.push( ["change:"+attribute, this] );
 			
-			// Return an observable property value, if available:
+			// Return an computed property value, if available:
 			if ( this.hasComputed(attribute) ) {
 				return this.c()[ attribute ].get();
 			}
@@ -101,7 +101,7 @@
 		},
 		
 		// Backbone.Model.set() override:
-		// will process any observable attribute setters,
+		// will process any computed attribute setters,
 		// and then pass along all results to the underlying model.
 		set: function( key, value, options ) {
 			var params = key;
@@ -117,11 +117,11 @@
 			// Default options definition:
 			options = options || {};
 
-			// Attempt to set observable attributes while not unsetting:
+			// Attempt to set computed attributes while not unsetting:
 			if ( !options.unset ) {
-				// All param properties are tested against observable setters,
-				// properties set to observables will be removed from the params table.
-				// Optionally, an observable setter may return key/value pairs to be merged into the set.
+				// All param properties are tested against computed setters,
+				// properties set to computeds will be removed from the params table.
+				// Optionally, an computed setter may return key/value pairs to be merged into the set.
 				params = deepModelSet(this, params, {}, []);
 			}
 			
@@ -130,7 +130,7 @@
 		},
 		
 		// Backbone.Model.toJSON() override:
-		// adds an "obs" option, specifying to include observable attributes.
+		// adds a "computed" option, specifying to include computed attributes.
 		toJSON: function( options ) {
 			var json = modelSuper( this, "toJSON", arguments );
 
@@ -144,7 +144,7 @@
 		},
 		
 		// Backbone.Model.destroy() override:
-		// clears all observable attributes before destroying.
+		// clears all computed attributes before destroying.
 		destroy: function() {
 			this.clearComputeds();
 			return modelSuper( this, "destroy", arguments );
@@ -162,18 +162,18 @@
 		initComputeds: function() {
 			this.clearComputeds();
 			
-			// Add all computed observables:
+			// Add all computed attributes:
 			_.each(_.result(this, "computeds")||{}, function( params, attribute ) {
 				params._init = 1;
 				this.addComputed( attribute, params );
 			}, this);
 
-			// Initialize all observable attributes:
+			// Initialize all computed attributes:
 			// all presets have been constructed and may reference each other now.
 			_.invoke( this.c(), "init" );
 		},
 		
-		// Adds a computed observable attribute to the model:
+		// Adds a computed attribute to the model:
 		// computed attribute will assemble and return customized values.
 		// @param attribute (string)
 		// @param getter (function) OR params (object)
@@ -208,12 +208,12 @@
 			return this;
 		},
 		
-		// Tests the model for a observable attribute definition:
+		// Tests the model for a computed attribute definition:
 		hasComputed: function( attribute ) {
 			return this.c().hasOwnProperty( attribute );
 		},
 		
-		// Removes an observable attribute from the model:
+		// Removes an computed attribute from the model:
 		removeComputed: function( attribute ) {
 			if ( this.hasComputed(attribute) ) {
 				this.c()[ attribute ].dispose();
@@ -222,7 +222,7 @@
 			return this;
 		},
 
-		// Removes all observable attributes:
+		// Removes all computed attributes:
 		clearComputeds: function() {
 			for ( var attribute in this.c() ) {
 				this.removeComputed( attribute );
@@ -282,12 +282,12 @@
 	// ----------------------
 
 	// Model deep-setter:
-	// Attempts to set a collection of key/value attribute pairs to observable attributes.
+	// Attempts to set a collection of key/value attribute pairs to computed attributes.
 	// Observable setters may digest values, and then return mutated key/value pairs for inclusion into the set operation.
-	// Values returned from observable setters will be recursively deep-set, allowing observables to set other observables.
-	// The final collection of resolved key/value pairs (after setting all observables) will be returned to the native model.
+	// Values returned from computed setters will be recursively deep-set, allowing computeds to set other computeds.
+	// The final collection of resolved key/value pairs (after setting all computeds) will be returned to the native model.
 	// @param model: target Epoxy model on which to operate.
-	// @param toSet: an object of key/value pairs to attempt to set within the observable model.
+	// @param toSet: an object of key/value pairs to attempt to set within the computed model.
 	// @param toReturn: resolved non-ovservable attribute values to be returned back to the native model.
 	// @param trace: property stack trace (prevents circular setter loops).	
 	function deepModelSet( model, toSet, toReturn, stack ) {
@@ -301,12 +301,12 @@
 				
 				if ( model.hasComputed(attribute) ) {
 					
-					// Has a observable attribute:
+					// Has a computed attribute:
 					// comfirm attribute does not already exist within the stack trace.
 					if ( !stack.length || _.indexOf(stack, attribute) < 0 ) {
 						
 						// Non-recursive:
-						// set and collect value from observable attribute. 
+						// set and collect value from computed attribute. 
 						value = model.c()[attribute].set(value);
 						
 						// Recursively set new values for a returned params object:
@@ -322,7 +322,7 @@
 					}
 					
 				} else {
-					// No observable attribute:
+					// No computed attribute:
 					// set the value to the keeper values.
 					toReturn[ attribute ] = value;
 				}
@@ -341,14 +341,6 @@
 			return _.clone(value);
 		}
 		return value;
-	}
-	
-	// Maps an array of attribute names into model values:
-	function mapModelAttributes( model, attributes ) {
-		for (var i=0, len=attributes.length; i < len; i++) {
-			attributes[i] = model.get(attributes[i]);
-		}
-		return attributes;
 	}
 	
 	
@@ -382,19 +374,19 @@
 		
 		// Skip init while parent model is initializing:
 		// Model will initialize in two passes...
-		// the first pass sets up all observable attributes,
+		// the first pass sets up all computed attributes,
 		// then the second pass initializes all bindings.
 		if ( !delayInit ) this.init();
 	}
 	
 	_.extend(EpoxyComputedModel.prototype, Backbone.Events, {
 		
-		// Initializes the observable's value and bindings:
+		// Initializes the computed's value and bindings:
 		// this method is called independently from the object constructor,
-		// allowing observables to build and initialize in two passes by the parent model.
+		// allowing computeds to build and initialize in two passes by the parent model.
 		init: function() {
 			
-			// Configure dependency map, then update the observable's value:
+			// Configure dependency map, then update the computed's value:
 			// All Epoxy.Model attributes accessed while getting the initial value
 			// will automatically register themselves within the model bindings map.
 			var bindings = {};
@@ -402,7 +394,7 @@
 			this.get( true );
 			modelMap = null;
 			
-			// If the observable has dependencies, then proceed to binding it:
+			// If the computed has dependencies, then proceed to binding it:
 			if ( deps.length ) {
 				
 				// Compile normalized bindings table:
@@ -432,18 +424,23 @@
 			}
 		},
 		
-		// Gets the observable's current value:
+		// Gets an attribute value from the parent model.
+		val: function( attribute ) {
+			return this.model.get( attribute );
+		},
+		
+		// Gets the computed's current value:
 		// Computed values flagged as dirty will need to regenerate themselves.
 		// Note: "update" is strongly checked as TRUE to prevent unintended arguments (handler events, etc) from qualifying.
 		get: function( update ) {
 			if ( update === true && this._get ) {
-				var val = this._get.apply( this.model, mapModelAttributes(this.model, this.deps.slice()) );
+				var val = this._get.apply( this.model, _.map(this.deps, this.val, this) );
 				this.change( val );
 			}
 			return this.value;
 		},
 		
-		// Sets the observable's current value:
+		// Sets the computed's current value:
 		// computed values (have a custom getter method) require a custom setter.
 		// Custom setters should return an object of key/values pairs;
 		// key/value pairs returned to the parent model will be merged into its main .set() operation.
@@ -456,17 +453,12 @@
 			return null;
 		},
 		
-		// Fires a change event for the observable attribute on the parent model:
-		fire: function() {
-			this.model.trigger( "change change:"+this.name );
-		},
-
-		// Changes the observable's value:
+		// Changes the computed's value:
 		// new values are cached, then fire an update event.
 		change: function( value ) {
 			if ( !_.isEqual(value, this.value) ) {
 				this.value = value;
-				this.fire();
+				this.model.trigger( "change change:"+this.name );
 			}
 		},
 		
@@ -758,7 +750,7 @@
 				// Dig deeper into label/value settings for non-primitive values:
 				if ( isObject( option ) ) {
 					// Extract a label and value from each object:
-					// a model's "get" method is used to access potential observable values.
+					// a model's "get" method is used to access potential computed values.
 					label = isModel( option ) ? option.get( textAttr ) : option[ textAttr ];
 					value = isModel( option ) ? option.get( valueAttr ) : option[ valueAttr ];
 				}
@@ -770,7 +762,7 @@
 				return "<option value='"+ value + select + label +"</option>";
 			},
 			clean: function() {
-				this.d = this.e = this.v = null;
+				this.d = this.e = this.v = 0;
 			}
 		},
 		
@@ -778,7 +770,7 @@
 		template: {
 			init: function( $element, value, context ) {
 				var raw = $element.find("script,template");
-				this.tmpl = _.template( raw.length ? raw.html() : $element.html() );
+				this.t = _.template( raw.length ? raw.html() : $element.html() );
 				
 				// If an array of template attributes was provided,
 				// then replace array with a compiled hash of attribute accessors:
@@ -788,10 +780,10 @@
 			},
 			set: function( $element, value ) {
 				value = isModel(value) ? value.toJSON({computed:true}) : value;
-				$element.html( this.tmpl(value) );
+				$element.html( this.t(value) );
 			},
 			clean: function() {
-				this.tmpl = null;
+				this.t = null;
 			}
 		},
 		
@@ -818,10 +810,10 @@
 				try {
 					if ( $element.val() != value ) $element.val( value );
 				} catch (error) {
-					// Error setting value in IE6: IGNORE.
+					// Error setting value: IGNORE.
 					// This occurs in IE6 while attempting to set an undefined multi-select option.
 					// unfortuantely, jQuery doesn't gracefully handle this error for us.
-					// remove this try/catch block when IE6 is officially deprecated!
+					// remove this try/catch block when IE6 is officially deprecated.
 				}
 			}
 		}
@@ -842,26 +834,16 @@
 	function makeFilter( handler ) {
 		return function() {
 			var params = arguments;
-			var read = isFunction( handler ) ? handler : handler.read;
+			var read = isFunction(handler) ? handler : handler.read;
 			var write = handler.write;
 			return function( value ) {
 				return isUndefined(value) ? 
-					read.apply( this, readFilterParams(params) ) :
+					read.apply( this, _.map(params, readAccessor) ) :
 					params[0]( (write ? write : read).call(this, value) );
 			};
 		};
 	}
 	
-	// Reads a list of cached filter params:
-	// this makes sure all params are accessed (for mapping purposes),
-	// and also unpacks the current value of each parameter for use within the handler.
-	function readFilterParams( params ) {
-		var args = [];
-		for (var i=0, len=params.length; i < len; i++) {
-			args.push( readAccessor(params[i]) );
-		}
-		return args;
-	}
 	
 	var bindingFilters = {
 		// Positive collection assessment [read-only]:
