@@ -80,7 +80,7 @@
 		// Array and Object values will return a shallow copy,
 		// primitive values will be returned directly.
 		getCopy: function( attribute ) {
-			return copyModelValue( this.get(attribute) );
+			return _.clone( this.get(attribute) );
 		},
 		
 		// Backbone.Model.get() override:
@@ -332,17 +332,6 @@
 		return toReturn;
 	}
 	
-	// Creates a shallow-copy of object values:
-	// Array values are sliced, objects are cloned, primitives are returned.
-	function copyModelValue( value ) {
-		if ( isArray(value) ) {
-			return value.slice();
-		} else if ( isObject(value) ) {
-			return _.clone(value);
-		}
-		return value;
-	}
-	
 	
 	// Epoxy.Model -> Computed
 	// -----------------------
@@ -494,8 +483,8 @@
 			return accessor();
 		}
 		else if ( isObject(accessor) ) {
-			// Accessor is object: return copy with all attributes read.
-			accessor = isArray(accessor) ? accessor.slice() : _.clone(accessor);
+			// Accessor is object/array: return copy with all attributes read.
+			accessor = _.clone(accessor);
 			
 			_.each(accessor, function( value, key ) {
 				accessor[ key ] = readAccessor( value );
