@@ -524,6 +524,12 @@ describe("Backbone.Epoxy.View", function() {
 	});
 	
 	
+	// Simple visibility check to replace ".is(':visible')", for basic Zepto caompatibility:
+	function isVisible($el) {
+		var dsp = $el.css("display");
+		return dsp !== 'none';
+	}
+	
 	it("should construct view with class options defined.", function() {
 		var model = new Backbone.Model();
 		var obj = {};
@@ -1041,9 +1047,9 @@ describe("Backbone.Epoxy.View", function() {
 	
 	it("binding 'toggle:' should establish a one-way binding with an element's visibility.", function() {
 		var $el = $(".test-toggle");
-		expect( $el.is(":visible") ).toBe( true );
+		expect( isVisible($el) ).toBe( true );
 		dataModel.set("active", false);
-		expect( $el.is(":visible") ).toBe( false );
+		expect( isVisible($el) ).toBe( false );
 	});
 	
 	
@@ -1071,9 +1077,9 @@ describe("Backbone.Epoxy.View", function() {
 	
 	it("operating with not() should negate a binding value.", function() {
 		var $el = $(".test-mod-not");
-		expect( $el.is(":visible") ).toBe( false );
+		expect( isVisible($el) ).toBe( false );
 		dataModel.set("active", false);
-		expect( $el.is(":visible") ).toBe( true );
+		expect( isVisible($el) ).toBe( true );
 	});
 	
 	

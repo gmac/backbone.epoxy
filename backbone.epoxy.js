@@ -513,7 +513,7 @@
 				var checked = !!$element.prop( "checked" );
 				var value = $element.val();
 				
-				if ( $element.is(":radio") ) {
+				if ( this.isRadio( $element ) ) {
 					// Radio button: return value directly.
 					return value;
 					
@@ -536,7 +536,7 @@
 				// Default as loosely-typed boolean:
 				var checked = !!value;
 				
-				if ( $element.is(":radio") ) {
+				if ( this.isRadio( $element ) ) {
 					// Radio button: match checked state to radio value.
 					checked = (value == $element.val());
 					
@@ -547,6 +547,10 @@
 				
 				// Set checked property to element:
 				$element.prop("checked", checked);
+			},
+			// Is radio button: avoids ".is(':radio');" check for basic Zepto compatibility.
+			isRadio: function( $element ) {
+				return $element.attr("type").toLowerCase() === "radio";
 			}
 		},
 		

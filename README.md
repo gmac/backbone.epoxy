@@ -2,12 +2,12 @@
 
 [Epoxy.js](http://epoxyjs.org "Epoxy.js") is an elegant and extensible data binding library for [Backbone.js](http://backbonejs.org "Backbone.js"); it provides feature-rich extensions of Backbone's `Model` and `View` components designed to hook view elements directly to data models. Epoxy captures some great aspects of [Knockout.js](http://knockoutjs.com "Knockout.js") and [Ember.js](http://emberjs.com "Ember.js") in a familiar API that feels tastefully like Backbone, with minimal additional file size (~9k min, 2k gzip). Some key features in Epoxy include:</p>
 
- - Computed Model Attributes
+ - Computed Model & View Attributes
  - Declarative View Bindings
  - Automated Dependency Mapping
  - Automatic View Updates
 
-Epoxy builds on [jQuery](http://jquery.com "jQuery.js")+[Backbone](http://backbonejs.org "Backbone.js") and works where they work: IE6+, Firefox 3+, Safari, Chrome.
+Epoxy builds on [jQuery](http://jquery.com "jQuery.js")/[Zepto](http://zeptojs.com/ "Zepto.js")+[Backbone](http://backbonejs.org "Backbone.js") and works where they work: IE6+, Firefox 3+, Safari, Chrome.
 
 ## Installation
 
@@ -18,7 +18,7 @@ Epoxy requires [jQuery](http://jquery.com "jQuery.js") 1.7.0+, [Underscore](http
 	<script src="backbone-min.js"></script>
 	<script src="backbone.epoxy.min.js"></script>
 
-You may choose to replace Underscore with the [Lo-Dash](http://lodash.com "Lodash.js") alternative (Epoxy's test suite runs slightly faster using Lo-Dash, although the difference is not drastic). Also remember to include the [json2](https://github.com/douglascrockford/JSON-js "JSON2") library when targeting IE6/7.
+You may choose to replace jQuery with [Zepto](http://zeptojs.com/ "Zepto.js") and/or Underscore with [Lo-Dash](http://lodash.com "Lodash.js"). Also remember to include the [json2](https://github.com/douglascrockford/JSON-js "JSON2") library when targeting IE6/7.
 
 ## Help & Documentation
 
