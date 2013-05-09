@@ -1186,7 +1186,7 @@
 		try {
 		 	var bindings = new Function("$f","$c","with($f){with($c){return{"+ declarations +"}}}")(filters, context);
 		} catch ( error ) {
-			throw( "Error parsing bindings: "+declarations +"\n>> "+error );
+			throw( 'Error parsing bindings: "'+declarations +'"\n>> '+error );
 		}
 
 		// Format the "events" option:
