@@ -21,7 +21,7 @@
 	});
 	
 	// Example view controller:
-	if (Backbone) {
+	if (typeof Backbone !== 'undefined') {
 		// Scenario mini-application views:
 		var ExampleView = Backbone.View.extend({
 			initialize: function() {
