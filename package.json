@@ -28,7 +28,7 @@
     "backbone": ">=0.9.9"
   },
   "main": "backbone.epoxy.js",
-  "version": "0.12.4",
+  "version": "0.12.5",
   "devDependencies": {
     "grunt": "~0.4.1",
     "grunt-contrib-uglify": "~0.1.2"
