@@ -312,7 +312,7 @@
 						// Recursively set new values for a returned params object:
 						// creates a new copy of the stack trace for each new search branch.
 						if ( value && isObject(value) ) {
-							toReturn = deepModelSet( model, value, toReturn, stack.slice().concat([attribute]) );
+							toReturn = deepModelSet( model, value, toReturn, stack.concat(attribute) );
 						}
 						
 					} else {
