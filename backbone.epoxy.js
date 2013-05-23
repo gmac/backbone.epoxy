@@ -469,6 +469,12 @@
 		optionValue: "value"
 	};
 	
+	
+	// Cache for storing binding parser functions:
+	// Cuts down on redundancy when building repetitive binding views.
+	var bindingCache = {};
+	
+	
 	// Reads value from an accessor:
 	// Accessors come in three potential forms:
 	// => A function to call for the requested value.
@@ -1184,7 +1190,8 @@
 		// parsing function is invoked with "filters" and "context" properties made available,
 		// yeilds a native context object with element-specific bindings defined.
 		try {
-		 	var bindings = new Function("$f","$c","with($f){with($c){return{"+ declarations +"}}}")(filters, context);
+			var parserFunct = bindingCache[declarations] || (bindingCache[declarations] = new Function("$f","$c","with($f){with($c){return{"+ declarations +"}}}"));
+		 	var bindings = parserFunct(filters, context);
 		} catch ( error ) {
 			throw( 'Error parsing bindings: "'+declarations +'"\n>> '+error );
 		}
