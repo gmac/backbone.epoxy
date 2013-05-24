@@ -1177,6 +1177,58 @@
 		return $elements;
 	}
 	
+	// Performs a quick formatting parse on a binding string:
+	// Spaces are removed and object attributes alphabetized to maximize caching potential.
+	function preparseBindings(bindings, sorted) {
+		var attrs = [];
+		var token = '';
+		var string = '';
+		bindings += ',';
+		
+		for (var i = 0, len = bindings.length; i < len; i++) {
+			var c = bindings.charAt(i);
+
+			if (!string) {
+				// Comma: chunk off tokens while not in a string.
+				if (c == ',') {
+					attrs.push(token);
+					token = '';
+					continue;
+				}
+				// Space: skip while not in string.
+				else if (c == ' ') {
+					// skip spaces within strings.
+					continue;
+				}
+				// String: open quotes value.
+				else if (c == "'" || c == '"') {
+					string = c;
+				}
+				// Block: chunk out block scope and parse it.
+				else if (c == '{' || c == '[' || c == '(') {
+					var opener = c;
+					var closer = (c == '{' ? '}' : (c == '[' ? ']' : ')'));
+					var io = i;
+					var ic = i;
+					while (io >= 0 && io <= ic) {
+						io = bindings.indexOf(opener, io+1);
+						ic = bindings.indexOf(closer, ic+1);
+					}
+					c = opener + preparseBindings(bindings.slice(i+1, ic), c == '{') + closer;
+					i = ic;
+				}
+			}
+			// String: close at non-escaped aligned quote.
+			else if (c == string && bindings.charAt(i-1) !== '\\') {
+				string = '';
+			}
+			token += c;
+		}
+
+		if (sorted) attrs.sort();
+		return attrs.join(',');
+	}
+	
 	// Binds an element into a view:
 	// The element's declarations are parsed, then a binding is created for each declared handler.
 	// @param view: the parent View to bind into.
@@ -1185,7 +1237,11 @@
 	// @param context: a compiled binding context with all availabe view data.
 	// @param handlers: a compiled handlers table with all native/custom handlers.
 	function bindElementToView( view, $element, declarations, context, handlers, filters ) {
-
+		
+		// Pre-format binding declaractions string:
+		// attempts to normalize formatting, thus maximizing parser caching.
+		declarations = preparseBindings(declarations);
+		
 		// Parse localized binding context:
 		// parsing function is invoked with "filters" and "context" properties made available,
 		// yeilds a native context object with element-specific bindings defined.
