@@ -1185,7 +1185,7 @@
 		var string = '';
 		bindings += ',';
 		
-		for (var i = 0, len = bindings.length; i < len; i++) {
+		for (var i=0, len=bindings.length; i < len; i++) {
 			var c = bindings.charAt(i);
 
 			if (!string) {
