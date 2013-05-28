@@ -7,13 +7,13 @@
 
 (function( root, factory ) {
 	
-	var backbone = "backbone";
-	var underscore = "underscore";
+	var backbone = 'backbone';
+	var underscore = 'underscore';
 	
-	if ( typeof exports !== "undefined" ) {
+	if ( typeof exports !== 'undefined' ) {
 		// Define as CommonJS export:
 		module.exports = factory( require(underscore), require(backbone) );
-	} else if ( typeof define === "function" && define.amd ) {
+	} else if ( typeof define === 'function' && define.amd ) {
 		// Define as AMD:
 		define( [underscore, backbone], factory );
 	} else {
@@ -44,7 +44,7 @@
 			extend = extend || {};
 			
 			for ( var i in this.prototype ) {
-				if ( this.prototype.hasOwnProperty(i) && i !== "constructor" ) {
+				if ( this.prototype.hasOwnProperty(i) && i !== 'constructor' ) {
 					extend[i] = this.prototype[i];
 				}
 			}
@@ -64,7 +64,7 @@
 	// -----------
 	var modelMap;
 	var modelSuper = superClass( Backbone.Model );
-	var modelProps = ["computeds"];
+	var modelProps = ['computeds'];
 	
 	Epoxy.Model = Backbone.Model.extend({
 		
@@ -72,7 +72,7 @@
 		// configures computed model attributes around the underlying native Backbone model.
 		constructor: function( attributes, options ) {
 			_.extend( this, _.pick(options||{}, modelProps) );
-			modelSuper( this, "constructor", arguments );
+			modelSuper( this, 'constructor', arguments );
 			this.initComputeds();
 		},
 		
@@ -89,7 +89,7 @@
 		get: function( attribute ) {
 			
 			// Automatically register bindings while building out computed dependency graphs:
-			modelMap && modelMap.push( ["change:"+attribute, this] );
+			modelMap && modelMap.push( ['change:'+attribute, this] );
 			
 			// Return an computed property value, if available:
 			if ( this.hasComputed(attribute) ) {
@@ -97,7 +97,7 @@
 			}
 			
 			// Default to native Backbone.Model get operation:
-			return modelSuper( this, "get", arguments );
+			return modelSuper( this, 'get', arguments );
 		},
 		
 		// Backbone.Model.set() override:
@@ -106,7 +106,7 @@
 		set: function( key, value, options ) {
 			var params = key;
 			
-			// Convert ["attribute"/value] arguments into {key:value} format:
+			// Convert ['attribute'/value] arguments into {key:value} format:
 			if ( params && !isObject(params) ) {
 				params = {};
 				params[ key ] = value;
@@ -126,13 +126,13 @@
 			}
 			
 			// Pass all resulting set params along to the underlying Backbone Model.
-			return modelSuper( this, "set", [params, options] );
+			return modelSuper( this, 'set', [params, options] );
 		},
 		
 		// Backbone.Model.toJSON() override:
-		// adds a "computed" option, specifying to include computed attributes.
+		// adds a 'computed' option, specifying to include computed attributes.
 		toJSON: function( options ) {
-			var json = modelSuper( this, "toJSON", arguments );
+			var json = modelSuper( this, 'toJSON', arguments );
 
 			if ( options && options.computed ) {
 				_.each(this.c(), function( computed, attribute ) {
@@ -147,7 +147,7 @@
 		// clears all computed attributes before destroying.
 		destroy: function() {
 			this.clearComputeds();
-			return modelSuper( this, "destroy", arguments );
+			return modelSuper( this, 'destroy', arguments );
 		},
 		
 		// Computed namespace manager:
@@ -163,14 +163,14 @@
 			this.clearComputeds();
 			
 			// Add all computed attributes:
-			_.each(_.result(this, "computeds")||{}, function( params, attribute ) {
+			_.each(_.result(this, 'computeds')||{}, function( params, attribute ) {
 				params._init = 1;
 				this.addComputed( attribute, params );
 			}, this);
 
 			// Initialize all computed attributes:
 			// all presets have been constructed and may reference each other now.
-			_.invoke( this.c(), "init" );
+			_.invoke( this.c(), 'init' );
 		},
 		
 		// Adds a computed attribute to the model:
@@ -239,7 +239,7 @@
 			if ( isArray(obj) && isFunction(array[method]) ) {
 				var args = array.slice.call( arguments, 2 );
 				var result = array[ method ].apply( obj, args );
-				this.trigger( "change change:"+attribute );
+				this.trigger( 'change change:'+attribute );
 				return result;
 			}
 			return null;
@@ -268,7 +268,7 @@
 				
 				// Trigger model change:
 				if (change) {
-					this.trigger( "change change:"+attribute );
+					this.trigger( 'change change:'+attribute );
 				}
 				
 				// Return the modified object:
@@ -318,7 +318,7 @@
 					} else {
 						// Recursive:
 						// Throw circular reference error.
-						throw( "Recursive setter: "+stack.join(" > ") );
+						throw( 'Recursive setter: '+stack.join(' > ') );
 					}
 					
 				} else {
@@ -351,7 +351,7 @@
 			params._set = params.set;
 		}
 		
-		// Prohibit override of "get()" and "set()", then extend:
+		// Prohibit override of 'get()' and 'set()', then extend:
 		delete params.get;
 		delete params.set;
 		_.extend(this, params);
@@ -388,7 +388,7 @@
 				
 				// Compile normalized bindings table:
 				// Ultimately, we want a table of event types, each with an array of their associated targets:
-				// {"change:name":[<model1>], "change:status":[<model1>,<model2>]}
+				// {'change:name':[<model1>], 'change:status':[<model1>,<model2>]}
 				
 				// Compile normalized bindings map:
 				_.each(deps, function( value ) {
@@ -420,7 +420,7 @@
 		
 		// Gets the computed's current value:
 		// Computed values flagged as dirty will need to regenerate themselves.
-		// Note: "update" is strongly checked as TRUE to prevent unintended arguments (handler events, etc) from qualifying.
+		// Note: 'update' is strongly checked as TRUE to prevent unintended arguments (handler events, etc) from qualifying.
 		get: function( update ) {
 			if ( update === true && this._get ) {
 				var val = this._get.apply( this.model, _.map(this.deps, this.val, this) );
@@ -436,7 +436,7 @@
 		set: function( val ) {
 			if ( this._get ) {
 				if ( this._set ) return this._set.apply( this.model, arguments );
-				else throw( "Cannot set read-only computed attribute." );
+				else throw( 'Cannot set read-only computed attribute.' );
 			}
 			this.change( val );
 			return null;
@@ -447,7 +447,7 @@
 		change: function( value ) {
 			if ( !_.isEqual(value, this.value) ) {
 				this.value = value;
-				this.model.trigger( "change change:"+this.name );
+				this.model.trigger( 'change change:'+this.name );
 			}
 		},
 		
@@ -465,8 +465,8 @@
 	// ----------------------------
 	
 	var bindingSettings = {
-		optionText: "label",
-		optionValue: "value"
+		optionText: 'label',
+		optionValue: 'value'
 	};
 	
 	
@@ -516,7 +516,7 @@
 		// Checked: read-write. Toggles the checked status of a form element.
 		checked: {
 			get: function( $element, currentValue ) {
-				var checked = !!$element.prop( "checked" );
+				var checked = !!$element.prop( 'checked' );
 				var value = $element.val();
 				
 				if ( this.isRadio( $element ) ) {
@@ -552,11 +552,11 @@
 				}
 				
 				// Set checked property to element:
-				$element.prop("checked", checked);
+				$element.prop('checked', checked);
 			},
-			// Is radio button: avoids ".is(':radio');" check for basic Zepto compatibility.
+			// Is radio button: avoids '.is(":radio");' check for basic Zepto compatibility.
 			isRadio: function( $element ) {
-				return $element.attr("type").toLowerCase() === "radio";
+				return $element.attr('type').toLowerCase() === 'radio';
 			}
 		},
 		
@@ -573,7 +573,7 @@
 		collection: {
 			init: function( $element, collection ) {
 				if ( !isCollection(collection) || !isFunction(collection.view) ) {
-					throw( "Binding 'collection' requires a Collection with a 'view' constructor." );
+					throw( 'Binding "collection" requires a Collection with a "view" constructor.' );
 				}
 				this.v = {};
 			},
@@ -662,17 +662,17 @@
 			}
 		},
 
-		// Disabled: write-only. Sets the "disabled" status of a form element (true :: disabled).
+		// Disabled: write-only. Sets the 'disabled' status of a form element (true :: disabled).
 		disabled: {
 			set: function( $element, value ) {
-				$element.prop( "disabled", !!value );
+				$element.prop( 'disabled', !!value );
 			}
 		},
 		
-		// Enabled: write-only. Sets the "disabled" status of a form element (true :: !disabled).
+		// Enabled: write-only. Sets the 'disabled' status of a form element (true :: !disabled).
 		enabled: {
 			set: function( $element, value ) {
-				$element.prop( "disabled", !value );
+				$element.prop( 'disabled', !value );
 			}
 		},
 		
@@ -704,7 +704,7 @@
 				var options = isCollection( value ) ? value.models : value;
 				var numOptions = options.length;
 				var enabled = true;
-				var html = "";
+				var html = '';
 				
 				// No options or default, and has an empty options placeholder:
 				// display placeholder and disable select menu.
@@ -728,7 +728,7 @@
 				}
 
 				// Set new HTML to the element and toggle disabled status:
-				$element.html( html ).prop( "disabled", !enabled );
+				$element.html( html ).prop( 'disabled', !enabled );
 
 				// Pull revised value with new options selection state:
 				var revisedValue = $element.val();
@@ -749,16 +749,16 @@
 				// Dig deeper into label/value settings for non-primitive values:
 				if ( isObject( option ) ) {
 					// Extract a label and value from each object:
-					// a model's "get" method is used to access potential computed values.
+					// a model's 'get' method is used to access potential computed values.
 					label = isModel( option ) ? option.get( textAttr ) : option[ textAttr ];
 					value = isModel( option ) ? option.get( valueAttr ) : option[ valueAttr ];
 				}
 				
 				// Configure selection-state option fragment:
 				// option should be selected if it's the only item (default/empty), or exists in the selection:
-				var select = (!numOptions || _.contains(selection, value)) ? "' selected='selected'>" : "'>";
+				var select = (!numOptions || _.contains(selection, value)) ? '" selected="selected">' : '">';
 				
-				return "<option value='"+ value + select + label +"</option>";
+				return '<option value="'+ value + select + label +'</option>';
 			},
 			clean: function() {
 				this.d = this.e = this.v = 0;
@@ -768,7 +768,7 @@
 		// Template: write-only. Renders the bound element with an Underscore template.
 		template: {
 			init: function( $element, value, context ) {
-				var raw = $element.find("script,template");
+				var raw = $element.find('script,template');
 				this.t = _.template( raw.length ? raw.html() : $element.html() );
 				
 				// If an array of template attributes was provided,
@@ -887,13 +887,13 @@
 		}),
 	
 		// Formats one or more accessors into a text string:
-		// ("$1 $2 did $3", firstName, lastName, action)
+		// ('$1 $2 did $3', firstName, lastName, action)
 		format: makeFilter(function( str ) {
 			var params = arguments;
 			
 			for ( var i=1, len=params.length; i < len; i++ ) {
 				// TODO: need to make something like this work: (?<!\\)\$1
-				str = str.replace( new RegExp("\\$"+i, "g"), params[i] );
+				str = str.replace( new RegExp('\\$'+i, 'g'), params[i] );
 			}
 			return str;
 		}),
@@ -908,10 +908,10 @@
 		csv: makeFilter({
 			read: function( value ) {
 				value = String( value );
-				return value ? value.split(",") : [];
+				return value ? value.split(',') : [];
 			},
 			write: function( value ) {
-				return isArray(value) ? value.join(",") : value;
+				return isArray(value) ? value.join(',') : value;
 			}
 		}),
 		
@@ -945,7 +945,7 @@
 	// ----------
 	var viewMap;
 	var viewSuper = superClass( Backbone.View );
-	var viewProps = ["viewModel", "bindings", "bindingFilters", "bindingHandlers", "bindingSources", "computeds"];
+	var viewProps = ['viewModel', 'bindings', 'bindingFilters', 'bindingHandlers', 'bindingSources', 'computeds'];
 	
 	
 	Epoxy.View = Backbone.View.extend({
@@ -954,7 +954,7 @@
 		// sets up binding controls around call to super.
 		constructor: function( options ) {
 			_.extend( this, _.pick(options||{}, viewProps) );
-			viewSuper( this, "constructor", arguments );
+			viewSuper( this, 'constructor', arguments );
 			this.applyBindings();
 		},
 		
@@ -966,8 +966,8 @@
 		// Bindings definition:
 		// this setting defines a DOM attribute name used to query for bindings.
 		// Alternatively, this be replaced with a hash table of key/value pairs,
-		// where "key" is a DOM query and "value" is its binding declaration.
-		bindings: "data-bind",
+		// where 'key' is a DOM query and 'value' is its binding declaration.
+		bindings: 'data-bind',
 		
 		// Compiles a model context, then applies bindings to the view:
 		// All Model->View relationships will be baked at the time of applying bindings;
@@ -976,7 +976,7 @@
 			this.removeBindings();
 			
 			var self = this;
-			var sources = _.clone(_.result(self, "bindingSources"));
+			var sources = _.clone(_.result(self, 'bindingSources'));
 			var declarations = self.bindings;
 			var handlers = _.clone( bindingHandlers );
 			var filters = _.clone( bindingFilters );
@@ -985,20 +985,20 @@
 			// Compile a complete set of binding handlers for the view:
 			// mixes all custom handlers into a copy of default handlers.
 			// Custom handlers defined as plain functions are registered as read-only setters.
-			_.each(_.result(self, "bindingHandlers")||{}, function( handler, name ) {
+			_.each(_.result(self, 'bindingHandlers')||{}, function( handler, name ) {
 			    handlers[ name ] = makeHandler( handler );
 			});
 			
 			// Compile a complete set of binding filters for the view:
 			// mixes all custom filters into a copy of default filters.
-			_.each(_.result(self, "bindingFilters")||{}, function( filter, name ) {
+			_.each(_.result(self, 'bindingFilters')||{}, function( filter, name ) {
 			    filters[ name ] = makeFilter( filter );
 			});
 			
-			// Add native "model" and "collection" data sources:
-			self.model = addSourceToViewContext( self, context, "model" );
-			self.viewModel = addSourceToViewContext( self, context, "viewModel" );
-			self.collection = addSourceToViewContext( self, context, "collection" );
+			// Add native 'model' and 'collection' data sources:
+			self.model = addSourceToViewContext( self, context, 'model' );
+			self.viewModel = addSourceToViewContext( self, context, 'viewModel' );
+			self.collection = addSourceToViewContext( self, context, 'collection' );
 			
 			// Add all additional data sources:
 			if ( sources ) {
@@ -1011,7 +1011,7 @@
 			}
 			
 			// Add all computed view properties:
-			_.each(_.result(self, "computeds")||{}, function( computed, name ) {
+			_.each(_.result(self, 'computeds')||{}, function( computed, name ) {
 				var getter = isFunction( computed ) ? computed : computed.get;
 				var setter = computed.set;
 				var deps = computed.deps;
@@ -1030,7 +1030,7 @@
 			if ( isObject(declarations) ) {
 				
 				// Object declaration method:
-				// {"span.my-element": "text:attribute"}
+				// {'span.my-element': 'text:attribute'}
 				
 				_.each(declarations, function( elementDecs, selector ) {
 					// Get DOM jQuery reference:
@@ -1045,10 +1045,10 @@
 			} else {
 				
 				// DOM attributes declaration method:
-				// <span data-bind="text:attribute"></span>
+				// <span data-bind='text:attribute'></span>
 				
 				// Create bindings for each matched element:
-				queryViewForSelector( self, "["+declarations+"]" ).each(function() {
+				queryViewForSelector( self, '['+declarations+']' ).each(function() {
 					var $element = $(this);
 					bindElementToView( self, $element, $element.attr(declarations), context, handlers, filters );
 				});
@@ -1080,7 +1080,7 @@
 		// unbinds the view before performing native removal tasks.
 		remove: function() {
 			this.removeBindings();
-			viewSuper( this, "remove" );
+			viewSuper( this, 'remove' );
 		}
 		
 	}, mixins);
@@ -1104,11 +1104,11 @@
 		if ( isModel(source) ) {
 			
 			// Establish source prefix:
-			prefix = prefix ? prefix+"_" : "";
+			prefix = prefix ? prefix+'_' : '';
 			
 			// Create a read-only accessor for the model instance:
-			context[ "$"+ name ] = function() {
-				viewMap && viewMap.push([source, "change"]);
+			context[ '$'+ name ] = function() {
+				viewMap && viewMap.push([source, 'change']);
 				return source;
 			};
 			
@@ -1116,8 +1116,8 @@
 			_.each(source.toJSON({computed:true}), function(value, attribute) {
 				
 				// Create named accessor functions:
-				// -> Attributes from "view.model" use their normal names.
-				// -> Attributes from additional sources are named as "source_attribute".
+				// -> Attributes from 'view.model' use their normal names.
+				// -> Attributes from additional sources are named as 'source_attribute'.
 				context[ prefix+attribute ] = function( value ) {
 					return accessViewDataAttribute( source, attribute, value );
 				};
@@ -1128,8 +1128,8 @@
 		else if ( isCollection(source) ) {
 			
 			// Create a read-only accessor for the collection instance:
-			context[ "$"+ name ] = function() {
-				viewMap && viewMap.push([source, "reset add remove sort update"]);
+			context[ '$'+ name ] = function() {
+				viewMap && viewMap.push([source, 'reset add remove sort update']);
 				return source;
 			};
 		}
@@ -1143,10 +1143,10 @@
 	// This function is broken out from the accessor creation process for performance.
 	// @param source: the model data source to interact with.
 	// @param attribute: the model attribute to read/write.
-	// @param value: the value to set, or "undefined" to get the current value.
+	// @param value: the value to set, or 'undefined' to get the current value.
 	function accessViewDataAttribute( source, attribute, value ) {
 		// Register the attribute to the bindings map, if enabled:
-		viewMap && viewMap.push([source, "change:"+attribute]);
+		viewMap && viewMap.push([source, 'change:'+attribute]);
 
 		// Set attribute value when accessor is invoked with an argument:
 		if ( !isUndefined(value) ) {
@@ -1187,21 +1187,21 @@
 	function bindElementToView( view, $element, declarations, context, handlers, filters ) {
 
 		// Parse localized binding context:
-		// parsing function is invoked with "filters" and "context" properties made available,
+		// parsing function is invoked with 'filters' and 'context' properties made available,
 		// yeilds a native context object with element-specific bindings defined.
 		try {
-			var parserFunct = bindingCache[declarations] || (bindingCache[declarations] = new Function("$f","$c","with($f){with($c){return{"+ declarations +"}}}"));
+			var parserFunct = bindingCache[declarations] || (bindingCache[declarations] = new Function('$f','$c','with($f){with($c){return{'+ declarations +'}}}'));
 		 	var bindings = parserFunct(filters, context);
 		} catch ( error ) {
 			throw( 'Error parsing bindings: "'+declarations +'"\n>> '+error );
 		}
 
-		// Format the "events" option:
-		// include events from the binding declaration along with a default "change" trigger,
-		// then format all event names with a ".epoxy" namespace.
-		var events = _.map( _.union(bindings.events || [], ["change"]), function(name) {
-			return name+".epoxy";
-		}).join(" ");
+		// Format the 'events' option:
+		// include events from the binding declaration along with a default 'change' trigger,
+		// then format all event names with a '.epoxy' namespace.
+		var events = _.map( _.union(bindings.events || [], ['change']), function(name) {
+			return name+'.epoxy';
+		}).join(' ');
 		
 		// Apply bindings from native context:
 		_.each(bindings, function( accessor, handlerName ) {
@@ -1218,7 +1218,7 @@
 	// used by the implementations of "getBinding" and "setBinding".
 	function accessViewContext( context, args, attribute, value ) {
 		if ( args.callee.caller && args.callee.caller.id === attribute ) {
-			throw( "recursive access error: "+attribute );
+			throw( 'recursive access error: '+attribute );
 		} else if ( context && context.hasOwnProperty(attribute) ) {
 			return isUndefined(value) ? readAccessor( context[attribute] ) : context[attribute](value);
 		}
@@ -1248,7 +1248,7 @@
 		
 		var self = this;
 		var tag = ($element[0].tagName).toLowerCase();
-		var changable = (tag == "input" || tag == "select" || tag == "textarea");
+		var changable = (tag == 'input' || tag == 'select' || tag == 'textarea' || $element.prop('contenteditable') == 'true');
 		var triggers = [];
 		var reset = function( target ) {
 			self.set(self.$el, readAccessor(accessor), target);
