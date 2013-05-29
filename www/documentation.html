@@ -34,7 +34,7 @@
 		<div class="banner clearfix" role="banner">
 			<p class="title"><span><b>Epoxy</b>.js</span> Elegant Data Binding for Backbone</p>
 			<div class="download">
-				<a href="js/backbone.epoxy.min.js" class="download-button">Download Epoxy 0.12.3</a>
+				<a href="js/backbone.epoxy.min.js" class="download-button">Download Epoxy 0.12.7</a>
 				<p class="download-info">10k min, 2k gzip <i>|</i> <a href="https://github.com/gmac/backbone.epoxy">GitHub Full Source</a></p>
 			</div>
 		</div>
@@ -472,7 +472,7 @@ Backbone.Epoxy.View.mixin( MyView.prototype );</code></pre>
             set: function( $element, value ) {
                 $element.text( value.join(",") );
             },
-            get: function( $element, value ) {
+            get: function( $element, value, event ) {
                 return $element.text().split(",");
             }
         }
@@ -481,7 +481,7 @@ Backbone.Epoxy.View.mixin( MyView.prototype );</code></pre>
 </pre>				
 				<ul>
 					<li><b>set:</b> <i>Required function, invoked in context of the binding</i>. This function is used to WRITE data from the model into the view. The <b>set</b> function receives two arguments: a jQuery representation of the bound element, and the model attribute value to be written into the view. The <b>set</b> function returns nothing.</li>
-					<li><b>[get]:</b> <i>Optional function, invoked in context of the binding</i>. This function is used to READ data from the view to be sent to the model. The <b>get</b> function receives two arguments: a jQuery representation of the bound element, and the current model attribute value to be changed (useful when modifying objects). The <b>get</b> function should return a value to replace the current bound model attribute. When modifying <tt>Object</tt> and <tt>Array</tt> values, be sure to make changes to a <i>copy</i> of the current value, then submit that back to the model.</li>
+					<li><b>[get]:</b> <i>Optional function, invoked in context of the binding</i>. This function is used to READ data from the view to be sent to the model. The <b>get</b> function receives three arguments: a jQuery representation of the bound element, the current model value that will be changed (useful for comparison purposes), and the event (if any) that has triggered the getter to run. The <b>get</b> function should return a value to replace the current bound model attribute. When modifying <tt>Object</tt> and <tt>Array</tt> values, be sure to make changes to a <i>copy</i> of the current value, then submit that back to the model.</li>
 				</ul>
 				
 				<!--p>Note that the <b>get</b> and <b>set</b> functions are invoked in the context of their parent view, so referencing <tt>this</tt> within their scopes refers to the view.</p-->
@@ -1049,7 +1049,7 @@ var view = new ListView();</code></pre>
     init: function( $element, value, bindings, context ) {
         // Initialize the binding handler...
     },
-    get: function( $element, value ) {
+    get: function( $element, value, event ) {
         // Get data from the bound element...
         return $element.val();
     },
@@ -1065,7 +1065,7 @@ var view = new ListView();</code></pre>
 				<ul>
 					<li><tt>handler.init( $element, value, bindings, context )</tt> : <i>optional</i>. A handler's <b>init</b> method is called immediately to configure the handler. This is generally only needed for complex handlers that store operational data on themselves. The method receives the bound element (as jQuery) and the bound data value as arguments, as well as the hash of parsed bindings being applied to the element, and a reference to the full binding context of all available view data. The <tt>bindings</tt> and <tt>context</tt> arguments are handy for pulling additional data into the handler if needed. The <b>init</b> method may also return a reformatted version of its managed value, although this is only recommended for developers with insight into Epoxy internals. If you're not sure, don't return anything.</li>
 					
-					<li><tt>handler.get( $element, value )</tt> : <i>required for two-way bindings</i>. Reads and returns the bound element's value. This should poll data from the DOM element, and then return the value formatted for the model. The existing model value is provided for comparative reference.</li>
+					<li><tt>handler.get( $element, value, event )</tt> : <i>required for two-way bindings</i>. Reads and returns the bound element's value. This should poll data from the DOM element, and then return the value formatted for the model. The existing model value is provided for comparative reference, as well as the event (if any) that has triggered the getter to run.</li>
 					
 					<li><tt>handler.set( $element, value )</tt> : <i>required</i>. Writes a data value into the DOM element. Receives the element (as jQuery) and the value to set, and returns nothing.</li>
 					
