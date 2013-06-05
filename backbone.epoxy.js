@@ -1209,8 +1209,6 @@
 			if ( handlers.hasOwnProperty(handlerName) ) {
 				// Create and add binding to the view's list of handlers:
 				view.b().push( new EpoxyBinding($element, handlers[handlerName], accessor, events, context, bindings) );
-			} else {
-				throw( 'Handler does not exist: '+handlerName );
 			}
 		});
 	}
