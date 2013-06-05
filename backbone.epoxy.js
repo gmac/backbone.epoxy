@@ -843,7 +843,6 @@
 		};
 	}
 	
-	
 	var bindingFilters = {
 		// Positive collection assessment [read-only]:
 		// Tests if all of the provided accessors are truthy (and).
@@ -1080,7 +1079,7 @@
 		// unbinds the view before performing native removal tasks.
 		remove: function() {
 			this.removeBindings();
-			viewSuper( this, 'remove' );
+			viewSuper( this, 'remove', arguments );
 		}
 		
 	}, mixins);
@@ -1210,6 +1209,8 @@
 			if ( handlers.hasOwnProperty(handlerName) ) {
 				// Create and add binding to the view's list of handlers:
 				view.b().push( new EpoxyBinding($element, handlers[handlerName], accessor, events, context, bindings) );
+			} else {
+				throw( 'Handler does not exist: '+handlerName );
 			}
 		});
 	}
@@ -1218,7 +1219,7 @@
 	// used by the implementations of "getBinding" and "setBinding".
 	function accessViewContext( context, args, attribute, value ) {
 		if ( args.callee.caller && args.callee.caller.id === attribute ) {
-			throw( 'recursive access error: '+attribute );
+			throw( 'Recursive access error: '+attribute );
 		} else if ( context && context.hasOwnProperty(attribute) ) {
 			return isUndefined(value) ? readAccessor( context[attribute] ) : context[attribute](value);
 		}
