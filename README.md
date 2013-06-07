@@ -27,6 +27,15 @@ For all complete information and documentation, visit the project's website at [
 
 ## Change Log
 
+**0.12.8** – *June 3, 2013* - [Diff](https://github.com/gmac/backbone.epoxy/compare/v0.12.0...v0.12.8 "Diff: v0.12.0/v0.12.8")
+
+Bug fixes and performance optimizations.
+
+ - Bug fix to `Epoxy.View.remove()` implementation.
+ - Adds bindings parser caching for improved performance.
+ - Additional error hooks/messaging for improved debugging.
+ - Small codebase optimizations and bug fixes.
+
 **0.12.0** – *April 2, 2013* - [Diff](https://github.com/gmac/backbone.epoxy/compare/v0.11.0...v0.12.0 "Diff: v0.11.0/v0.12.0")
 
 Major reorganization of core features to improve workflow patterns.
