@@ -26,7 +26,7 @@
 	// Epoxy namespace:
 	var Epoxy = Backbone.Epoxy = {};
 		
-	// Object-type assessment utils:
+	// Object-type utils:
 	var array = Array.prototype;
 	var isUndefined = _.isUndefined;
 	var isFunction = _.isFunction;
@@ -38,7 +38,7 @@
 	
 	// Static mixins API:
 	// added as a static member to Epoxy class objects (Model & View);
-	// generates a class attribute set for mixin with other objects.
+	// generates a set of class attributes for mixin with other objects.
 	var mixins = {
 		mixin: function( extend ) {
 			extend = extend || {};
@@ -91,7 +91,7 @@
 			// Automatically register bindings while building out computed dependency graphs:
 			modelMap && modelMap.push( ['change:'+attribute, this] );
 			
-			// Return an computed property value, if available:
+			// Return a computed property value, if available:
 			if ( this.hasComputed(attribute) ) {
 				return this.c()[ attribute ].get();
 			}
@@ -106,7 +106,7 @@
 		set: function( key, value, options ) {
 			var params = key;
 			
-			// Convert ['attribute'/value] arguments into {key:value} format:
+			// Convert key/value arguments into {key:value} format:
 			if ( params && !isObject(params) ) {
 				params = {};
 				params[ key ] = value;
@@ -833,8 +833,8 @@
 	function makeFilter( handler ) {
 		return function() {
 			var params = arguments;
-			var read = isFunction(handler) ? handler : handler.read;
-			var write = handler.write;
+			var read = isFunction(handler) ? handler : handler.get;
+			var write = handler.set;
 			return function( value ) {
 				return isUndefined(value) ? 
 					read.apply( this, _.map(params, readAccessor) ) :
@@ -905,11 +905,11 @@
 		
 		// CSV array formatting [read-write]:
 		csv: makeFilter({
-			read: function( value ) {
+			get: function( value ) {
 				value = String( value );
 				return value ? value.split(',') : [];
 			},
-			write: function( value ) {
+			set: function( value ) {
 				return isArray(value) ? value.join(',') : value;
 			}
 		}),

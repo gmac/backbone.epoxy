@@ -34,7 +34,7 @@
 		<div class="banner clearfix" role="banner">
 			<p class="title"><span><b>Epoxy</b>.js</span> Elegant Data Binding for Backbone</p>
 			<div class="download">
-				<a href="js/backbone.epoxy.min.js" class="download-button">Download Epoxy 0.12.7</a>
+				<a href="js/backbone.epoxy.min.js" class="download-button">Download Epoxy 1.0.0</a>
 				<p class="download-info">10k min, 2k gzip <i>|</i> <a href="https://github.com/gmac/backbone.epoxy">GitHub Full Source</a></p>
 			</div>
 		</div>
@@ -46,8 +46,6 @@
 			</ul>
 			<div class="nav-toc">
 				<div class="nav-toc-content">
-					<p><b><a href="#upgrading">Upgrading</a></b></p>
-					
 					<b><a href="#model">Epoxy.Model</a></b>
 					<ul>
 						<li><b><a href="#model-extend">extend</a></b></li>
@@ -132,20 +130,6 @@
 		</div>
 		<div class="main" role="main">
 			<h1>Documentation</h1>
-			
-			<div class="section">
-				<h2 id="upgrading">Upgrading from 0.11.x</h2>
-				
-				<p>Epoxy 0.12.0 makes some significant alterations to the library API, and therefore may require existing projects to refactor while upgrading. These API changes are a result of assessing practical use-cases for the library, and tailoring APIs to better suit application designs and practical workflows.</p>
-				
-				<ul>
-					<li><b>Removed:</b> <tt>model.observableDefaults</tt> and <tt>model.addObservable()</tt>. All references to the former Model "observables" API has been removed (computeds ARE still included). Observables referred to extraneous data attributes stored on a model, intended for storing view-specific data. In practice these offered little value as features of a model, plus they confused the use of computed attributes. View-specific data should now be stored in the sanctioned <b>viewModel</b> property of a view. Also, you may still use a computed as a model observable by giving it a value.</li>
-					
-					<li><b>Renamed:</b> model <tt>hasObservable</tt>, <tt>removeObservable</tt>, and <tt>clearObservables</tt> have been renamed to <tt>hasComputed</tt>, <tt>removeComputed</tt>, and <tt>clearComputeds</tt>. For the above stated reasons, the entire "observables" API has been deprecated. All former observable methods have been renamed to more succinctly express their purpose.</li>
-					
-					<li><b>Mixin:</b> the process of using Epoxy as a mixin library has been simplified. The Model and View components now provide a static <tt>mixin</tt> function to generate a class abstract for mixin with your projects.</li>
-				</ul>
-			</div>
 			
 			<div class="section">
 				<h2 id="model">Epoxy.Model</h2>
@@ -437,7 +421,7 @@ Backbone.Epoxy.View.mixin( MyView.prototype );</code></pre>
 			<div class="section">
 				<h3 id="view-binding-filters">bindingFilters</h3>
 				<code>view.bindingFilters</code>
-				<p>A hash table defining a view's custom binding filters. Binding filters are used to format model data for display within the view. While Epoxy includes a core set of basic <a href="#binding-filters">binding filters</a> for common formatting operations, developers are encouraged to extend their views with customized binding filters as needed.</p>
+				<p>A hash table defining a view's custom binding filters. Binding filters are used to format model data for display within the view. While Epoxy includes a core set of basic <a href="#binding-filters">binding filters</a> for common formatting operations; developers are also encouraged to extend their views with custom binding filters as needed.</p>
 
 				<p>To declare custom binding filters, define a new property on the <b>bindingFilters</b> hash with a formatting function that receives data arguments and returns a formatted value:</p>
 
@@ -535,7 +519,6 @@ Backbone.Epoxy.View.mixin( MyView.prototype );</code></pre>
 			<div class="section">
 				<h3 id="view-binding-sources">bindingSources</h3>
 				<code>view.bindingSources</code>
-				<p class="draft">This API is a working draft. Implementation may change.</p>
 				<p>A hash table defining additional binding sources to be added to the view's binding context. Binding sources are instances of <tt>Backbone.Model</tt> and/or <tt>Backbone.Collection</tt>. By default, an Epoxy view configures two potential binding sources: the view's <b>model</b> and <b>collection</b> properties are automatically added to the binding context under the aliases <tt>$model</tt> and <tt>$collection</tt>. Additional model and collection data sources may be specified within the <b>bindingSources</b> hash; these additional data sources will be added into the binding context under the alias <tt>$sourceName</tt>.</p>
 
 				<p>Additionally, model data sources provide aliases to all of their attributes within the binding context. In the case of the default <tt>$model</tt> data source, all model attributes are aliased within the binding context using their normal <tt>attribute</tt> name. For additional model sources added through the <b>bindingSources</b> hash, model attributes are added under the alias <tt>source_attribute</tt>. This avoids attribute naming conflicts while binding multiple models of the same type.</p>
@@ -1027,10 +1010,25 @@ var view = new ListView();</code></pre>
 			<div class="section">
 				<h3 id="binding-add-filter">addFilter</h3>
 				<code>Backbone.Epoxy.binding.addFilter( name, filter )</code>
-				<p>Adds a <a href="#binding-filters">binding filter</a> to Epoxy's table of internal defaults. Filters added with this method become available to all Epoxy views. Filters are added with a name string and a filter function, and return a modified binding value. Filters create read-only values, so should only be applied to one-way binding handlers. All filter arguments are pre-processed by the filter, so you may safely use conditional logic in filters without breaking automated dependency mapping:</p>
+				<p>Adds a <a href="#binding-filters">binding filter</a> to Epoxy's table of internal defaults. Filters added with this method become available to all Epoxy views. Filters are added with a name string and a filter function/methods object. All filter arguments are pre-processed, so you may safely use conditional logic in filters without breaking automated dependency maps.</p>
+				
+				<p>A <b>one-way</b> filter is defined with a name and a getter function. This getter function requests one or more values from the model, formats them, and then returns the result to the bound view:</p>
 
 <pre><code class="js">Backbone.Epoxy.binding.addFilter("select", function(condition, truthy, falsey) {
     return condition ? truthy : falsey;
+});</code></pre>
+
+				<p>A <b>two-way</b> filter is defined with a methods object that provides filtering functions for getting/setting a value. A two-way filter may only apply to a single bound model value. The two-way getter function passes a formatted value from the model to the view, while the setter function passes the counter-formatted value from the view to the model:</p>
+			
+<pre><code class="js">Backbone.Epoxy.binding.addFilter("filter_name", {
+    get: function( value ) {
+        // Format the value as it passes from the model to the view...
+        return value;
+    },
+    set: function( value ) {
+        // Format the value as it passes from the view to the model...
+        return value;
+    }
 });</code></pre>
 			</div>
 						
