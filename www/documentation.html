@@ -82,6 +82,7 @@
 						<li><a href="#view-remove">remove</a></li>
 						<li><a href="#view-remove-bindings">removeBindings</a></li>
 						<li><a href="#view-set-binding">setBinding</a></li>
+						<li><a href="#view-setter-options">setterOptions</a></li>
 						<li><a href="#view-view-model">viewModel</a></li>
 					</ul>
 			
@@ -423,7 +424,9 @@ Backbone.Epoxy.View.mixin( MyView.prototype );</code></pre>
 				<code>view.bindingFilters</code>
 				<p>A hash table defining a view's custom binding filters. Binding filters are used to format model data for display within the view. While Epoxy includes a core set of basic <a href="#binding-filters">binding filters</a> for common formatting operations; developers are also encouraged to extend their views with custom binding filters as needed.</p>
 
-				<p>To declare custom binding filters, define a new property on the <b>bindingFilters</b> hash with a formatting function that receives data arguments and returns a formatted value:</p>
+				<p>Filters are added with a name string and a filter function or methods object. All filter arguments are pre-processed, so you may safely use conditional logic in filters without breaking automated dependency maps. All filtering functions are called anonymously and operate in global scope.</p>
+				
+				<p>A <b>one-way</b> filter is defined with a name and a getter function. This getter function requests one or more values from the model, formats them, and then returns the result to the bound view:</p>
 
 <pre><code class="js">var BindingView = Backbone.Epoxy.View.extend({
     bindingFilters: {
@@ -431,15 +434,28 @@ Backbone.Epoxy.View.mixin( MyView.prototype );</code></pre>
             return "Your name is: "+ firstName +" "+ lastName;
         }
     }
-});</code></pre>				
-				
+});</code></pre>
+
 				<p>The above filter definition would be bound as:</p>
-				
+
 <pre><code class="html">&lt;div data-bind="text:yourName(firstName,lastName)"&gt;&lt;/div&gt;</code></pre>
 
-				<p>Binding filter functions are called anonymously and operate in global scope. Note that filters generate read-only values, therefore may only be applied to one-way binding handlers. Filters applied to two-way handlers will throw an error when data is submitted back into the filter.</p>
-				
-				<p>Unlike computed properties, you may safely use conditional logic in filter functions without risking holes in their dependency graph (filter functions have exposed arguments, which allows them to be pre-processed for mapping purposes).</p>
+				<p>A <b>two-way</b> filter is defined with a methods object that provides filtering functions for getting/setting a value. A two-way filter may only apply to a single bound model value. The two-way getter function passes a formatted value from the model to the view, while the setter function passes the counter-formatted value from the view to the model:</p>
+			
+<pre><code class="js">var BindingView = Backbone.Epoxy.View.extend({
+    bindingFilters: {
+    	myFilter: {
+            get: function( value ) {
+                // Format the value as it passes from the model to the view...
+                return value;
+            },
+            set: function( value ) {
+                // Format the value as it passes from the view to the model...
+                return value;
+            }
+    	}
+    }
+});</code></pre>
 			</div>
 			
 			<div class="section">
@@ -620,6 +636,12 @@ var BindingView = Backbone.Epoxy.View.extend({
 				<h3 id="view-set-binding">setBinding</h3>
 				<code>view.setBinding(attribute, value)</code>
 				<p>Sets data through the view's <a href="#view-binding-context">binding context</a>. The <b>setBinding</b> method may submit data to any model attribute name available to binding declarations. The submitted data value will pass through binding context routers for storage in the connected data model.</p>
+			</div>
+			
+			<div class="section">
+				<h3 id="view-setter-options">setterOptions</h3>
+				<code>view.setterOptions</code>
+				<p>Specifies an options object to be passed into all bound setters within the view. This equates to calling <tt>model.set({attrs}, {options})</tt> in two-way bindings. Additionally, you may define an Epoxy-specific <tt>{save:true}</tt> option to have bound setters write to the model via the <b>save</b> method rather than with <b>set</b> (<b>setterOptions</b> will also be passed into the <b>save</b> method).</p>
 			</div>
 			
 			<div class="section">
@@ -922,7 +944,7 @@ var view = new ListView();</code></pre>
 			
 			<div class="section">
 				<h2 id="binding-filters">View Binding Filters</h2>
-				<p>Binding filters provide a layer of flexibility for formatting data attributes directly within a binding declaration; they may perform read-only formatting on multiple input values, or perform read-write formatting on a single input value. Filters are intended to format raw values for binding-specific purposes:</p>
+				<p>Binding filters provide a layer of flexibility for formatting data attributes directly within a binding declaration; they may perform read-only formatting on multiple inputs, or perform read-write formatting on a single input. Filters are intended to format raw values for binding-specific purposes:</p>
 
 <pre><code class="html">&lt;span data-bind="toggle:not(firstName)"&gt;Please enter a first name.&lt;/span&gt;</code></pre>
 				
@@ -1089,7 +1111,7 @@ var view = new ListView();</code></pre>
 			
 			<div class="footer" role="contentinfo">
 				<p>Epoxy.js for Backbone is available on <a href="https://github.com/gmac/backbone.epoxy">GitHub</a>.<br>
-					&copy; 2013 Greg MacWilliam (<a href="https://twitter.com/gmacwilliam">@gmacwilliam</a>), a project of <a href="http://www.threespot.com">Threespot</a>.</p>
+					&copy; 2013 Greg MacWilliam (<a href="https://twitter.com/gmacwilliam">@gmacwilliam</a>).</p>
 			</div>
 		</div>
 	</div>

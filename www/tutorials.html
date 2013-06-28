@@ -33,7 +33,7 @@
 		<div class="banner clearfix" role="banner">
 			<p class="title"><span><b>Epoxy</b>.js</span> Elegant Data Binding for Backbone</p>
 			<div class="download">
-				<a href="js/backbone.epoxy.min.js" class="download-button">Download Epoxy 0.12.7</a>
+				<a href="js/backbone.epoxy.min.js" class="download-button">Download Epoxy 1.0.0</a>
 				<p class="download-info">10k min, 2k gzip <i>|</i> <a href="https://github.com/gmac/backbone.epoxy">GitHub Full Source</a></p>
 			</div>
 		</div>
@@ -516,18 +516,17 @@ var TodoItemModel = Backbone.Model.extend({
 // Epoxy View for each ToDo item:
 var TodoItemView = Backbone.Epoxy.View.extend({
     el:"&lt;li&gt;&lt;input type='checkbox'&gt; &lt;input type='text' class='todo'&gt;&lt;/li&gt;",
-
+	
+    setterOptions: {save: true},
+	
     bindings: {
-        "input[type='text']": "value:todo,readonly:complete,save:$model",
-        "input[type='checkbox']": "checked:complete,save:$model"
+        "input[type='text']": "value:todo,readonly:complete",
+        "input[type='checkbox']": "checked:complete"
     },
 
     bindingHandlers: {
         readonly: function( $element, value ) {
             $element.prop( "readonly", !!value );
-        },
-        save: function( $element, $model ) {
-            $model.save();
         }
     }
 });
@@ -602,7 +601,7 @@ var app = new TodoAppView();</code></pre>
 			
 			<div class="footer" role="contentinfo">
 				<p>Epoxy.js for Backbone is available on <a href="https://github.com/gmac/backbone.epoxy">GitHub</a>.<br>
-					&copy; 2013 Greg MacWilliam (<a href="https://twitter.com/gmacwilliam">@gmacwilliam</a>), a project of <a href="http://www.threespot.com">Threespot</a>.</p>
+					&copy; 2013 Greg MacWilliam (<a href="https://twitter.com/gmacwilliam">@gmacwilliam</a>).</p>
 			</div>
 		</div>
 	</div>
