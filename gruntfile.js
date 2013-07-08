@@ -4,9 +4,12 @@ module.exports = function( grunt ) {
 		pkg: grunt.file.readJSON('package.json'),
 		uglify: {
 			options: {
-				banner: '// Backbone.Epoxy <%= pkg.version %>\n// (c) 2013 Greg MacWilliam\n// Freely distributed under the MIT license\n// http://epoxyjs.org\n'
+				banner: '// Backbone.Epoxy <%= pkg.version %>\n// (c) 2013 Greg MacWilliam\n// Freely distributed under the MIT license\n// http://epoxyjs.org\n',
+				sourceMapRoot: './',
+				sourceMap: '<%= pkg.name %>.min.map',
+				sourceMapUrl: '<%= pkg.name %>.min.map'
 			},
-			epoxy: {
+			target: {
 				src: '<%= pkg.name %>.js',
 				dest: '<%= pkg.name %>.min.js'
 			}
