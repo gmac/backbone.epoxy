@@ -599,8 +599,8 @@
 						
 						// Attempt to add at proper index,
 						// otherwise just append into the element.
-						if ($element.children().length < index) {
-							$element.eq(index).before(view.$el);
+						if ($element.children().length > index) {
+							$element.children().eq(index).before(view.$el);
 						} else {
 							$element.append(view.$el);
 						}
