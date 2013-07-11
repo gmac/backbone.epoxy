@@ -596,11 +596,12 @@
 						// Add new view:
 						views[ target.cid ] = view = new collection.view({model: target});
 						var index = _.indexOf(models, target);
+						var $children = $element.children();
 						
 						// Attempt to add at proper index,
 						// otherwise just append into the element.
-						if ($element.children().length > index) {
-							$element.children().eq(index).before(view.$el);
+						if (index < $children.length) {
+							$children.eq(index).before(view.$el);
 						} else {
 							$element.append(view.$el);
 						}
@@ -608,8 +609,7 @@
 					} else {
 						
 						// Remove existing view:
-						view = views[ target.cid ];
-						view.remove();
+						views[ target.cid ].remove();
 						delete views[ target.cid ];
 					}
 					
@@ -618,7 +618,7 @@
 					// SORT/RESET Event (from a Collection):
 					// First test if we're sorting...
 					// (we have models and all their views are present)
-					var sort = models.length && _.every(models, function(model) {
+					var sort = models.length && collection.every(function(model) {
 						return views.hasOwnProperty(model.cid);
 					});
 					
