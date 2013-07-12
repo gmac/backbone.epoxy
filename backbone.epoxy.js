@@ -499,22 +499,25 @@
 		// return formatted value, or pass through primitives:
 		return accessor;
 	}
-
+	
 	
 	// Binding Handlers
 	// ----------------
 	// Handlers define set/get methods for exchanging data with the DOM.
 	
+	// Formatting function for defining new handler objects:
+	function makeHandler(handler) {
+		return isFunction(handler) ? {set: handler} : handler;
+	}
+	
 	var bindingHandlers = {
 		// Attribute: write-only. Sets element attributes.
-		attr: {
-			set: function($element, value) {
-				$element.attr(value);
-			}
-		},
+		attr: makeHandler(function($element, value) {
+			$element.attr(value);
+		}),
 		
 		// Checked: read-write. Toggles the checked status of a form element.
-		checked: {
+		checked: makeHandler({
 			get: function($element, currentValue) {
 				var checked = !!$element.prop('checked');
 				var value = $element.val();
@@ -558,19 +561,17 @@
 			isRadio: function($element) {
 				return $element.attr('type').toLowerCase() === 'radio';
 			}
-		},
+		}),
 		
 		// Class Name: write-only. Toggles a collection of class name definitions.
-		classes: {
-			set: function($element, value) {
-				_.each(value, function(enabled, className) {
-					$element.toggleClass(className, !!enabled);
-				});
-			}
-		},
+		classes: makeHandler(function($element, value) {
+			_.each(value, function(enabled, className) {
+				$element.toggleClass(className, !!enabled);
+			});
+		}),
 		
 		// Collection: write-only. Manages a list of views bound to a Backbone.Collection.
-		collection: {
+		collection: makeHandler({
 			init: function($element, collection) {
 				if (!isCollection(collection) || !isFunction(collection.view)) {
 					throw('Binding "collection" requires a Collection with a "view" constructor.');
@@ -653,38 +654,30 @@
 					}
 				}
 			}
-		},
+		}),
 		
 		// CSS: write-only. Sets a collection of CSS styles to an element.
-		css: {
-			set: function($element, value) {
-				$element.css(value);
-			}
-		},
+		css: makeHandler(function($element, value) {
+			$element.css(value);
+		}),
 
 		// Disabled: write-only. Sets the 'disabled' status of a form element (true :: disabled).
-		disabled: {
-			set: function($element, value) {
-				$element.prop('disabled', !!value);
-			}
-		},
+		disabled: makeHandler(function($element, value) {
+			$element.prop('disabled', !!value);
+		}),
 		
 		// Enabled: write-only. Sets the 'disabled' status of a form element (true :: !disabled).
-		enabled: {
-			set: function($element, value) {
-				$element.prop('disabled', !value);
-			}
-		},
-		
+		enabled: makeHandler(function($element, value) {
+			$element.prop('disabled', !value);
+		}),
+	
 		// HTML: write-only. Sets the inner HTML value of an element.
-		html: {
-			set: function($element, value) {
-				$element.html(value);
-			}
-		},
+		html: makeHandler(function($element, value) {
+			$element.html(value);
+		}),
 		
 		// Options: write-only. Sets option items to a <select> element, then updates the value.
-		options: {
+		options: makeHandler({
 			init: function($element, value, context, bindings) {
 				this.e = bindings.optionsEmpty;
 				this.d = bindings.optionsDefault;
@@ -763,10 +756,10 @@
 			clean: function() {
 				this.d = this.e = this.v = 0;
 			}
-		},
+		}),
 		
 		// Template: write-only. Renders the bound element with an Underscore template.
-		template: {
+		template: makeHandler({
 			init: function($element, value, context) {
 				var raw = $element.find('script,template');
 				this.t = _.template(raw.length ? raw.html() : $element.html());
@@ -784,24 +777,20 @@
 			clean: function() {
 				this.t = null;
 			}
-		},
+		}),
 		
 		// Text: write-only. Sets the text value of an element.
-		text: {
-			set: function($element, value) {
-				$element.text(value);
-			}
-		},
+		text: makeHandler(function($element, value) {
+			$element.text(value);
+		}),
 		
 		// Toggle: write-only. Toggles the visibility of an element.
-		toggle: {
-			set: function($element, value) {
-				$element.toggle(!!value);
-			}
-		},
+		toggle: makeHandler(function($element, value) {
+			$element.toggle(!!value);
+		}),
 		
 		// Value: read-write. Gets and sets the value of a form element.
-		value: {
+		value: makeHandler({
 			get: function($element) {
 				return $element.val();
 			},
@@ -815,13 +804,8 @@
 					// remove this try/catch block when IE6 is officially deprecated.
 				}
 			}
-		}
+		})
 	};
-
-	// Formatting function for defining new handler objects:
-	function makeHandler(handler) {
-		return isFunction(handler) ? {set: handler} : handler;
-	}
 	
 	
 	// Binding Filters
