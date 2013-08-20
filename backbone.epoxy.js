@@ -618,8 +618,8 @@
 					
 					// SORT/RESET Event (from a Collection):
 					// First test if we're sorting...
-					// (we have models and all their views are present)
-					var sort = models.length && collection.every(function(model) {
+					// (we have models and the number of models hasn't changed and all their views are present)
+					var sort = models.length && (_.keys(views).length == models.length) && collection.every(function(model) {
 						return views.hasOwnProperty(model.cid);
 					});
 					
