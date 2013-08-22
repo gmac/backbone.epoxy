@@ -941,6 +941,7 @@
 		constructor: function(options) {
 			_.extend(this, _.pick(options||{}, viewProps));
 			viewSuper(this, 'constructor', arguments);
+			viewMap = undefined;
 			this.applyBindings();
 		},
 		
