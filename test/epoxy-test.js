@@ -871,7 +871,18 @@ describe("Backbone.Epoxy.View", function() {
 		
 		expect( $el.find(":first-child .name-dsp").text() ).toBe( "A" );
 	});
-	
+
+	it("binding 'collection:' child views should update display based on their model bindings.", function() {
+		var modViewWithInitialCollection = new (Backbone.Epoxy.View.extend({
+			collection: new TestCollection([{name: "A"}]),
+			el: "<div data-bind='collection:$collection'></div>",
+		}));
+
+		expect( modViewWithInitialCollection.$el.find(":first-child .name-dsp").text() ).toBe( "A" );
+
+		modViewWithInitialCollection.collection.first().set({name: "B"})
+		expect( modViewWithInitialCollection.$el.find(":first-child .name-dsp").text() ).toBe( "B" );
+	});
 	
 	it("binding 'css:' should establish a one-way binding with an element's css styles.", function() {
 		var $el = $(".test-css");
