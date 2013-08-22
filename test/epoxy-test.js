@@ -352,11 +352,8 @@ describe("Backbone.Epoxy.View", function() {
 	
 	// Collection test components:
 	
-	var CollectionView = Backbone.View.extend({
-		el: "<li><span class='name-dsp'></span> <button class='name-remove'>x</button></li>",
-		initialize: function() {
-			this.$( ".name-dsp" ).text( this.model.get("name") );
-		}
+	var CollectionView = Backbone.Epoxy.View.extend({
+		el: "<li><span class='name-dsp' data-bind='text:name'></span> <button class='name-remove'>x</button></li>"
 	});
 	
 	var TestCollection = Backbone.Collection.extend({
