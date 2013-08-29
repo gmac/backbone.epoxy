@@ -1007,7 +1007,7 @@
 				getter.id = name;
 				
 				context[ name ] = function(value) {
-					return (value && setter) ?
+					return (!isUndefined(value) && setter) ?
 						setter.call(self, value) :
 						getter.apply(self, getDepsFromViewContext(self._c, deps));
 				};
