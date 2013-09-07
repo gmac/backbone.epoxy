@@ -447,7 +447,7 @@
 		change: function(value) {
 			if (!_.isEqual(value, this.value)) {
 				this.value = value;
-				this.model.trigger('change change:'+this.name);
+				this.model.trigger('change:'+this.name+' change', this.model);
 			}
 		},
 		
