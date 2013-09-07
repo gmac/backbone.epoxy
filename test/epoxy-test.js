@@ -592,6 +592,19 @@ describe("Backbone.Epoxy.View", function() {
 		expect( view2.$el.text() ).toBe( "Luke" );
 	});
 	
+	it("should include top-level view container in bindings searches via :el selector.", function() {
+		
+		var view = new (Backbone.Epoxy.View.extend({
+			el: "<span></span>",
+			model: dataModel,
+			bindings: {
+				":el": "text:firstName"
+			}
+		}));
+		
+		expect( view.$el.text() ).toBe( "Luke" );
+	});
+	
 	it("should throw error in response to undefined property bindings.", function() {
 		
 		var ErrorView = Backbone.Epoxy.View.extend({

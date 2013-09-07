@@ -505,11 +505,12 @@ Backbone.Epoxy.View.mixin( MyView.prototype );</code></pre>
 				<code>view.bindings</code>
 				<p>A hash declaring the view's element-to-attribute binding scheme, or a string defining an element attribute to query from the view's DOM. All bindings are established using the view's <b>$el</b> reference as the display target, and the view's <a href="#view-binding-context">binding context</a> as the data provider. A view missing its <b>$el</b> property and/or valid binding data will apply no bindings.</p>
 				
-				<p>The bindings hash syntax keeps all binding declarations within the view. The <b>bindings</b> object declares a set of key/value pairs, where the key defines an element query, and the value defines the element's model bindings:</p>
+				<p>The bindings hash syntax keeps all binding declarations within the view. The <b>bindings</b> object declares a set of key/value pairs, where the key defines an element query, and the value defines the element's model bindings. A custom <tt>":el"</tt> pseudo-selector may be used for the view's main <b>$el</b> member:</p>
 <pre>
 <code class="js">var BindingView = Backbone.Epoxy.View.extend({
     model: new Backbone.Model({firstName:"Luke", lastName:"Skywalker"}),
     bindings: {
+        ":el": "toggle:true",
         "input.first-name": "value:firstName,events:['keyup']",
         "input.last-name": "value:lastName,events:['keyup']"
     }
