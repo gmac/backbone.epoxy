@@ -920,6 +920,9 @@
 		},
 		config: function(settings) {
 			_.extend(bindingSettings, settings);
+		},
+		emptyCache: function() {
+			bindingCache = {};
 		}
 	};
 	

@@ -125,6 +125,7 @@
 						<li><a href="#binding-add-filter">addFilter</a></li>
 						<li><a href="#binding-add-handler">addHandler</a></li>
 						<li><a href="#binding-config">config</a></li>
+						<li><a href="#binding-empty-cache">emptyCache</a></li>
 					</ul>
 				</div>
 			</div>
@@ -1107,6 +1108,12 @@ var view = new ListView();</code></pre>
     optionText: "optText",
     optionValue: "optValue"
 });</code></pre>
+			</div>
+			
+			<div class="section">
+				<h3 id="binding-empty-cache">emptyCache</h3>
+				<code>Backbone.Epoxy.binding.emptyCache()</code>
+				<p>Resets the internal hash table of cached binding parser functions. Cached parser functions are highly efficient for parsing redundant binding schemes (as is: one binding scheme is instanced repeatedly for multiple views). You should rarely (or never) need to empty Epoxy's internal cache. The only circumstance where you may want to consider emptying the cache is on long-running single page applications where numerous different binding schemes are encountered sporadically over time, and may never be reused.</p>
 			</div>
 			
 			<div class="footer" role="contentinfo">
