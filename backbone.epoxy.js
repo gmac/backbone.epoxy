@@ -580,9 +580,15 @@
 			},
 			set: function($element, collection, target) {
 								
-				var models = collection.models;
-				var views = this.v;
 				var view;
+				var views = this.v;
+				var models = collection.models;
+
+				// Cache and reset the current dependency graph state:
+				// sub-views may be created (each with their own dependency graph),
+				// therefore we need to suspend the working graph map here before making children...
+				var mapCache = viewMap;
+				viewMap = null;
 				
 				// Default target to the bound collection object:
 				// during init (or failure), the binding will reset.
@@ -645,6 +651,9 @@
 					// Show element after manipulating:
 					$element.show();
 				}
+				
+				// Restore cached dependency graph configuration:
+				viewMap = mapCache;
 			},
 			clean: function() {
 				for (var id in this.v) {
@@ -941,7 +950,6 @@
 		constructor: function(options) {
 			_.extend(this, _.pick(options||{}, viewProps));
 			viewSuper(this, 'constructor', arguments);
-			viewMap = undefined;
 			this.applyBindings();
 		},
 		
