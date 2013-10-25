@@ -572,16 +572,17 @@
 		
 		// Collection: write-only. Manages a list of views bound to a Backbone.Collection.
 		collection: makeHandler({
-			init: function($element, collection) {
-				if (!isCollection(collection) || !isFunction(collection.view)) {
-					throw('Binding "collection" requires a Collection with a "view" constructor.');
-				}
+			init: function($element, collection, context) {
+				if (!isCollection(collection)) throw('Binding "collection" requires a Collection.');
+				this.ItemView = context.$ItemView;
+				if (!isFunction(this.ItemView)) throw('Binding "collection" requires an ItemView.');
 				this.v = {};
 			},
 			set: function($element, collection, target) {
 								
 				var view;
 				var views = this.v;
+				var ItemView = this.ItemView;
 				var models = collection.models;
 
 				// Cache and reset the current dependency graph state:
@@ -601,7 +602,7 @@
 					if (!views.hasOwnProperty(target.cid)) {
 						
 						// Add new view:
-						views[ target.cid ] = view = new collection.view({model: target});
+						views[ target.cid ] = view = new ItemView({model: target});
 						var index = _.indexOf(models, target);
 						var $children = $element.children();
 						
@@ -643,7 +644,7 @@
 						this.clean();
 						
 						collection.each(function(model) {
-							views[ model.cid ] = view = new collection.view({model: model});
+							views[ model.cid ] = view = new ItemView({model: model});
 							$element.append(view.$el);
 						});
 					}
@@ -1000,6 +1001,8 @@
 			self.model = addSourceToViewContext(self, context, options, 'model');
 			self.viewModel = addSourceToViewContext(self, context, options, 'viewModel');
 			self.collection = addSourceToViewContext(self, context, options, 'collection');
+			if (self.collection && self.collection.view) self.ItemView = self.collection.view; // support the old API
+			context.$ItemView = self.ItemView;
 			
 			// Add all additional data sources:
 			if (sources) {
