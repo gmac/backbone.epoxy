@@ -1153,7 +1153,7 @@
 			
 			// Set Object (non-null, non-array) hashtable value:
 			if (!isObject(value) || isArray(value)) {
-				var val = value;
+				var val = _.clone(value);
 				(value = {})[attribute] = val;
 			}
 			
