@@ -1020,7 +1020,6 @@
 				var getter = isFunction(computed) ? computed : computed.get;
 				var setter = computed.set;
 				var deps = computed.deps;
-				getter.id = name;
 				
 				context[ name ] = function(value) {
 					return (!isUndefined(value) && setter) ?
@@ -1062,12 +1061,12 @@
 		
 		// Gets a value from the binding context:
 		getBinding: function(attribute) {
-			return accessViewContext(this._c, arguments, attribute);
+			return accessViewContext(this._c, attribute);
 		},
 		
 		// Sets a value to the binding context:
 		setBinding: function(attribute, value) {
-			return accessViewContext(this._c, arguments, attribute, value);
+			return accessViewContext(this._c, attribute, value);
 		},
 		
 		// Disposes of all view bindings:
@@ -1222,10 +1221,8 @@
 	
 	// Gets and sets view context data attributes:
 	// used by the implementations of "getBinding" and "setBinding".
-	function accessViewContext(context, args, attribute, value) {
-		if (args.callee.caller && args.callee.caller.id === attribute) {
-			throw('Recursive access error: '+attribute);
-		} else if (context && context.hasOwnProperty(attribute)) {
+	function accessViewContext(context, attribute, value) {
+		if (context && context.hasOwnProperty(attribute)) {
 			return isUndefined(value) ? readAccessor(context[attribute]) : context[attribute](value);
 		}
 	}
