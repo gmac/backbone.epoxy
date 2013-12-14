@@ -704,7 +704,6 @@
 				var optionsEmpty = readAccessor(self.e);
 				var optionsDefault = readAccessor(self.d);
 				var currentValue = readAccessor(self.v);
-				var selection = isArray(currentValue) ? currentValue : [ currentValue ];
 				var options = isCollection(value) ? value.models : value;
 				var numOptions = options.length;
 				var enabled = true;
@@ -714,7 +713,7 @@
 				// display placeholder and disable select menu.
 				if (!numOptions && !optionsDefault && optionsEmpty) {
 				
-					html += self.opt(optionsEmpty, numOptions, selection);
+					html += self.opt(optionsEmpty, numOptions);
 					enabled = false;
 				
 				} else {
@@ -727,7 +726,7 @@
 				
 					// Create all option items:
 					_.each(options, function(option, index) {
-						html += self.opt(option, numOptions, selection);
+						html += self.opt(option, numOptions);
 					});
 				}
 
@@ -743,7 +742,7 @@
 					self.v(revisedValue);
 				}
 			},
-			opt: function(option, numOptions, selection) {
+			opt: function(option, numOptions) {
 				// Set both label and value as the raw option object by default:
 				var label = option;
 				var value = option;
@@ -758,11 +757,7 @@
 					value = isModel(option) ? option.get(valueAttr) : option[ valueAttr ];
 				}
 				
-				// Configure selection-state option fragment:
-				// option should be selected if it's the only item (default/empty), or exists in the selection:
-				var select = (!numOptions || _.contains(selection, value)) ? '" selected="selected">' : '">';
-				
-				return '<option value="'+ value + select + label +'</option>';
+				return ['<option value="', value, '">', label, '</option>'].join('');
 			},
 			clean: function() {
 				this.d = this.e = this.v = 0;
