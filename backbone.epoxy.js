@@ -73,7 +73,7 @@
 		constructor: function(attributes, options) {
 			_.extend(this, _.pick(options||{}, modelProps));
 			modelSuper(this, 'constructor', arguments);
-			this.initComputeds();
+			this.initComputeds(attributes);
 		},
 		
 		// Gets a copy of a model attribute value:
@@ -159,11 +159,16 @@
 		// Initializes the Epoxy model:
 		// called automatically by the native constructor,
 		// or may be called manually when adding Epoxy as a mixin.
-		initComputeds: function() {
+		initComputeds: function(attributes) {
 			this.clearComputeds();
 			
+			// Resolve computeds hash, and extend it with any preset attribute keys:
+			// TODO: write test.
+			var computeds = _.result(this, 'computeds')||{};
+			computeds = _.extend(computeds, _.pick(attributes||{}, _.keys(computeds)));
+			
 			// Add all computed attributes:
-			_.each(_.result(this, 'computeds')||{}, function(params, attribute) {
+			_.each(computeds, function(params, attribute) {
 				params._init = 1;
 				this.addComputed(attribute, params);
 			}, this);
@@ -630,26 +635,25 @@
 					});
 					
 					// Hide element before manipulating:
-					$element.hide();
+					$element.children().detach();
+					var frag = document.createDocumentFragment();
 					
 					if (sort) {
 						// Sort existing views:
 						collection.each(function(model) {
-							$element.append(views[model.cid].$el);
+							frag.appendChild(views[model.cid].el);
 						});
 						
 					} else {
 						// Reset with new views:
 						this.clean();
-						
 						collection.each(function(model) {
 							views[ model.cid ] = view = new collection.view({model: model});
-							$element.append(view.$el);
+							frag.appendChild(view.el);
 						});
 					}
 					
-					// Show element after manipulating:
-					$element.show();
+					$element.append(frag);
 				}
 				
 				// Restore cached dependency graph configuration:
