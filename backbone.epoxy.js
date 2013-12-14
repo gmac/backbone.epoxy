@@ -732,7 +732,7 @@
 				}
 
 				// Set new HTML to the element and toggle disabled status:
-				$element.html(html).prop('disabled', !enabled);
+				$element.html(html).prop('disabled', !enabled).val(currentValue);
 
 				// Pull revised value with new options selection state:
 				var revisedValue = $element.val();
