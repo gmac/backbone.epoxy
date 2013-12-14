@@ -547,9 +547,9 @@ var BindingView = Backbone.Epoxy.View.extend({
     model: new Backbone.Model({name: "Luke Skywalker"}),
     collection: new Backbone.Collection(),
     bindingSources: {
-        han: new Backbone.Model({name: "Han Solo"}),
-        obiwan: new Backbone.Model({name: "Obi-Wan Kenobi"}),
-        users: new Backbone.Collection()
+        han: function() { return new Backbone.Model({name: "Han Solo"}) },
+        obiwan: function() { return new Backbone.Model({name: "Obi-Wan Kenobi"}) },
+        users: function() { new Backbone.Collection() }
     }
 });
 
