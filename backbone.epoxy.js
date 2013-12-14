@@ -73,7 +73,7 @@
 		constructor: function(attributes, options) {
 			_.extend(this, _.pick(options||{}, modelProps));
 			modelSuper(this, 'constructor', arguments);
-			this.initComputeds(attributes);
+			this.initComputeds(attributes, options);
 		},
 		
 		// Gets a copy of a model attribute value:
@@ -159,7 +159,7 @@
 		// Initializes the Epoxy model:
 		// called automatically by the native constructor,
 		// or may be called manually when adding Epoxy as a mixin.
-		initComputeds: function(attributes) {
+		initComputeds: function(attributes, options) {
 			this.clearComputeds();
 			
 			// Resolve computeds hash, and extend it with any preset attribute keys:
@@ -1144,7 +1144,7 @@
 	
 	// Attribute data accessor:
 	// exchanges individual attribute values with model sources.
-	// This function is broken out from the accessor creation process for performance.
+	// This function is separated out from the accessor creation process for performance.
 	// @param source: the model data source to interact with.
 	// @param attribute: the model attribute to read/write.
 	// @param value: the value to set, or 'undefined' to get the current value.
@@ -1156,7 +1156,7 @@
 		if (!isUndefined(value)) {
 			
 			// Set Object (non-null, non-array) hashtable value:
-			if (!isObject(value) || isArray(value)) {
+			if (!isObject(value) || isArray(value) || _.isDate(value)) {
 				var val = value;
 				(value = {})[attribute] = val;
 			}
