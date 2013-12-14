@@ -1155,7 +1155,8 @@
 			// Set Object (non-null, non-array) hashtable value:
 			if (!isObject(value) || isArray(value) || _.isDate(value)) {
 				var val = value;
-				(value = {})[attribute] = val;
+				value = {};
+				value[attribute] = val;
 			}
 			
 			// Set value:
