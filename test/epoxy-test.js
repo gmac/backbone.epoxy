@@ -306,13 +306,17 @@ describe("Backbone.Epoxy.Model", function() {
 				return this.get("isSelected");
 			},
 			set: function( value ) {
-				return {isSelected: true};
+				  return {isSelected: value};
 			}
 		});
 		
 		expect( model.get("crossSetter") ).toBe( false );
+
 		model.set("crossSetter", true );
 		expect( model.get("isSelected") ).toBe( true );
+
+		model.set("crossSetter", false );
+		expect( model.get("isSelected") ).toBe( false );
 	});
 	
 	
