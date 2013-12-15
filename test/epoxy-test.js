@@ -105,16 +105,6 @@ describe("Backbone.Epoxy.Model", function() {
 		expect( model.computeds ).toBe( obj );
 	});
 	
-	it("should construct model with class options defined.", function() {
-		var obj = {};
-		
-		var model = new Backbone.Epoxy.Model({}, {
-			computeds: obj
-		});
-		
-		expect( model.computeds ).toBe( obj );
-	});
-	
 	it("should allow Epoxy model configuration to mixin with another Backbone Model.", function() {
 		var model = new MixinModel();
 		expect( model.get("avgPaymentDsp") ).toBe( "$500" );
