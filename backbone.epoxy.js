@@ -236,13 +236,17 @@
 		// Internal array value modifier:
 		// performs array ops on a stored array value, then fires change.
 		// No action is taken if the specified attribute value is not an array.
-		modifyArray: function(attribute, method) {
+		modifyArray: function(attribute, method, options) {
 			var obj = this.get(attribute);
 			
 			if (isArray(obj) && isFunction(array[method])) {
 				var args = array.slice.call(arguments, 2);
 				var result = array[ method ].apply(obj, args);
-				this.trigger('change change:'+attribute);
+				options = options || {};
+				
+				if (!options.silent) {
+				  this.trigger('change:'+attribute+' change', this, array, options); 
+				}
 				return result;
 			}
 			return null;
@@ -251,12 +255,14 @@
 		// Internal object value modifier:
 		// sets new property values on a stored object value, then fires change.
 		// No action is taken if the specified attribute value is not an object.
-		modifyObject: function(attribute, property, value) {
+		modifyObject: function(attribute, property, value, options) {
 			var obj = this.get(attribute);
 			var change = false;
 			
 			// If property is Object:
 			if (isObject(obj)) {
+				
+				options = options || {};
 				
 				// Delete existing property in response to undefined values:
 				if (isUndefined(value) && obj.hasOwnProperty(property)) {
@@ -270,8 +276,8 @@
 				}
 				
 				// Trigger model change:
-				if (change) {
-					this.trigger('change change:'+attribute);
+				if (change && !options.silent) {
+					this.trigger('change:'+attribute+' change', this, obj, options);
 				}
 				
 				// Return the modified object:
@@ -306,7 +312,7 @@
 					
 					// Has a computed attribute:
 					// comfirm attribute does not already exist within the stack trace.
-					if (!stack.length || _.indexOf(stack, attribute) < 0) {
+					if (!stack.length || !_.contains(stack, attribute)) {
 						
 						// Non-recursive:
 						// set and collect value from computed attribute. 
