@@ -1,13 +1,16 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-  "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE html>
 <html>
 <head>
-  <title>Backbone.Epoxy - Jasmine Test Suite</title>
+  <title>Backbone.Epoxy - Test Suite</title>
 
-	<link rel="shortcut icon" type="image/png" href="jasmine-1.2.0/jasmine_favicon.png">
-	<link rel="stylesheet" type="text/css" href="jasmine-1.2.0/jasmine.css">
-	<script src="jasmine-1.2.0/jasmine.js"></script>
-	<script src="jasmine-1.2.0/jasmine-html.js"></script>
+	<link rel="stylesheet" type="text/css" href="node_modules/mocha/mocha.css">
+	<script src="www/js/jquery.js"></script>
+	<script src="node_modules/mocha/mocha.js"></script>
+	<script src="node_modules/chai/chai.js"></script>
+	<script src="node_modules/underscore/underscore.js"></script>
+	<script src="node_modules/backbone/backbone.js"></script>
+	<script src="backbone.epoxy.js"></script>
+
 	<style>
 	body {
 		margin-bottom: 50px;
@@ -42,7 +45,7 @@
 	</style>
 </head>
 <body>
-	<div id="ie-console"></div>
+
 	<div id="dom-view" class="test-view">
 		<strong>DOM / Attribute Mapping</strong>
 		<div class="section">
@@ -53,7 +56,7 @@
 			<p class="test-css" data-bind="css:{display:errorDisplay}">Error: incomplete form.</p>
 		</div>
 		<div class="section">
-			<span class="test-text-first" data-bind="text:firstName"></span> 
+			<span class="test-text-first" data-bind="text:firstName"></span>
 			<span class="test-text-last" data-bind="text:lastName"></span>
 			<p class="test-html" data-bind="html:nameDisplay"></p>
 		</div>
@@ -61,11 +64,11 @@
 			<p>
 				<strong>
 					<a class="test-attr-multi" data-bind="attr:{href:preference,title:preference}">model.active:</a>
-				</strong> 
+				</strong>
 				<span class="test-attr" data-bind="text:active,attr:{'data-active':active}"></span>
 			</p>
 			<p>
-				<label>active:</label> 
+				<label>active:</label>
 				<input type="checkbox" class="test-checked-boolean" data-bind="checked:active">
 				<button class="test-enabled" data-bind="enabled:active">yes</button>
 				<button class="test-disabled" data-bind="disabled:active">no</button>
@@ -75,26 +78,26 @@
 		<div class="section">
 			<p>Selected Options: <span class="test-custom-binding" data-bind="printArray:checkList"></span></p>
 			<p>
-				<label>a</label>: <input type="checkbox" class="check-list" value="a" data-bind="checked:checkList"> &nbsp; 
-				<label>b</label>: <input type="checkbox" class="check-list" value="b" data-bind="checked:checkList"> &nbsp; 
-				<label>c</label>: <input type="checkbox" class="check-list" value="c" data-bind="checked:checkList"> &nbsp; 
+				<label>a</label>: <input type="checkbox" class="check-list" value="a" data-bind="checked:checkList"> &nbsp;
+				<label>b</label>: <input type="checkbox" class="check-list" value="b" data-bind="checked:checkList"> &nbsp;
+				<label>c</label>: <input type="checkbox" class="check-list" value="c" data-bind="checked:checkList"> &nbsp;
 			</p>
 			<p class="test-view-computed" data-bind="text:checkedCount"></p>
 		</div>
 		<div class="section">
 			<p>
-				<strong>model.preference:</strong> 
+				<strong>model.preference:</strong>
 				<span data-bind="text:preference"></span>
 			</p>
 			<p>
-				<label>a:</label> 
-				<input type="radio" class="preference" name="preference" value="a" data-bind="checked:preference"> &nbsp; 
-				<label>b:</label> 
+				<label>a:</label>
+				<input type="radio" class="preference" name="preference" value="a" data-bind="checked:preference"> &nbsp;
+				<label>b:</label>
 				<input type="radio" class="preference" name="preference" value="b" data-bind="checked:preference">
 			</p>
 		</div>
 	</div>
-	
+
 	<div id="mod-view" class="test-view">
 		<strong>Binding Operators</strong>
 		<div class="section">
@@ -127,49 +130,23 @@
 			<ul class="test-collection" data-bind="collection:$collection"></ul>
 		</div>
 	</div>
-	
+
 	<script type="text/template-epoxy" id="tmpl-view-tmpl">
 		<div id="tmpl-view" class="test-view">
 			<strong>Template / Selector Mapping</strong>
 			<p><span class="user-first"></span> <span class="user-last"></span></p>
 		</div>
 	</script>
-	
-	<script src="../www/js/json2.js"></script>
-	<script src="../www/js/jquery.js"></script>
-	<!--script src="vendor/zepto.js"></script-->
-	<!--script src="vendor/ender.js"></script-->
-	<script src="../www/js/underscore.js"></script>
-	<script src="../www/js/backbone.js"></script>
-	<script src="../backbone.epoxy.js"></script>
+
+	<div id="mocha"></div>
+
 	<script>
-	if (!window.console) {
-		console = {
-			log: function( mssg ) {
-				$("#ie-console").append("<p>"+mssg+"</p>");
-			}
-		};
-	}
-	
+	expect = chai.expect;
+  mocha.setup('bdd');
 	_.templateSettings = { interpolate : /\{\{(.+?)\}\}/g };
 	</script>
-	<script src="epoxy-test.js"></script>
-	<script type="text/javascript">
-	
-	$(function() {
-		var jasmineEnv = jasmine.getEnv();
-		jasmineEnv.updateInterval = 1000;
-		
-		var htmlReporter = new jasmine.HtmlReporter();
 
-		jasmineEnv.addReporter(htmlReporter);
-
-		jasmineEnv.specFilter = function(spec) {
-			return htmlReporter.specFilter(spec);
-		};
-		
-		jasmineEnv.execute();
-	});
-	</script>
+	<script src="test.js"></script>
+	<script>mocha.run();</script>
 </body>
 </html>
