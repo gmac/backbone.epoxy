@@ -316,7 +316,7 @@ describe("Backbone.Epoxy.Model", function() {
 				return this.get("isSelected");
 			},
 			set: function( value ) {
-				return {isSelected: true};
+				return {isSelected: value};
 			}
 		});
 
