@@ -921,9 +921,17 @@
 		})
 	};
 
+	// Define allowed binding parameters:
+	// These params may be included in binding handlers without throwing errors.
+	var allowedParams = {
+		events: 1,
+		optionsDefault: 1,
+		optionsEmpty: 1
+	};
 
 	// Define binding API:
 	Epoxy.binding = {
+		allowedParams: allowedParams,
 		addHandler: function(name, handler) {
 			bindingHandlers[ name ] = makeHandler(handler);
 		},
@@ -1215,6 +1223,8 @@
 			if (handlers.hasOwnProperty(handlerName)) {
 				// Create and add binding to the view's list of handlers:
 				view.b().push(new EpoxyBinding($element, handlers[handlerName], accessor, events, context, bindings));
+			} else if (!allowedParams.hasOwnProperty(handlerName)) {
+				throw('binding handler "'+ handlerName +'" is not defined.');
 			}
 		});
 	}
