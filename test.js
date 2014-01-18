@@ -64,25 +64,6 @@ describe("Backbone.Epoxy.Model", function() {
 		}
 	});
 
-	var MixinModel = Backbone.Model.extend({
-		defaults: {
-			avgPayment: 500
-		},
-
-		initialize: function() {
-			this.initComputeds();
-		},
-
-		computeds: {
-			avgPaymentDsp: function() {
-				return "$"+this.get( "avgPayment" );
-			}
-		}
-	});
-
-	Backbone.Epoxy.Model.mixin( MixinModel.prototype );
-
-
 	// Setup
 	beforeEach(function() {
 		model = new TestModel();
@@ -116,7 +97,25 @@ describe("Backbone.Epoxy.Model", function() {
 	});
 
 	it("should allow Epoxy model configuration to mixin with another Backbone Model.", function() {
+		var MixinModel = Backbone.Model.extend({
+			defaults: {
+				avgPayment: 500
+			},
+
+			initialize: function() {
+				this.initComputeds();
+			},
+
+			computeds: {
+				avgPaymentDsp: function() {
+					return "$"+this.get( "avgPayment" );
+				}
+			}
+		});
+
+		Backbone.Epoxy.Model.mixin( MixinModel.prototype );
 		var model = new MixinModel();
+		
 		expect( model.get("avgPaymentDsp") ).to.equal( "$500" );
 	});
 
@@ -502,17 +501,6 @@ describe("Backbone.Epoxy.View", function() {
 	}));
 
 
-	var MixinView = Backbone.View.extend({
-		el: "<div data-bind='text:ship'></div>",
-		model: new Backbone.Model({ship:"Deathstar"}),
-		initialize: function() {
-			this.applyBindings();
-		}
-	});
-
-	Backbone.Epoxy.View.mixin( MixinView.prototype );
-
-
 	// Setup
 	beforeEach(function() {
 
@@ -561,7 +549,17 @@ describe("Backbone.Epoxy.View", function() {
 
 
 	it("should allow Epoxy view configuration to mixin with another Backbone View.", function() {
+		var MixinView = Backbone.View.extend({
+			el: "<div data-bind='text:ship'></div>",
+			model: new Backbone.Model({ship:"Deathstar"}),
+			initialize: function() {
+				this.applyBindings();
+			}
+		});
+
+		Backbone.Epoxy.View.mixin( MixinView.prototype );
 		var view = new MixinView();
+		
 		expect( view.$el.text() ).to.equal( "Deathstar" );
 	});
 
