@@ -111,7 +111,10 @@
 
 			// Default options definition:
 			options = options || {};
-
+			
+			// Create store for capturing computed change events:
+			var computedEvents = this._setting = [];
+			
 			// Attempt to set computed attributes while not unsetting:
 			if (!options.unset) {
 				// All param properties are tested against computed setters,
@@ -119,9 +122,24 @@
 				// Optionally, an computed setter may return key/value pairs to be merged into the set.
 				params = deepModelSet(this, params, {}, []);
 			}
-
+			
+			// Remove computed change events store:
+			delete this._setting;
+			
 			// Pass all resulting set params along to the underlying Backbone Model.
-			return _super(this, 'set', [params, options]);
+			var result = _super(this, 'set', [params, options]);
+			
+			// Dispatch all outstanding events:
+			if (!options.silent) {
+				_.each(computedEvents, function(evt) {
+					this.trigger.apply(this, evt);
+				}, this);
+				
+				if (!this.hasChanged()) {
+					this.trigger('change', this);
+				}
+			}
+			return result;
 		},
 
 		// Backbone.Model.toJSON() override:
@@ -453,7 +471,14 @@
 		change: function(value) {
 			if (!_.isEqual(value, this.value)) {
 				this.value = value;
-				this.model.trigger('change:'+this.name+' change', this.model);
+				var evt = ['change:'+this.name, this.model, value];
+				
+				if (this.model._setting) {
+					this.model._setting.push(evt);
+				} else {
+					evt[0] += ' change';
+					this.model.trigger.apply(this.model, evt);
+				}
 			}
 		},
 
