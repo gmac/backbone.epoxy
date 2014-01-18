@@ -34,7 +34,7 @@
 		<div class="banner clearfix" role="banner">
 			<p class="title"><span><b>Epoxy</b>.js</span> Elegant Data Binding for Backbone</p>
 			<div class="download">
-				<a href="js/backbone.epoxy.min.js" class="download-button">Download Epoxy 1.0.3</a>
+				<a href="js/backbone.epoxy.min.js" class="download-button">Download Epoxy 1.0.5</a>
 				<p class="download-info">10k min, 2k gzip <i>|</i> <a href="https://github.com/gmac/backbone.epoxy">GitHub Full Source</a></p>
 			</div>
 		</div>
@@ -124,6 +124,7 @@
 					<ul>
 						<li><a href="#binding-add-filter">addFilter</a></li>
 						<li><a href="#binding-add-handler">addHandler</a></li>
+						<li><a href="#binding-allowed-params">allowedParams</a></li>
 						<li><a href="#binding-config">config</a></li>
 						<li><a href="#binding-empty-cache">emptyCache</a></li>
 					</ul>
@@ -1094,7 +1095,24 @@ var view = new ListView();</code></pre>
 					<li><tt>handler.clean()</tt> : <i>optional</i>. Called during handler disposal; offers a cleanup hook to remove any custom binding configuration as the handler is deprecated.</li>
 				</ul>
 			</div>
-			
+
+			<div class="section">
+				<h3 id="binding-allowed-params">allowedParams</h3>
+				<code>Backbone.Epoxy.binding.allowedParams</code>
+				<p>A hash defining all non-handler attributes that are allowed within binding declarations. When validating bindings, Epoxy will throw an error for binding declarations that do not have a handler method or an <tt>allowedParams</tt> key. By default, <tt>allowedParams</tt> defines the following allowed keys:</p>
+				<ul>
+					<li><tt>events</tt></li>
+					<li><tt>optionsDefault</tt></li>
+					<li><tt>optionsEmpty</tt></li>
+				</ul>
+
+				<p>If you define a custom binding handler that utilizes additional params within the binding declaration, then you must specifically add these additional parameter names into the <tt>allowedParams</tt> hash.</p>
+
+<pre><code class="js">Epoxy.binding.allowedParams.myCustomParam = true;</code></pre>
+
+				<p>In the above example, Epoxy will no longer throw an error when it encounters a <tt>myCustomParam</tt> definition within a binding declaration.</p>
+			</div>
+
 			<div class="section">
 				<h3 id="binding-config">config</h3>
 				<code>Backbone.Epoxy.binding.config( settings )</code>
