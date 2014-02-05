@@ -42,7 +42,7 @@
 			extend = extend || {};
 
 			for (var i in this.prototype) {
-				if (this.prototype.hasOwnProperty(i) && i !== 'constructor') {
+				if (this.prototype.hasOwnProperty(i) && i !== 'constructor' && i !== 'bindings' ) {
 					extend[i] = this.prototype[i];
 				}
 			}
