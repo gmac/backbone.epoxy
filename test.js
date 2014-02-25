@@ -365,8 +365,7 @@ describe("Backbone.Epoxy.View", function() {
 	});
 
 	var TestCollection = Backbone.Collection.extend({
-		model: Backbone.Model,
-		view: CollectionView
+		model: Backbone.Model
 	});
 
 
@@ -458,6 +457,7 @@ describe("Backbone.Epoxy.View", function() {
 		model: dataModel,
 		viewModel: viewModel,
 		collection: new TestCollection(),
+		itemView: CollectionView,
 		bindings: "data-bind",
 
 		events: {
@@ -879,6 +879,7 @@ describe("Backbone.Epoxy.View", function() {
 	it("binding 'collection:' child views should update display based on their model bindings.", function() {
 		var modViewWithInitialCollection = new (Backbone.Epoxy.View.extend({
 			collection: new TestCollection([{name: "A"}]),
+			itemView: CollectionView,
 			el: "<div data-bind='collection:$collection'></div>",
 		}));
 

@@ -20,7 +20,7 @@
 	}
 
 }(this, function(_, Backbone) {
-
+	
 	// Epoxy namespace:
 	var Epoxy = Backbone.Epoxy = {};
 
@@ -49,28 +49,25 @@
 			return extend;
 		}
 	};
-
-	// Partial application for calling method implementations of a super-class object:
-	function superClass(sup) {
-		return function(instance, method, args) {
-			return sup.prototype[ method ].apply(instance, args);
-		};
+	
+	// Calls method implementations of a super-class object:
+	function _super(instance, method, args) {
+		return instance._super.prototype[method].apply(instance, args);
 	}
-
-
+	
 	// Epoxy.Model
 	// -----------
 	var modelMap;
-	var modelSuper = superClass(Backbone.Model);
 	var modelProps = ['computeds'];
 
 	Epoxy.Model = Backbone.Model.extend({
-
+		_super: Backbone.Model,
+		
 		// Backbone.Model constructor override:
 		// configures computed model attributes around the underlying native Backbone model.
 		constructor: function(attributes, options) {
 			_.extend(this, _.pick(options||{}, modelProps));
-			modelSuper(this, 'constructor', arguments);
+			_super(this, 'constructor', arguments);
 			this.initComputeds(attributes, options);
 		},
 
@@ -95,7 +92,7 @@
 			}
 
 			// Default to native Backbone.Model get operation:
-			return modelSuper(this, 'get', arguments);
+			return _super(this, 'get', arguments);
 		},
 
 		// Backbone.Model.set() override:
@@ -114,7 +111,10 @@
 
 			// Default options definition:
 			options = options || {};
-
+			
+			// Create store for capturing computed change events:
+			var computedEvents = this._setting = [];
+			
 			// Attempt to set computed attributes while not unsetting:
 			if (!options.unset) {
 				// All param properties are tested against computed setters,
@@ -122,15 +122,30 @@
 				// Optionally, an computed setter may return key/value pairs to be merged into the set.
 				params = deepModelSet(this, params, {}, []);
 			}
-
+			
+			// Remove computed change events store:
+			delete this._setting;
+			
 			// Pass all resulting set params along to the underlying Backbone Model.
-			return modelSuper(this, 'set', [params, options]);
+			var result = _super(this, 'set', [params, options]);
+			
+			// Dispatch all outstanding events:
+			if (!options.silent) {
+				_.each(computedEvents, function(evt) {
+					this.trigger.apply(this, evt);
+				}, this);
+				
+				if (!this.hasChanged()) {
+					this.trigger('change', this);
+				}
+			}
+			return result;
 		},
 
 		// Backbone.Model.toJSON() override:
 		// adds a 'computed' option, specifying to include computed attributes.
 		toJSON: function(options) {
-			var json = modelSuper(this, 'toJSON', arguments);
+			var json = _super(this, 'toJSON', arguments);
 
 			if (options && options.computed) {
 				_.each(this.c(), function(computed, attribute) {
@@ -145,7 +160,7 @@
 		// clears all computed attributes before destroying.
 		destroy: function() {
 			this.clearComputeds();
-			return modelSuper(this, 'destroy', arguments);
+			return _super(this, 'destroy', arguments);
 		},
 
 		// Computed namespace manager:
@@ -456,7 +471,14 @@
 		change: function(value) {
 			if (!_.isEqual(value, this.value)) {
 				this.value = value;
-				this.model.trigger('change:'+this.name+' change', this.model);
+				var evt = ['change:'+this.name, this.model, value];
+				
+				if (this.model._setting) {
+					this.model._setting.push(evt);
+				} else {
+					evt[0] += ' change';
+					this.model.trigger.apply(this.model, evt);
+				}
 			}
 		},
 
@@ -581,16 +603,16 @@
 
 		// Collection: write-only. Manages a list of views bound to a Backbone.Collection.
 		collection: makeHandler({
-			init: function($element, collection) {
-				if (!isCollection(collection) || !isFunction(collection.view)) {
-					throw('Binding "collection" requires a Collection with a "view" constructor.');
-				}
+			init: function($element, collection, context) {
+				if (!isCollection(collection)) throw('Binding "collection" requires a Collection.');
+				if (!isFunction(this.view.itemView)) throw('Binding "collection" requires a itemView.');
 				this.v = {};
 			},
 			set: function($element, collection, target) {
 
 				var view;
 				var views = this.v;
+				var ItemView = this.view.itemView;
 				var models = collection.models;
 
 				// Cache and reset the current dependency graph state:
@@ -610,7 +632,7 @@
 					if (!views.hasOwnProperty(target.cid)) {
 
 						// Add new view:
-						views[ target.cid ] = view = new collection.view({model: target});
+						views[ target.cid ] = view = new ItemView({model: target});
 						var index = _.indexOf(models, target);
 						var $children = $element.children();
 
@@ -652,7 +674,7 @@
 						// Reset with new views:
 						this.clean();
 						collection.each(function(model) {
-							views[ model.cid ] = view = new collection.view({model: model});
+							views[ model.cid ] = view = new ItemView({model: model});
 							frag.appendChild(view.el);
 						});
 					}
@@ -950,17 +972,16 @@
 	// Epoxy.View
 	// ----------
 	var viewMap;
-	var viewSuper = superClass(Backbone.View);
 	var viewProps = ['viewModel', 'bindings', 'bindingFilters', 'bindingHandlers', 'bindingSources', 'computeds'];
 
-
 	Epoxy.View = Backbone.View.extend({
-
+		_super: Backbone.View,
+		
 		// Backbone.View constructor override:
 		// sets up binding controls around call to super.
 		constructor: function(options) {
 			_.extend(this, _.pick(options||{}, viewProps));
-			viewSuper(this, 'constructor', arguments);
+			_super(this, 'constructor', arguments);
 			this.applyBindings();
 		},
 
@@ -1011,6 +1032,11 @@
 			self.model = addSourceToViewContext(self, context, options, 'model');
 			self.viewModel = addSourceToViewContext(self, context, options, 'viewModel');
 			self.collection = addSourceToViewContext(self, context, options, 'collection');
+      
+      // Support legacy "collection.view" API for rendering list items:
+			if (self.collection && self.collection.view) {
+			  self.itemView = self.collection.view;
+		  }
 
 			// Add all additional data sources:
 			if (sources) {
@@ -1091,7 +1117,7 @@
 		// unbinds the view before performing native removal tasks.
 		remove: function() {
 			this.removeBindings();
-			viewSuper(this, 'remove', arguments);
+			_super(this, 'remove', arguments);
 		}
 
 	}, mixins);
@@ -1222,7 +1248,7 @@
 			// Validate that each defined handler method exists before binding:
 			if (handlers.hasOwnProperty(handlerName)) {
 				// Create and add binding to the view's list of handlers:
-				view.b().push(new EpoxyBinding($element, handlers[handlerName], accessor, events, context, bindings));
+				view.b().push(new EpoxyBinding(view, $element, handlers[handlerName], accessor, events, context, bindings));
 			} else if (!allowedParams.hasOwnProperty(handlerName)) {
 				throw('binding handler "'+ handlerName +'" is not defined.');
 			}
@@ -1253,12 +1279,15 @@
 	// Epoxy.View -> Binding
 	// ---------------------
 	// The binding object connects an element to a bound handler.
+	// @param view: the view object this binding is attached to.
 	// @param $element: the target element (as jQuery) to bind.
 	// @param handler: the handler object to apply (include all handler methods).
 	// @param accessor: an accessor method from the binding context that exchanges data with the model.
-	// @param options: a compiled set of binding options that was pulled from the declaration.
-	function EpoxyBinding($element, handler, accessor, events, context, bindings) {
-
+	// @param events: 
+	// @param context: 
+	// @param bindings: 
+	function EpoxyBinding(view, $element, handler, accessor, events, context, bindings) {
+	  
 		var self = this;
 		var tag = ($element[0].tagName).toLowerCase();
 		var changable = (tag == 'input' || tag == 'select' || tag == 'textarea' || $element.prop('contenteditable') == 'true');
@@ -1266,7 +1295,8 @@
 		var reset = function(target) {
 			self.set(self.$el, readAccessor(accessor), target);
 		};
-
+    
+    self.view = view;
 		self.$el = $element;
 		self.evt = events;
 		_.extend(self, handler);
@@ -1316,7 +1346,7 @@
 			this.clean();
 			this.stopListening();
 			this.$el.off(this.evt);
-			this.$el = null;
+			this.$el = this.view = null;
 		}
 	});
 

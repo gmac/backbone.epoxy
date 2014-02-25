@@ -707,7 +707,7 @@ var BindingView = Backbone.Epoxy.View.extend({
 				<ul>
 					<li>The binding must target a <tt>Backbone.Collection</tt> data source available within the <b><a href="#view-binding-context">binding context</a></b>. </li>
 
-					<li>The bound collection must have a property called <b>view</b>, which defines a <tt>Backbone.View</tt> constructor for rendering collection items.</li>
+					<li>The bound view must provide a property called <b>itemView</b>, which defines a <tt>Backbone.View</tt> constructor for rendering collection items.</li>
 				</ul>
 
 <pre class="js"><code class="js">// View for individual collection items:
@@ -720,13 +720,13 @@ var ListItemView = Backbone.View.extend({
 
 // Collection defining a Model and View:
 var ListCollection = Backbone.Collection.extend({
-    model: Backbone.Model,
-    view: ListItemView
+    model: Backbone.Model
 });
 
 // Binding view for list of collection items:
 var ListView = Backbone.Epoxy.View.extend({
     el: "&lt;ul data-bind='collection:$collection'&gt;&lt;/ul&gt;",
+    itemView: ListItemView,
     initialize: function() {
         this.collection = new ListCollection();
         this.collection.reset([{label: "Luke Skywalker"}, {label: "Han Solo"}]);

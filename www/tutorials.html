@@ -472,12 +472,13 @@ var view = new BindingView({model: model});</code></pre>
 });
 
 var ListCollection = Backbone.Collection.extend({
-    model: Backbone.Model,
-    view: ListItemView
+    model: Backbone.Model
 });
 
 var ListView = Backbone.Epoxy.View.extend({
     el: "#bind-collection",
+    itemView: ListItemView,
+    
     initialize: function() {
         this.collection = new ListCollection();
         this.collection.reset([{label: "Luke Skywalker"}, {label: "Han Solo"}]);
@@ -491,7 +492,7 @@ var view = new ListView();</code></pre>
 &lt;/div&gt;</code></pre>
 </div>
 			
-			<p>In the above example, <tt>data-bind="collection:$collection"</tt> binds an unordered list's contents to the view's <b>collection</b> data source. However, what renders individual collection items? Note how a <b>view</b> property is assigned to the <tt>Backbone.Collection</tt> object... That <b>view</b> property defines an item renderer for the collection; this is Epoxy's one and only assertion on the native <tt>Backbone.Collection</tt> object.</p>
+			<p>In the above example, <tt>data-bind="collection:$collection"</tt> binds an unordered list's contents to the view's <b>collection</b> data source. However, what renders individual collection items? Note how an <b>itemView</b> property is defined on the list view class... That <b>itemView</b> property defines an item renderer for the collection.</p>
 			
 			<p>For more details on setting up a collection binding, see the <a href="documentation.html#handler-collection">collection handler</a> documentation. For more examples on using data source bindings, see the <a href="#epoxy-todos">Epoxy ToDos</a> demo below.</p>
 			
@@ -534,7 +535,6 @@ var TodoItemView = Backbone.Epoxy.View.extend({
 // Collection for ToDo items:
 var TodosCollection = Backbone.Collection.extend({
     model: TodoItemModel,
-    view: TodoItemView,
     localStorage: new Backbone.LocalStorage("todos")
 });
 
@@ -543,7 +543,8 @@ var TodoAppView = Backbone.Epoxy.View.extend({
     el: "#epoxy-todo-app",
 
     collection: new TodosCollection(),
-
+    itemView: TodoItemView,
+    
     initialize: function() {
         this.collection.fetch();
     },
@@ -592,9 +593,9 @@ var app = new TodoAppView();</code></pre>
 				
 				<li><tt>TodoItemView</tt> : this is an Epoxy view used for the display of each individual todo list item. This view constructs a DOM fragment with a checkbox and text input, and then binds those elements' values to the view's model. In addition, the view adds a few custom binding handlers to help manage the view: the <tt>readonly:</tt> handler toggles the text input's <tt>"readonly"</tt> property, and the <tt>save:</tt> binding is used used to call <b>save</b> on the bound model after elements are changed.</li>
 				
-				<li><tt>TodosCollection</tt> : this is a native Backbone collection used to manage our active list of todos. It cites <tt>TodoItemModel</tt> as its model constructor, and <tt>TodoItemView</tt> as its view constructor. Remember, a collection must specify a <b>view</b> constructor property in order to work with Epoxy's <tt>collection:</tt> binding.</li>
+				<li><tt>TodosCollection</tt> : this is a native Backbone collection used to manage our active list of todos. It cites <tt>TodoItemModel</tt> as its model constructor.</li>
 				
-				<li><tt>TodoAppView</tt> : finally, this Epoxy view manages the main application container view. It uses native Backbone <tt>events</tt> to setup the application's primary controls used to add and remove items from the <tt>TodosCollection</tt> instance. It also applies an Epoxy <tt>collection:</tt> binding to the view's default collection source (referenced as <tt>$collection</tt>).</li>
+				<li><tt>TodoAppView</tt> : finally, this Epoxy view manages the main application container view. It uses native Backbone <tt>events</tt> to setup the application's primary controls used to add and remove items from the <tt>TodosCollection</tt> instance. It also applies an Epoxy <tt>collection:</tt> binding to the view's default collection source (referenced as <tt>$collection</tt>). Also note, <tt>TodoItemView</tt> is provided as the <b>itemView</b> property for rendering individual collection items.</li>
 			</ul>
 			
 			<p>Mind you, this application certainly did not require data binding to make it work. In fact, data binding is overkill for many common application scenarios. Keep that in mind while assessing the goals and objectives of your projects. Ironically, the author of this library is a very reserved advocate of data binding: while data binding is a great tool at the moments when you need it, it should NOT be considered as an automatic choice approach when creating an interface; especially when using Backbone. However when a situation does lend itself to data binding... you'd like it to be done well.</p>
