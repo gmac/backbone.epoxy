@@ -1031,11 +1031,11 @@
 			self.model = addSourceToViewContext(self, context, options, 'model');
 			self.viewModel = addSourceToViewContext(self, context, options, 'viewModel');
 			self.collection = addSourceToViewContext(self, context, options, 'collection');
-      
-      // Support legacy "collection.view" API for rendering list items:
+
+			// Support legacy "collection.view" API for rendering list items:
 			if (self.collection && self.collection.view) {
-			  self.itemView = self.collection.view;
-		  }
+				self.itemView = self.collection.view;
+			}
 
 			// Add all additional data sources:
 			if (sources) {
