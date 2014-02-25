@@ -7,7 +7,6 @@
 
 (function(root, factory) {
 
-
 	if (typeof exports !== 'undefined') {
 		// Define as CommonJS export:
 		module.exports = factory(require("underscore"), require("backbone"));
@@ -605,7 +604,7 @@
 		collection: makeHandler({
 			init: function($element, collection, context) {
 				if (!isCollection(collection)) throw('Binding "collection" requires a Collection.');
-				if (!isFunction(this.view.itemView)) throw('Binding "collection" requires a itemView.');
+				if (!isFunction(this.view.itemView)) throw('Binding "collection" requires an itemView.');
 				this.v = {};
 			},
 			set: function($element, collection, target) {
