@@ -812,9 +812,14 @@
 			}
 		}),
 
-		// Text: write-only. Sets the text value of an element.
-		text: makeHandler(function($element, value) {
-			$element.text(value);
+		// Text: read-write. Gets and sets the text value of an element.
+		text: makeHandler({
+			get: function($element) {
+				return $element.text();
+			},
+			set: function($element, value) {
+				$element.text(value);
+			}
 		}),
 
 		// Toggle: write-only. Toggles the visibility of an element.
