@@ -829,7 +829,7 @@
 			},
 			set: function($element, value) {
 				try {
-					if ($element.val() != value) $element.val(value);
+					if ($element.val() != value + '') $element.val(value);
 				} catch (error) {
 					// Error setting value: IGNORE.
 					// This occurs in IE6 while attempting to set an undefined multi-select option.
