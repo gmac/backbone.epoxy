@@ -926,9 +926,15 @@ var view = new ListView();</code></pre>
 			
 			<div class="section">
 				<h3 id="handler-text">text</h3>
-				<span class="alias">read-only</span>
+				<span class="alias">read-write</span>
 				<code>data-bind="text:modelAttribute"</code>
 				<p>Sets the element's text content to the bound model attribute value. Uses the jQuery <b>text</b> method.</p>
+
+				<p>To enable a writeable binding, add the HTML5 <tt>contenteditable</tt> property to the element:</p>
+
+<pre><code class="html">&lt;span contenteditable="true" data-bind="text:yourName,events:['blur paste']"&gt;
+    Select to edit your name.
+&lt;/span&gt;</code></pre>
 			</div>
 			
 			<div class="section">
