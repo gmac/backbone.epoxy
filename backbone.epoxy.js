@@ -41,7 +41,11 @@
 			extend = extend || {};
 
 			for (var i in this.prototype) {
-				if (this.prototype.hasOwnProperty(i) && i !== 'constructor' && i !== 'bindings' ) {
+				// Skip override on pre-defined binding declarations:
+				if (i === 'bindings' && extend.bindings) continue;
+
+				// Assimilate non-constructor Epoxy prototype properties onto extended object:
+				if (this.prototype.hasOwnProperty(i) && i !== 'constructor') {
 					extend[i] = this.prototype[i];
 				}
 			}

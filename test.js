@@ -564,6 +564,23 @@ describe("Backbone.Epoxy.View", function() {
 	});
 
 
+	it("should allow Epoxy view configuration to mixin with another Backbone View but not overriding bindings.", function() {
+		var MixinView = Backbone.View.extend({
+			el: "<div data-epoxy='text:ship'></div>",
+			model: new Backbone.Model({ship:"Deathstar"}),
+			bindings: 'data-epoxy',
+			initialize: function() {
+				this.applyBindings();
+			}
+		});
+
+		Backbone.Epoxy.View.mixin( MixinView.prototype );
+		var view = new MixinView();
+		
+		expect( view.$el.text() ).to.equal( "Deathstar" );
+	});
+
+
 	it("should bind view elements to model via binding selector map.", function() {
 		var $el = $("#tmpl-view .user-first");
 		expect( $el.text() ).to.equal( "Luke" );
