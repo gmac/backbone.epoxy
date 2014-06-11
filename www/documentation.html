@@ -707,7 +707,7 @@ var BindingView = Backbone.Epoxy.View.extend({
 				<ul>
 					<li>The binding must target a <tt>Backbone.Collection</tt> data source available within the <b><a href="#view-binding-context">binding context</a></b>. </li>
 
-					<li>The bound view must provide a property called <b>itemView</b>, which defines a <tt>Backbone.View</tt> constructor for rendering collection items.</li>
+					<li>The bound view must provide a property called <b>itemView</b>, which defines a <tt>Backbone.View</tt> constructor for rendering collection items. This item will receive a <tt>collectionView</tt> option when constructed that references the parent view.</li>
 				</ul>
 
 <pre class="js"><code class="js">// View for individual collection items:

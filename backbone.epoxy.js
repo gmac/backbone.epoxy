@@ -635,7 +635,7 @@
 					if (!views.hasOwnProperty(target.cid)) {
 
 						// Add new view:
-						views[ target.cid ] = view = new ItemView({model: target});
+						views[ target.cid ] = view = new ItemView({model: target, collectionView: this.view});
 						var index = _.indexOf(models, target);
 						var $children = $element.children();
 
@@ -677,7 +677,7 @@
 						// Reset with new views:
 						this.clean();
 						collection.each(function(model) {
-							views[ model.cid ] = view = new ItemView({model: model});
+							views[ model.cid ] = view = new ItemView({model: model, collectionView: this.view});
 							frag.appendChild(view.el);
 						});
 					}
@@ -1042,6 +1042,7 @@
 			self.collection = addSourceToViewContext(self, context, options, 'collection');
 
 			// Support legacy "collection.view" API for rendering list items:
+			// **Deprecated: will be removed after next release*.*
 			if (self.collection && self.collection.view) {
 				self.itemView = self.collection.view;
 			}
