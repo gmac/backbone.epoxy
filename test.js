@@ -592,6 +592,24 @@ describe("Backbone.Epoxy.View", function() {
 		expect( $el.text() ).to.equal( "Luke" );
 	});
 
+	it("should bind view element to model via binding selector map in object notation.", function() {
+		
+		var view = new (Backbone.Epoxy.View.extend({
+			el: "<span class='first-name'></span>",
+			model: dataModel,
+			bindings: {
+				".first-name": {
+					text: 'firstName',
+					attr: {
+						title: 'format("$1 $2", firstName, lastName)'
+					}
+				}
+			}
+		}));
+
+		expect( view.$el.text() ).to.equal( "Luke" );
+		expect( view.$el.attr('title') ).to.equal( "Luke Skywalker" );
+	});
 
 	it("should include top-level view container in bindings searches.", function() {
 

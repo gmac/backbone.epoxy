@@ -19,7 +19,7 @@
   }
 
 }(this, function(_, Backbone) {
-  
+
   // Epoxy namespace:
   var Epoxy = Backbone.Epoxy = {};
 
@@ -52,12 +52,12 @@
       return extend;
     }
   };
-  
+
   // Calls method implementations of a super-class object:
   function _super(instance, method, args) {
     return instance._super.prototype[method].apply(instance, args);
   }
-  
+
   // Epoxy.Model
   // -----------
   var modelMap;
@@ -65,7 +65,7 @@
 
   Epoxy.Model = Backbone.Model.extend({
     _super: Backbone.Model,
-    
+
     // Backbone.Model constructor override:
     // configures computed model attributes around the underlying native Backbone model.
     constructor: function(attributes, options) {
@@ -114,10 +114,10 @@
 
       // Default options definition:
       options = options || {};
-      
+
       // Create store for capturing computed change events:
       var computedEvents = this._setting = [];
-      
+
       // Attempt to set computed attributes while not unsetting:
       if (!options.unset) {
         // All param properties are tested against computed setters,
@@ -125,13 +125,13 @@
         // Optionally, an computed setter may return key/value pairs to be merged into the set.
         params = deepModelSet(this, params, {}, []);
       }
-      
+
       // Remove computed change events store:
       delete this._setting;
-      
+
       // Pass all resulting set params along to the underlying Backbone Model.
       var result = _super(this, 'set', [params, options]);
-      
+
       // Dispatch all outstanding computed events:
       if (!options.silent) {
         // Make sure computeds get a "change" event:
@@ -479,7 +479,7 @@
       if (!_.isEqual(value, this.value)) {
         this.value = value;
         var evt = ['change:'+this.name, this.model, value];
-        
+
         if (this.model._setting) {
           this.model._setting.push(evt);
         } else {
@@ -990,7 +990,7 @@
 
   Epoxy.View = Backbone.View.extend({
     _super: Backbone.View,
-    
+
     // Backbone.View constructor override:
     // sets up binding controls around call to super.
     constructor: function(options) {
@@ -1088,6 +1088,10 @@
           // Get DOM jQuery reference:
           var $element = queryViewForSelector(self, selector);
 
+          // flattern object notated binding declaration
+          if(_.isObject(elementDecs)){
+            elementDecs = flatternBindingDescription(elementDecs);
+          }
           // Ignore empty DOM queries (without errors):
           if ($element.length) {
             bindElementToView(self, $element, elementDecs, context, handlers, filters);
@@ -1290,6 +1294,22 @@
     return values;
   }
 
+  // Converts binding description in object notation to 'flat' string version
+  function flatternBindingDescription(description) {
+    var level = arguments[1] || 1;
+    var value, key, result, stringPair;
+    result = [];
+    for (key in description){
+      value = description[key];
+      if (_.isObject(value)){
+        value = "{" + flatternBindingDescription(value, level + 1) + "}";
+      }
+      stringPair = key + ":" + value;
+      result.push(stringPair)
+    }
+    return result.join(',');
+  }
+
 
   // Epoxy.View -> Binding
   // ---------------------
@@ -1298,11 +1318,11 @@
   // @param $element: the target element (as jQuery) to bind.
   // @param handler: the handler object to apply (include all handler methods).
   // @param accessor: an accessor method from the binding context that exchanges data with the model.
-  // @param events: 
-  // @param context: 
-  // @param bindings: 
+  // @param events:
+  // @param context:
+  // @param bindings:
   function EpoxyBinding(view, $element, handler, accessor, events, context, bindings) {
-    
+
     var self = this;
     var tag = ($element[0].tagName).toLowerCase();
     var changable = (tag == 'input' || tag == 'select' || tag == 'textarea' || $element.prop('contenteditable') == 'true');
@@ -1310,7 +1330,7 @@
     var reset = function(target) {
       self.$el && self.set(self.$el, readAccessor(accessor), target);
     };
-    
+
     self.view = view;
     self.$el = $element;
     self.evt = events;
