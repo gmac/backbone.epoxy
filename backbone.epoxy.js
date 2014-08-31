@@ -132,15 +132,19 @@
 			// Pass all resulting set params along to the underlying Backbone Model.
 			var result = _super(this, 'set', [params, options]);
 			
-			// Dispatch all outstanding events:
+			// Dispatch all outstanding computed events:
 			if (!options.silent) {
+				// Make sure computeds get a "change" event:
+				if (!this.hasChanged() && computedEvents.length) {
+					this.trigger('change', this);
+				}
+
+				// Trigger each individual computed attribute change:
+				// NOTE: computeds now officially fire AFTER basic "change"...
+				// We can't really fire them earlier without duplicating the Backbone "set" method here.
 				_.each(computedEvents, function(evt) {
 					this.trigger.apply(this, evt);
 				}, this);
-				
-				if (!this.hasChanged()) {
-					this.trigger('change', this);
-				}
 			}
 			return result;
 		},
