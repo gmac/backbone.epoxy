@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <!-- Always force latest IE rendering engine or request Chrome Frame -->
+  <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+
+  <title>Epoxy.js : Elegant Data Binding for Backbone | <%= current_page.data.title || '' %></title>
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="description" content="Epoxy is an elegant and extensible data binding library for Backbone.js designed to hook view elements directly to data models.">
+  <meta name="author" content="Greg MacWilliam">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-title" content="Epoxy.js">
+  <meta name="application-name" content="Epoxy.js">
+
+  <link rel="shortcut icon" href="<%= image_path('favicon.ico') %>" type="image/x-icon">
+  <link rel="icon" href="<%= image_path('favicon.ico') %>" type="image/x-icon">
+  
+  <%= stylesheet_link_tag "screen" %>
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-39215101-1']);
+    _gaq.push(['_trackPageview']);
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+</head>
+<body class="<%= page_classes %>">
+  <div id="page">
+    <div class="banner clearfix" role="banner">
+      <p class="title"><span><b>Epoxy</b>.js</span> Elegant Data Binding for Backbone</p>
+      <div class="download">
+        <a href="https://raw.githubusercontent.com/gmac/backbone.epoxy/master/backbone.epoxy.min.js" class="download-button">Download Epoxy</a>
+        <p class="download-info">11k min, 2k gzip <i>|</i> <a href="https://github.com/gmac/backbone.epoxy">GitHub Full Source</a></p>
+      </div>
+    </div>
+    <div class="navigation" role="navigation">
+      <ul class="nav-main clearfix">
+        <li<%= ' class="active"' if page_classes == 'index' %>><a href="index.html">About Epoxy.js</a></li>
+        <li<%= ' class="active"' if page_classes == 'tutorials' %>><a href="tutorials.html">Getting Started</a></li>
+        <li<%= ' class="active"' if page_classes == 'documentation' %>><a href="documentation.html">Documentation</a></li>
+      </ul>
+      <% if content_for?(:table_of_contents) %>
+      <div class="nav-toc">
+        <div class="nav-toc-content">
+          <%= yield_content :table_of_contents %>
+        </div>
+      </div>
+      <% end %>
+    </div>
+    <div class="main" role="main">
+      <%= yield %>
+      <div class="footer" role="contentinfo">
+        <p>Epoxy.js for Backbone is available on <a href="https://github.com/gmac/backbone.epoxy">GitHub</a>.<br>
+        &copy; <%= Time.now.year %> Greg MacWilliam (<a href="https://twitter.com/gmacwilliam">@gmacwilliam</a>).</p>
+      </div>
+    </div>
+  </div>
+  <%= javascript_include_tag "all" %>
+</body>
+</html>

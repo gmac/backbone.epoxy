@@ -1,16 +1,19 @@
+@import 'compass';
+@import 'reset';
+
 @font-face {
     font-family: 'BebasRegular';
-    src: url('BEBAS___-webfont.eot');
-    src: url('BEBAS___-webfont.eot?#iefix') format('embedded-opentype'),
-         url('BEBAS___-webfont.woff') format('woff'),
-         url('BEBAS___-webfont.ttf') format('truetype'),
-         url('BEBAS___-webfont.svg#BebasRegular') format('svg');
+    src: font-url("BEBAS___-webfont.eot");
+    src: font-url("BEBAS___-webfont.eot?#iefix") format('embedded-opentype'),
+         font-url("BEBAS___-webfont.woff") format('woff'),
+         font-url("BEBAS___-webfont.ttf") format('truetype'),
+         font-url("BEBAS___-webfont.svg#BebasRegular") format('svg');
     font-weight: normal;
     font-style: normal;
 }
 
 body {
-	background: #000 url(../images/tile-dk.png) repeat;
+	background: #000 image-url("tile-dk.png") repeat;
 	margin: 0;
 }
 
@@ -54,7 +57,7 @@ strong {
 	background-color: #fff;
 	font: 14px/1.5em 'Helvetica Neue', Helvetica, Arial;
 	margin: 0 auto;
-	width: 990px;
+	max-width: 990px;
 }
 
 .news {
@@ -67,11 +70,16 @@ strong {
 .banner {
 	border-bottom: 1px solid #ccc;
 	float: left;
-	left: 280px;
-	position: relative;
 	margin-bottom: 40px;
 	padding: 15px 0 40px;
-	width: 660px;
+}
+
+.banner,
+.main {
+	margin-left: 260px;
+	max-width: 660px;
+	padding-left: 30px;
+	padding-right: 30px;
 }
 
 .title {
@@ -112,10 +120,12 @@ strong {
 	font-weight:normal;
 	padding:6px 24px;
 	text-decoration:none;
-}.download-button:hover {
+}
+.download-button:hover {
 	color: #fff;
 	text-decoration: underline;
-}.download-button:active {
+}
+.download-button:active {
 	position:relative;
 	top:1px;
 }
@@ -141,7 +151,7 @@ strong {
 }
 
 .navigation {
-	background: #fefefe url(../images/tile-lt.png) repeat;
+	background: #fefefe image-url("tile-lt.png") repeat;
 	border-right: 1px solid #ccc;
 	position: absolute;
 	width: 230px;
@@ -208,9 +218,6 @@ strong {
 
 .main {
 	clear: both;
-	left: 280px;
-	position: relative;
-	width: 660px;
 }
 
 .features {
@@ -228,19 +235,19 @@ strong {
 }
 
 .features .computed {
-	background: url(../images/icon-computed.png) no-repeat;
+	background: image-url("icon-computed.png") no-repeat;
 }
 
 .features .declarative {
-	background: url(../images/icon-declarative.png) no-repeat;
+	background: image-url("icon-declarative.png") no-repeat;
 }
 
 .features .mapping {
-	background: url(../images/icon-mapping.png) no-repeat;
+	background: image-url("icon-mapping.png") no-repeat;
 }
 
 .features .refresh {
-	background: url(../images/icon-refresh.png) no-repeat;
+	background: image-url("icon-refresh.png") no-repeat;
 }
 
 .section {
@@ -445,10 +452,9 @@ code .tag {
 	text-decoration: underline;
 }
 
-@media only screen and (max-width: 990px) {
+@media only screen and (max-width: 750px) {
 	#page {
 		background-image: none;
-		width: 600px;
 	}
 	
 	h1 {
@@ -504,17 +510,12 @@ code .tag {
 	
 	.main {
 		left: auto;
-		margin: 0 30px;
-		position: static;
+		margin: 0;
 		width: auto;
 	}
 }
 
 @media only screen and (max-width: 600px) {
-	#page {
-		width: 350px;
-	}
-	
 	.title {
 		font-size: 15px;
 	}
@@ -533,6 +534,6 @@ code .tag {
 	}
 	
 	.main {
-		margin: 0 20px;
+		margin: 0;
 	}
 }

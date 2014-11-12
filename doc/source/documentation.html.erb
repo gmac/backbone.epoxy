@@ -1,0 +1,1104 @@
+---
+title: Documentation
+---
+<% content_for :table_of_contents do %>
+<b><a href="#model">Epoxy.Model</a></b>
+<ul>
+	<li><b><a href="#model-extend">extend</a></b></li>
+	<li><b><a href="#model-mixin">mixin</a></b></li>
+	<li><b><a href="#model-constructor">constructor</a></b></li>
+	<li><a href="#model-add-computed">addComputed</a></li>
+	<li><a href="#model-clear-computeds">clearComputeds</a></li>
+	<li><a href="#model-computeds">computeds</a></li>
+	<li><a href="#model-destroy">destroy</a></li>
+	<li><a href="#model-get">get</a></li>
+	<li><a href="#model-get-copy">getCopy</a></li>
+	<li><a href="#model-has-computed">hasComputed</a></li>
+	<li><a href="#model-init-computeds">initComputeds</a></li>
+	<li><a href="#model-modify-array">modifyArray</a></li>
+	<li><a href="#model-modify-object">modifyObject</a></li>
+	<li><a href="#model-remove-computed">removeComputed</a></li>
+	<li><a href="#model-set">set</a></li>
+	<li><a href="#model-tojson">toJSON</a></li>
+</ul>
+
+<b><a href="#view">Epoxy.View</a></b>
+<ul>
+	<li><b><a href="#view-extend">extend</a></b></li>
+	<li><b><a href="#view-mixin">mixin</a></b></li>
+	<li><b><a href="#view-constructor">constructor</a></b></li>
+	<li><b><a href="#view-binding-context">binding context</a></b></li>
+	<li><a href="#view-apply-bindings">applyBindings</a></li>
+	<li><a href="#view-binding-filters">bindingFilters</a></li>
+	<li><a href="#view-binding-handlers">bindingHandlers</a></li>
+	<li><a href="#view-bindings">bindings</a></li>
+	<li><a href="#view-binding-sources">bindingSources</a></li>
+	<li><a href="#view-computeds">computeds</a></li>
+	<li><a href="#view-get-binding">getBinding</a></li>
+	<li><a href="#view-remove">remove</a></li>
+	<li><a href="#view-remove-bindings">removeBindings</a></li>
+	<li><a href="#view-set-binding">setBinding</a></li>
+	<li><a href="#view-setter-options">setterOptions</a></li>
+	<li><a href="#view-view-model">viewModel</a></li>
+</ul>
+
+<b><a href="#binding-handlers">View Binding Handlers</a></b>
+<ul>
+	<li><a href="#handler-attr">attr</a></li>
+	<li><a href="#handler-checked">checked</a></li>
+	<li><a href="#handler-classes">classes</a></li>
+	<li><a href="#handler-collection">collection</a></li>
+	<li><a href="#handler-css">css</a></li>
+	<li><a href="#handler-disabled">disabled</a></li>
+	<li><a href="#handler-enabled">enabled</a></li>
+	<li><a href="#handler-events">events</a></li>
+	<li><a href="#handler-html">html</a></li>
+	<li><a href="#handler-item-view">itemView</a></li>
+	<li><a href="#handler-options">options</a></li>
+	<li><a href="#handler-options-default">optionsDefault</a></li>
+	<li><a href="#handler-options-empty">optionsEmpty</a></li>
+	<li><a href="#handler-template">template</a></li>
+	<li><a href="#handler-text">text</a></li>
+	<li><a href="#handler-toggle">toggle</a></li>
+	<li><a href="#handler-value">value</a></li>
+</ul>
+
+<b><a href="#binding-filters">View Binding Filters</a></b>
+<ul>
+	<li><a href="#filter-all">all</a></li>
+	<li><a href="#filter-any">any</a></li>
+	<li><a href="#filter-csv">csv</a></li>
+	<li><a href="#filter-decimal">decimal</a></li>
+	<li><a href="#filter-format">format</a></li>
+	<li><a href="#filter-integer">integer</a></li>
+	<li><a href="#filter-length">length</a></li>
+	<li><a href="#filter-none">none</a></li>
+	<li><a href="#filter-not">not</a></li>
+	<li><a href="#filter-select">select</a></li>
+</ul>
+
+<b><a href="#binding">Epoxy.binding</a></b>
+<ul>
+	<li><a href="#binding-add-filter">addFilter</a></li>
+	<li><a href="#binding-add-handler">addHandler</a></li>
+	<li><a href="#binding-allowed-params">allowedParams</a></li>
+	<li><a href="#binding-config">config</a></li>
+	<li><a href="#binding-empty-cache">emptyCache</a></li>
+</ul>
+<% end %>
+
+<h1>Documentation</h1>
+
+<div class="section">
+	<h2 id="model">Epoxy.Model</h2>
+
+	<p>The Epoxy Model object extends <tt>Backbone.Model</tt>, providing a new model abstract to be extended into your application.</p>
+
+	<p>The Epoxy model introduces computed attributes on top of Backbone's native model attributes. Computed attributes operate as accessors and mutators, where a computed attribute will <b>get</b> an assembled value derived from other model attributes, and will <b>set</b> one more more mutated values derived from an input. Computed attributes are virtualized properties of the model: they may be <b>get</b> and <b>set</b> just like normal model attributes, and will trigger <tt>"change"</tt> events on the model when modified, however they do not exist within the model's <b>attributes</b> table, nor will they be saved with model data. Computed model attributes exist only in memory for the lifespan of a model instance. Computed attributes bind themselves to their dependencies and will update themselves in response to any of their dependencies changing, and then in turn trigger their own <tt>"change:attribute"</tt> event on the model.</p>
+</div>
+<div class="section">
+	<h3 id="model-extend">extend</h3>
+	<code>Backbone.Epoxy.Model.extend(properties, [classProperties])</code>
+	<p>Extends the <tt>Epoxy.Model</tt> constructor for use in your own implementation.</p>
+</div>
+
+<div class="section">
+	<h3 id="model-mixin">mixin</h3>
+	<code>Backbone.Epoxy.Model.mixin([target])</code>
+	<p>Generates an abstract of <tt>Epoxy.Model</tt> methods for mixin with your Model classes.</p>
+	
+<pre><code class="js">_.extend( MyModel.prototype, Backbone.Epoxy.Model.mixin() );
+// or:
+Backbone.Epoxy.Model.mixin( MyModel.prototype );</code></pre>
+	
+	<p>When initializing your model instances, you'll need to manually resolve the Epoxy constructor options and then call <b>initComputeds</b> to reproduce Epoxy model setup.</p>
+</div>
+
+<div class="section">
+	<h3 id="model-constructor">constructor</h3>
+	<code>new Backbone.Epoxy.Model([attributes], [options])</code>
+	<p>Creates a new <tt>Epoxy.Model</tt> instance. When constructed, <tt>computeds</tt> may be passed as an options property for direct assignment to the model. A constructed model will automatically initialize all computed property definitions.</p>
+</div>
+
+<div class="section">
+	<h3 id="model-add-computed">addComputed</h3><br>
+	<code>model.addComputed(name, params) or...</code><br>
+	<code>model.addComputed(name, getter, [setter], [*deps])</code>
+	<p>Adds a computed attribute to the model. Computed attributes operate as accessors and mutators, where a computed attribute will <b>get</b> an assembled value derived from other model attributes, and will <b>set</b> one more more mutated values derived from an input. Computeds bind themselves to their dependency attributes and will update themselves in response to any of their dependencies changing, then in turn trigger their own <tt>"change:attribute"</tt> event on the model.</p>
+
+	<p id="model-computed-params">The <b>addComputed</b> method is called with an attribute name and a params object defining the following:</p>
+	
+	<ul>
+		<li><b>get:</b> <i>Required function; invoked in context of the model</i>. This getter function assembles its value based on other model attributes (native or computed), and then returns the generated value. If a <tt>deps</tt> param is also specified, then the dependency array will be mapped and injected as arguments into the getter function. Note that a getter function should always reference other model attributes using the model's <b>get</b> method (for <a href="#model-computed-deps">automatic dependency mapping</a>).</li>
+              
+		<li><b>[deps]:</b> <i>Optional array</i>. An array of attribute names that the getter function depends on. When defined, the dependency attributes will be mapped and injected as arguments into the getter function. Technically this manual property mapping is only required if your getter contains unreachable values that would be missed by automatic dependency mapping (discussed below).</li>
+              					
+		<li><b>[set]:</b> <i>Optional function; invoked in context of the model</i>. A mutator function which receives a raw input value, and returns an object defining new key/value pairs to be merged into the model. Computed attributes declared without a <b>set</b> function are read-only.</li>
+	</ul>
+	
+	<p>Note that the <b>get</b> and <b>set</b> functions are invoked in the context of their parent model, so referencing <tt>this</tt> within their scopes refers to the model.</p>
+	
+<pre><button class="run">Run</button><code class="js">var model = new Backbone.Epoxy.Model({price:100});
+model.addComputed("formattedPrice", {
+    deps: ["price"],
+    get: function( price ) {
+        return "$"+ price;
+    },
+    set: function( value ) {
+        return {price: parseInt(value.replace("$", ""))}
+    }
+});
+
+alert( model.get("formattedPrice") ); // '$100'
+model.set("formattedPrice", "$150");
+alert( model.get("price") ); // 150</code>	
+</pre>
+	
+	<p><b id="model-computed-deps">Automatic Dependency Mapping</b></p>
+	<p>In the above example, <tt>["price"]</tt> is manually declared as a dependency of the computed getter (meaning the getter will need to update itself when <tt>"price"</tt> changes). While this manual declaration is a nice safety net, we could also exclude the <tt>deps</tt> param and just <b>get</b> the <tt>price</tt> attribute instead, allowing automatic dependency mapping to discover attribute relationships.</p>
+	
+	<p>Automatic dependency mapping works using the <b>get</b> method wrapper of the <tt>Epoxy.Model</tt>. While generating a computed attribute's initial value, the <tt>Epoxy.Model</tt> registers all attribute names requested from <i>all</i> <tt>Epoxy.Model</tt> instances, and binds the computed attribute accordingly. Automatic mapping works great given the following:</p>
+	
+	<ul>
+		<li>All model references (the parent model, or others) are instances of <tt>Epoxy.Model</tt>.</li>
+		<li>All model attributes are accessed using their model's <b>get</b> method.</li>
+		<li>All <b>get</b> calls are free of conditional logic (keep reading...)</li>
+	</ul>
+	
+	<p>Regarding conditional <b>get</b> calls: this situation may create unreachable getters that cannot be automatically mapped. Consider the following BROKEN example:</p>
+	
+<pre>
+<code class="js">var model = new Backbone.Epoxy.Model({
+    shortName: "Luke",
+    fullName: "Luke Skywalker",
+    active: false
+});
+
+// BROKEN:
+model.addComputed("displayName", function() {
+    return this.get("active") ? this.get("fullName") : this.get("shortName");
+});</code>	
+</pre>
+				<p>See the error in the above example? The <tt>fullName</tt> and <tt>shortName</tt> attributes are accessed conditionally, therefore one will be unreachable while mapping dependencies. To fix this, we could either manually declare dependencies, or else <b>get</b> all dependencies as local variables prior to conditional logic, like so:</p>
+				
+<pre>
+<code class="js">// FIXED:
+model.addComputed("displayName", function() {
+    var fullName = this.get("fullName");
+    var shortName = this.get("shortName");
+    return this.get("active") ? fullName : shortName;
+});</code>	
+</pre>
+
+	<p><b id="model-computed-value">Storing Raw Values</b></p>
+	
+	<p>A lesser use-case for computed attributes is the storage of additional raw model values. When a value is assigned to a computed, that value may be <b>get</b> and <b>set</b> through the model and will trigger change events, however it will not be stored in the model's attributes table, nor saved with model data. Raw values are defined as a computed attribute with a single <tt>{value:'myValue'}</tt> param.</p>
+	
+<pre><button class="run">Run</button><code class="js">var model = new Backbone.Epoxy.Model();
+model.addComputed("rawValue", {value: 100});
+
+alert( model.get("rawValue") ); // 100
+model.set("rawValue", 200);
+alert( model.get("rawValue") ); // 200</code>	
+</pre>
+
+	<p>Use the <b><a href="#model-computeds">computeds</a></b> hash to automatically initialize computed attributes on your model instances.</p>
+</div>
+
+<div class="section">
+	<h3 id="model-clear-computeds">clearComputeds</h3>
+	<code>model.clearComputeds()</code>
+	<p>Removes all computed properties on the model and cleans up their bound events. Cleared computeds will no longer exist on the model, so will no longer be accessible or trigger events. Be sure to call <b>clearComputeds</b> when deprecating an Epoxy model without specifically calling its <b>destroy</b> method.</p>
+</div>
+
+<div class="section">
+	<h3 id="model-computeds">computeds</h3>
+	<code>model.computeds</code>
+	<p>A hash table declaring computed attributes to be automatically added to a model instance by <b>initComputeds</b>. Uses <b><a href="#model-add-computed">addComputed</a></b> to create computed attributes. Computeds may be declared with a <a href="#model-computed-params">computed params</a> object, or as a getter function (uses <a href="#model-computed-deps">automatic dependency mapping</a>).</p>
+
+<pre><code class="js">var ComputedModel = Backbone.Epoxy.Model.extend({
+    defaults: {
+        firstName: "Luke",
+        lastName: "Skywalker"
+    },
+    computeds: {
+        fullNameParams: {
+            deps: ["firstName", "lastName"],
+            get: function( firstName, lastName ) {
+                return firstName +" "+ lastName;
+            },
+            set: function( value ) {
+                var first = value.split(" ")[0];
+                var last = value.split(" ")[1];
+                return {firstName: first, lastName: last};
+            }
+        },
+        fullNameGetter: function() {
+            return this.get("firstName") +" "+ this.get("lastName");
+        }
+    }
+});</code></pre>
+</div>
+
+<div class="section">
+	<h3 id="model-destroy">destroy</h3>
+	<code>model.destroy([options])</code>
+	<p>Override wrapper for the Backbone Model's native <b>destroy</b> method. This wrapper cleans up Epoxy model configuration, then defers to the Backbone Model's native <b>destroy</b> method. If you'd like to clean up a model without completely destroying it, use the <b>clearComputeds</b> method.</p>
+</div>
+
+<div class="section">
+	<h3 id="model-get">get</h3>
+	<code>model.get(attribute)</code>
+	<p>Override wrapper for the Backbone Model's native <b>get</b> method. This override allows native model attributes and Epoxy computed attributes to be accessed through a common API.</p>
+	
+	<p>The Epoxy <b>get</b> method will first check for a computed attribute, then defers to the Backbone Model's native <b>get</b> method if no computed value was found. Remember that a computed attribute overrides a native attribute with the same name, so be mindful of naming collisions.</p>
+</div>
+
+<div class="section">
+	<h3 id="model-get-copy">getCopy</h3>
+	<code>model.getCopy(attribute)</code>
+	<p>Gets a model attribute value (native or computed), and performs a shallow copy on any non-primitive values returned. This is useful for getting copies of <tt>Object</tt> and <tt>Array</tt> values that you plan to modify outside of the model, then resubmit with changes (remember that <tt>"change"</tt> events only trigger for non-primitive values when their identity changes). The <b><a href="#model-modify-array">modifyArray</a></b> and <b><a href="#model-modify-object">modifyObject</a></b> methods may also be used to perform object changes internally within the model.</p>
+</div>
+
+<div class="section">
+	<h3 id="model-has-computed">hasComputed</h3>
+	<code>model.hasComputed(attribute)</code>
+	<p>Returns <tt>true</tt> if the model has a computed attribute with the specified name. Note that the Backbone Model's native <b>has</b> method is NOT modified by Epoxy, so will still only report on the presence of Backbone-native model attributes.</p>
+</div>
+
+<div class="section">
+	<h3 id="model-init-computeds">initComputeds</h3>
+	<code>model.initComputeds()</code>
+	<p>Clears all computed model attributes, then builds all computed attributes defined in the model's <b>computeds</b> hash. This method is automatically called by the Epoxy model constructor after initializing the model, therefore you should only need to call this manually when using Epoxy as a mixin library.</p>
+</div>
+
+<div class="section">
+	<h3 id="model-modify-array">modifyArray</h3>
+	<code>model.modifyArray(attribute, arrayMethod, [*args])</code>
+	<p>Performs an internal update on a stored <tt>Array</tt> model attribute (native or computed) using a standard JavaScript array modifier (<tt>pop</tt>, <tt>push</tt>, <tt>reverse</tt>, <tt>shift</tt>, <tt>slice</tt>, <tt>sort</tt>, <tt>splice</tt>, and <tt>unshift</tt>), then triggers a change event for the modified model attribute. Invoke with the model attribute name to modify, a string of the array method name to call, and any additional arguments to be passed into the array method. Returns any results from the array method. Calling <b>modifyArray</b> on a non-array attribute will take no action.</p>
+	
+<pre><button class="run">Run</button><code class="js">var model = new Backbone.Epoxy.Model({wordList:[]});
+model.modifyArray("wordList", "push", "deathstar");
+alert( model.get("wordList").length );</code>	
+</pre>
+</div>
+
+<div class="section">
+	<h3 id="model-modify-object">modifyObject</h3>
+	<code>model.modifyObject(attribute, objectProperty, value)</code>
+	<p>Performs an internal update on a stored <tt>Object</tt> model attribute (native or computed), then triggers a change event for the modified model attribute. Invoke with the model attribute name to modify, a property name to set on the object, and a value to set as the object property. Setting <tt>undefined</tt> to a property will delete it from the object. Returns the modified object. Calling <b>modifyObject</b> will only take action on model attributes with an assessed type of <tt>"object"</tt>.</p>
+	
+<pre><button class="run">Run</button><code class="js">var model = new Backbone.Epoxy.Model({ wordsDict:{} });
+model.modifyObject("wordsDict", "deathstar", true);
+alert( model.get("wordsDict").hasOwnProperty("deathstar") );</code>	
+</pre>
+	</div>
+	
+	<div class="section">
+		<h3 id="model-remove-computed">removeComputed</h3>
+		<code>model.removeComputed(attribute)</code>
+		<p>Removes a computed attribute by name, and cleans up all bound listeners. A removed computed property will no longer exist within the model, so may no longer be accessed or trigger events.</p>
+	</div>
+	
+	<div class="section">
+		<h3 id="model-set">set</h3>
+		<code>model.set(attributes, [options])</code>
+		<p>Override wrapper for the Backbone Model's native <b>set</b> method. This override allows basic model attributes and Epoxy computed/computed attributes to be accessed through a common API.</p>
+		
+		<p>The Epoxy <b>set</b> method will first check for a computed attribute, then defers to the Backbone Model's native <b>set</b> method if no computed was found. Remember that a computed attribute overrides a native attribute with the same name, so be mindful of naming collisions.</p>
+	</div>
+	
+	<div class="section">
+		<h3 id="model-tojson">toJSON</h3>
+		<code>model.toJSON([options])</code>
+		<p>Override wrapper for the Backbone Model's native <b>toJSON</b> method. Allows an optional <tt>{computed:true}</tt> param to be passed, specifying that computed attribute values should be included in the returned data.</p>
+	</div>
+	
+	<div class="section">
+		<h2 id="view">Epoxy.View</h2>
+
+		<p>The Epoxy View object extends <tt>Backbone.View</tt>, providing a new view abstract to be extended or mixed into your application.</p>
+
+		<p>The Epoxy View provides elegant and extensible hooks for binding data sources (<tt>Backbone.Model</tt> and/or <tt>Backbone.Collection</tt> instances) directly to DOM elements. When data attributes change, they will automatically trigger refresh of all bound view elements; seamlessly updating the view without requiring a complete render pass.</p>
+
+		<p>Also note that an Epoxy view may bind to a native <tt>Backbone.Model</tt> instance, or to an <tt>Epoxy.Model</tt> with specialized computed attributes. Because both model types operate with a common API, the Epoxy View does not depend on its <tt>Epoxy.Model</tt> counterpart to support model bindings. Therefore, you're free to exclude <tt>Epoxy.Model</tt> resources from your project if you just want view binding features.</p>
+	</div>
+	
+	<div class="section">
+		<h3 id="view-extend">extend</h3>
+		<code>Backbone.Epoxy.View.extend(properties, [classProperties])</code>
+		<p>Extends the <tt>Epoxy.View</tt> constructor for use in your own implementation.</p>
+	</div>
+	
+	<div class="section">
+		<h3 id="view-mixin">mixin</h3>
+		<code>Backbone.Epoxy.View.mixin([target])</code>
+		<p>Generates an abstract of <tt>Epoxy.View</tt> methods for mixin with your View classes.</p>
+
+<pre><code class="js">_.extend( MyView.prototype, Backbone.Epoxy.View.mixin() );
+// or:
+Backbone.Epoxy.View.mixin( MyView.prototype );</code></pre>
+
+	<p>When initializing your view instances, you'll need to manually resolve the Epoxy constructor options and then call <b>applyBindings</b> to reproduce Epoxy view setup.</p>
+</div>
+			
+<div class="section">
+	<h3 id="view-constructor">constructor</h3>
+	<code>new Backbone.Epoxy.View([options])</code>
+	<p>Creates a new <tt>Epoxy.View</tt> instance. The following attributes may be passed as options for direct assignment to the view instance: <tt>viewModel</tt>, <tt>bindings</tt>, <tt>bindingFilters</tt>, <tt>bindingHandlers</tt>, <tt>bindingSources</tt>, and/or <tt>computeds</tt>.</p>
+</div>
+
+<div class="section">
+	<h3 id="view-binding-context">binding context</h3>
+	<code>{$model:model, $collection:collection, [*attributes], [*computeds]}</code>
+	<p>To establish bindings, an Epoxy view generates a <i>binding context</i> with routers mapping all available data sources, model attributes, and computed properties of the view. This compiled binding context serves as a router table for exchanging values between data sources and the view. Live values may be read and written through the binding context using the view's <b><a href="#view-get-binding">getBinding</a></b> and <b><a href="#view-set-binding">setBinding</a></b> methods.</p>
+	
+	<p>As noted above, a binding context includes three sets of resources:</p>
+	
+	<ul>
+		<li><b>Data Sources</b>: these are instances of <tt>Backbone.Model</tt> and/or <tt>Backbone.Collection</tt> that provide themselves and their attributes to the view for binding. By default, an Epoxy view looks for three potential data sources: the view's <b>model</b> property, <b>viewModel</b> property, and its <b>collection</b> property. References to these data sources are automatically configured in the binding context as <tt>$model</tt>, <tt>$viewModel</tt>, and <tt>$collection</tt>. Additional models and collections may be added through the <b><a href="#view-binding-sources">bindingSources</a></b> hash, and will be added to the context as <tt>"$sourceName"</tt>.</li>
+		
+		<li><b>Model Attributes</b>: all <tt>Backbone.Model</tt> data sources will have their model attributes added to the binding context as well. For the view's primary <b>model</b> and <b>viewModel</b> properties, all attributes will be added using their normal names (ie: <tt>"attribute"</tt>). For additional models defined through <b>bindingSources</b>, each model's attributes will be aliased as <tt>"source_attribute"</tt>. Note that instances of <tt>Epoxy.Model</tt> will provide aliases to ALL attributes, including their computeds.</li>
+		
+		<li><b>Computed View Properties</b>: all computed property functions defined in the view's <tt>computeds</tt> hash are the final values added into the binding context.</li>
+	</ul>
+	
+	<p>Be mindful of naming conflicts within the binding context. Attributes of the <b>model</b>, <b>viewModel</b>, and view <b>computeds</b> are all aliased with their normal names. Therefore, specificity in naming is strongly encouraged.</p>
+</div>
+
+<div class="section">
+	<h3 id="view-apply-bindings">applyBindings</h3>
+	<code>view.applyBindings()</code>
+	<p>Removes any existing view bindings, then applies all bindings defined within the view's <b>bindings</b> object. All bindings are established using the view's <b>$el</b> as the display target, and the view's <b>model</b>, <b>collection</b>, and/or <b>bindingSources</b> properties as the data sources (see <b><a href="#view-binding-context">binding context</a></b> for more information). A view with invalid display or data targets will apply no bindings. If the <b>bindings</b> object is a string, that string will be used as an attribute selector query for extracting bindings from the view's <b>$el</b> container.</p>
+
+	<p>The <b>applyBindings</b> method is automatically called by the view constructor <i>after</i> the view's <b>initialize</b> method runs. This allows the <b>initialize</b> step to make adjustments within the view prior to bindings being applied. You generally shouldn't need to call <b>applyBindings</b> manually.</p>
+
+	<p>Also note that view bindings are baked at the time they are applied. All relationships between data sources and the view are established during this binding step and can only be reconfigured by unbinding and rebinding the view.</p>
+</div>
+
+<div class="section">
+	<h3 id="view-binding-filters">bindingFilters</h3>
+	<code>view.bindingFilters</code>
+	<p>A hash table defining a view's custom binding filters. Binding filters are used to format model data for display within the view. While Epoxy includes a core set of basic <a href="#binding-filters">binding filters</a> for common formatting operations; developers are also encouraged to extend their views with custom binding filters as needed.</p>
+
+	<p>Filters are added with a name string and a filter function or methods object. All filter arguments are pre-processed, so you may safely use conditional logic in filters without breaking automated dependency maps. All filtering functions are called anonymously and operate in global scope.</p>
+	
+	<p>A <b>one-way</b> filter is defined with a name and a getter function. This getter function requests one or more values from the model, formats them, and then returns the result to the bound view:</p>
+
+<pre><code class="js">var BindingView = Backbone.Epoxy.View.extend({
+    bindingFilters: {
+        yourName: function( firstName, lastName ) {
+            return "Your name is: "+ firstName +" "+ lastName;
+        }
+    }
+});</code></pre>
+
+	<p>The above filter definition would be bound as:</p>
+
+<pre><code class="html">&lt;div data-bind="text:yourName(firstName,lastName)"&gt;&lt;/div&gt;</code></pre>
+
+	<p>A <b>two-way</b> filter is defined with a methods object that provides filtering functions for getting/setting a value. A two-way filter may only apply to a single bound model value. The two-way getter function passes a formatted value from the model to the view, while the setter function passes the counter-formatted value from the view to the model:</p>
+			
+<pre><code class="js">var BindingView = Backbone.Epoxy.View.extend({
+    bindingFilters: {
+    	myFilter: {
+            get: function( value ) {
+                // Format the value as it passes from the model to the view...
+                return value;
+            },
+            set: function( value ) {
+                // Format the value as it passes from the view to the model...
+                return value;
+            }
+    	}
+    }
+});</code></pre>
+</div>
+
+<div class="section">
+	<h3 id="view-binding-handlers">bindingHandlers</h3>
+	<code>view.bindingHandlers</code>
+	<p>A hash table defining a view's custom binding handlers. Binding handlers are used to apply binding data to elements in the view. While Epoxy includes a core set of basic <a href="#binding-handlers">binding handlers</a> for managing an element's content and formatting, developers are encouraged to extend their views with customized binding handlers as needed.</p>
+		
+	<p>To declare binding handlers, define a new property on the <b>bindingHandlers</b> hash with a params object defining <b>set</b> and <b>get</b> function properties:</p>
+
+<pre>
+<code class="js">var BindingView = Backbone.Epoxy.View.extend({
+    bindingHandlers: {
+        printList: {
+            set: function( $element, value ) {
+                $element.text( value.join(",") );
+            },
+            get: function( $element, value, event ) {
+                return $element.text().split(",");
+            }
+        }
+    }
+});</code>
+</pre>				
+	<ul>
+		<li><b>set:</b> <i>Required function, invoked in context of the binding</i>. This function is used to WRITE data from the model into the view. The <b>set</b> function receives two arguments: a jQuery representation of the bound element, and the model attribute value to be written into the view. The <b>set</b> function returns nothing.</li>
+		<li><b>[get]:</b> <i>Optional function, invoked in context of the binding</i>. This function is used to READ data from the view to be sent to the model. The <b>get</b> function receives three arguments: a jQuery representation of the bound element, the current model value that will be changed (useful for comparison purposes), and the event (if any) that has triggered the getter to run. The <b>get</b> function should return a value to replace the current bound model attribute. When modifying <tt>Object</tt> and <tt>Array</tt> values, be sure to make changes to a <i>copy</i> of the current value, then submit that back to the model.</li>
+	</ul>
+	
+	<!--p>Note that the <b>get</b> and <b>set</b> functions are invoked in the context of their parent view, so referencing <tt>this</tt> within their scopes refers to the view.</p-->
+	
+	<p>While declaring a display-only binding handler (one-way binding), you may declare its setter function directly on the <b>bindingHandlers</b> hash:</p>
+
+<pre>
+<code class="js">var BindingView = Backbone.Epoxy.View.extend({
+    bindingHandlers: {
+        printList: function( $element, value ) {
+            $element.text( value.join(",") );
+        }
+    }
+});</code>
+</pre>
+</div>
+			
+<div class="section">
+	<h3 id="view-bindings">bindings</h3>
+	<code>view.bindings</code>
+	<p>A hash declaring the view's element-to-attribute binding scheme, or a string defining an element attribute to query from the view's DOM. All bindings are established using the view's <b>$el</b> reference as the display target, and the view's <a href="#view-binding-context">binding context</a> as the data provider. A view missing its <b>$el</b> property and/or valid binding data will apply no bindings.</p>
+	
+	<p>The bindings hash syntax keeps all binding declarations within the view. The <b>bindings</b> object declares a set of key/value pairs, where the key defines an element query, and the value defines the element's model bindings. A custom <tt>":el"</tt> pseudo-selector may be used for the view's main <b>$el</b> member:</p>
+<pre>
+<code class="js">var BindingView = Backbone.Epoxy.View.extend({
+    model: new Backbone.Model({firstName:"Luke", lastName:"Skywalker"}),
+    bindings: {
+        ":el": "toggle:true",
+        "input.first-name": "value:firstName,events:['keyup']",
+        "input.last-name": "value:lastName,events:['keyup']"
+    }
+});</code>
+</pre>
+	<p>Alternatively, you may choose to follow the popular convention of declaring bindings directly within the DOM using element attributes, at which time the <b>bindings</b> property should define the attribute name to query for. Epoxy specifies <tt>"data-bind"</tt> by default. All philosophical opinions aside, this technique works just as well as view-based declarations. Getting into philosophy, this method creates a bizarre (albeit handy) relationship between JavaScript mechanics and raw display. Ultimately, the choice is yours as to which method works best for your purposes.</p>
+	
+	<p>View for attribute binding declarations:</p>
+		
+<pre><code class="js">var BindingView = Backbone.Epoxy.View.extend({
+    el: "#binding-view"
+    model: new Backbone.Model({firstName:"Luke", lastName:"Skywalker"}),
+    bindings: "data-bind"
+});</code></pre>
+				
+	<p>DOM for attribute binding declarations:</p>
+				
+<pre><code class="html">&lt;div id="binding-view"&gt;
+    &lt;p&gt;First: &lt;input type="text" data-bind="value:firstName,events:['keyup']"&gt;&lt;/p&gt;
+    &lt;p&gt;Last: &lt;input type="text" data-bind="value:lastName,events:['keyup']"&gt;&lt;/p&gt;
+&lt;/div&gt;</code></pre>
+</div>
+
+<div class="section">
+	<h3 id="view-binding-sources">bindingSources</h3>
+	<code>view.bindingSources</code>
+	<p>A hash table defining additional binding sources to be added to the view's binding context. Binding sources are instances of <tt>Backbone.Model</tt> and/or <tt>Backbone.Collection</tt>. By default, an Epoxy view configures two potential binding sources: the view's <b>model</b> and <b>collection</b> properties are automatically added to the binding context under the aliases <tt>$model</tt> and <tt>$collection</tt>. Additional model and collection data sources may be specified within the <b>bindingSources</b> hash; these additional data sources will be added into the binding context under the alias <tt>$sourceName</tt>.</p>
+
+	<p>Additionally, model data sources provide aliases to all of their attributes within the binding context. In the case of the default <tt>$model</tt> data source, all model attributes are aliased within the binding context using their normal <tt>attribute</tt> name. For additional model sources added through the <b>bindingSources</b> hash, model attributes are added under the alias <tt>source_attribute</tt>. This avoids attribute naming conflicts while binding multiple models of the same type.</p>
+
+<pre>
+<code class="js">// Epoxy view specifying five data sources:
+var BindingView = Backbone.Epoxy.View.extend({
+    model: new Backbone.Model({name: "Luke Skywalker"}),
+    collection: new Backbone.Collection(),
+    bindingSources: {
+        han: function() { return new Backbone.Model({name: "Han Solo"}) },
+        obiwan: function() { return new Backbone.Model({name: "Obi-Wan Kenobi"}) },
+        users: function() { new Backbone.Collection() }
+    }
+});
+
+// Resulting binding context (psudocode):
+{
+    $model: &lt;Backbone.Model&gt;,
+    $collection: &lt;Backbone.Collection&gt;,
+    $han: &lt;Backbone.Model&gt;,
+    $obiwan: &lt;Backbone.Model&gt;,
+    $users: &lt;Backbone.Collection&gt;,
+    name: &lt;$model.name&gt;,
+    han_name: &lt;$han.name&gt;,
+    obiwan_name: &lt;$obiwan.name&gt;
+}
+</code>
+</pre>
+	<p>A note about Collection sources: Epoxy bindings do not register a <tt>"change"</tt> event on collection sources to avoid generally superfluous updates. Instead, you may manually trigger an <tt>"update"</tt> event on a collection source to refresh its bindings.</p>
+</div>
+
+<div class="section">
+	<h3 id="view-computeds">computeds</h3>
+	<code>view.computeds</code>
+	<p>A hash table defining a view's computed properties. Computed view properties act as custom data routers: they assemble custom values from data available in the <a href="#view-binding-context">binding context</a>, and route formatted values. While this is conceptually similar to computed model attributes, computed view properties are unique in that they do not store their own data, nor do they trigger any events; they simply act as pass-throughs for modifying context data using the view's <tt>getBinding</tt> and <tt>setBinding</tt> API methods. Computed view properties are an excellent place to assemble view-specific display values and/or markup.</p>
+	
+	<p>Computed view properties may be declared with a <a href="#view-computed-params">computed params</a> object, or as a getter function (uses <a href="#view-computed-deps">automatic dependency mapping</a>). Computed view functions are called in the context of the view, so referencing <tt>this</tt> refers to the parent view.</p>
+	
+<pre><code class="js">var MyView = Backbone.Epoxy.View.extend({
+    el: "#my-view",
+    computeds: {
+        priceParams: {
+            deps: ["price"],
+            get: function( price ) {
+                return "$"+ price;
+            },
+            set: function( value ) {
+                this.setBinding("price", value.replace("$", ""));
+            }
+        },
+        welcomeGetter: function() {
+            var name = this.getBinding("firstName");
+            return name ? "Welcome back, "+name : "Hello!";
+        }
+    }	
+});</code></pre>
+	
+	<p id="view-computed-params">When declaring a computed view property using a params object, the following options may be provided:</p>
+	
+	<ul>
+		<li><b>get:</b> <i>Required function; invoked in context of the view</i>. This getter function assembles its value based on other data in the view context, then returns the generated value. If a <tt>deps</tt> option is also specified, then the dependency values are mapped and injected as arguments into the getter function. If dependencies are not manually specified, then the <b>getBinding</b> method must be used for data access (for <a href="#view-computed-deps">automatic dependency mapping</a>).</li>
+              
+		<li><b>[deps]:</b> <i>Optional array</i>. An array of context attribute names that the getter function depends on. When provided, these dependency values will be mapped and injected as arguments into the getter function.</li>
+		
+		<li><b>[set]:</b> <i>Optional function; invoked in context of the view</i>. A function that receives an input value for storage. The <b>set</b> method provides no protocol for data storage – storage is entirely dependent on your setter implementation. Use <b>setBinding</b> to write data into view sources. Computed view properties declared without a <b>set</b> function are read-only.</li>
+	</ul>
+	
+	<p id="view-computed-deps"><b>Automatic dependency mapping with computed views</b></p>
+	
+	<p>Like computed model attributes, computed view properties must map dependencies between view bindings and their underlying data values to keep the display in sync. You may manually declare dependencies using a params object (see above), or use the following guidelines for automatic dependency mapping:</p>
+	
+	<ul>
+		<li>When getting and/or setting data within a computed function, always use the <tt>getBinding</tt> and <tt>setBinding</tt> view methods to make sure context data is mapped while being accessed. Getting and setting data through other protocols (such as direct model access) will fail to map dependencies.</li>
+		
+		<li>Keep <tt>getBinding</tt> and <tt>setBinding</tt> calls outside of conditional logic blocks. Conditional logic may prevent mapping methods from being reached, therefore it's safest to collect mapped values into local variables before performing conditional logic with them.</li>
+	</ul>
+</div>
+
+<div class="section">
+	<h3 id="view-get-binding">getBinding</h3>
+	<code>view.getBinding(attribute)</code>
+	<p>Gets data through the view's <a href="#view-binding-context">binding context</a>. The <b>getBinding</b> method may request any data attribute name available to binding declarations. This applies to data sources (referenced as <tt>"$source"</tt>), model attributes (referenced as <tt>"attribute"</tt> or <tt>"source_attribute"</tt>), and <a href="#view-computeds">computed view properties</a>.</p>
+</div>
+
+<div class="section">
+	<h3 id="view-remove">remove</h3>
+	<code>view.remove()</code>
+	<p>Override wrapper for the Backbone Views's native <b>remove</b> method. This override calls <b>removeBindings</b>, then defers to the Backbone View's native <b>remove</b> method.</p>
+</div>
+
+<div class="section">
+	<h3 id="view-remove-bindings">removeBindings</h3>
+	<code>view.removeBindings()</code>
+	<p>Removes and cleans up all bindings applied to the view. All binding hooks will be nullified, leaving the view's DOM elements formatted in their final bound state. The <b>removeBindings</b> method is automatically called with the <b>remove</b> method. Be mindful that you should manually call <b>removeBindings</b> when deprecating an Epoxy view without specifically calling its <b>remove</b> method.</p>
+</div>
+
+<div class="section">
+	<h3 id="view-set-binding">setBinding</h3>
+	<code>view.setBinding(attribute, value)</code>
+	<p>Sets data through the view's <a href="#view-binding-context">binding context</a>. The <b>setBinding</b> method may submit data to any model attribute name available to binding declarations. The submitted data value will pass through binding context routers for storage in the connected data model.</p>
+</div>
+
+<div class="section">
+	<h3 id="view-setter-options">setterOptions</h3>
+	<code>view.setterOptions</code>
+	<p>Specifies an options object to be passed into all bound setters within the view. This equates to calling <tt>model.set({attrs}, {options})</tt> in two-way bindings. Additionally, you may define an Epoxy-specific <tt>{save:true}</tt> option to have bound setters write to the model via the <b>save</b> method rather than with <b>set</b> (<b>setterOptions</b> will also be passed into the <b>save</b> method).</p>
+</div>
+
+<div class="section">
+	<h3 id="view-view-model">viewModel</h3>
+	<code>view.viewModel</code>
+	<p>References a model for storing view-specific data. This may be an instance of <tt>Backbone.Model</tt> or <tt>Epoxy.Model</tt>, and may be passed into the view through constructor options. A view model instance and all of its attributes will be added to the view's <a href="#view-binding-context">binding context</a> for use in bindings. While there is nothing exceptionally unique about this model instance, it offers a compositional benefit for organizing stateful and operational data within a view structure.</p>
+</div>
+
+<div class="section">
+	<h2 id="binding-handlers">View Binding Handlers</h2>
+	<p>Binding handlers are used to interchange model data with elements in the view. The Epoxy <tt>View</tt> includes default binding handlers for common tasks such as managing a bound element's content, class, and style. However, don't feel limited to just Epoxy's out-of-the-box binding handlers. You may easily <a href="#view-binding-handlers">define your own binding handlers</a> within a view.</p>
+	
+	<p>One or more binding handlers may be applied to an element as a comma-separated properties list (here shown using DOM attribute bindings):</p>
+
+<pre>
+<code class="html">&lt;a data-bind="text:linkText,attr:{href:linkUrl,title:linkText}"&gt;&lt;/a&gt;</code>
+</pre>
+	<p>In the above example, <tt>"text:"</tt> and <tt>"attr:"</tt> are binding handlers, while <tt>"linkText"</tt> and <tt>"linkUrl"</tt> are the bound model attributes assigned to them. In the case of the <tt>"attr"</tt> handler, its value is a hash of attribute names, each with an associated model value.</p>
+	
+	<p>Be aware that binding declarations are parsed as JavaScript <tt>Object</tt> bodies, therefore a binding declaration <i>must</i> conform to proper JavaScript syntax. To give due credit, Epoxy's binding system is modeled after the clever technique used in <a href="http://knockoutjs.com/">Knockout.js</a>. However, Epoxy deliberately limits some of Knockout's free-form binding allowances, such as inline concatenation (which becomes overly technical within the presentation layer, IMHO). If you're coming from Knockout, don't expect to write as much inline binding JavaScript.</p>
+</div>
+
+<div class="section">
+	<h3 id="handler-attr">attr</h3>
+	<span class="alias">read-only</span>
+	<code>data-bind="attr:{name:modelAttribute,'data-name':modelAttribute}"</code>
+	<p>Binds model attribute values to a list of element attributes. Attribute bindings are defined as a hash of key/value pairs, where each key defines an element attribute and the model reference defines the attribute value. Attribute keys may be defined as strings.</p>
+</div>
+
+<div class="section">
+	<h3 id="handler-checked">checked</h3>
+	<span class="alias">read-write</span>
+	<code>data-bind="checked:modelAttribute"</code>
+	<p>Binds <tt>checkbox</tt> and <tt>radio</tt> elements to the model. The binding behavior differs slightly for various element/value combinations:</p>
+
+	<ul>
+		<li><b>Radios:</b> a bound <tt>radio</tt> element will become checked when the element's <tt>value</tt> matches the bound model attribute. Checking a radio will set its <tt>value</tt> to the bound model attribute.</li>
+
+		<li><b>Checkbox arrays:</b> when a <tt>checkbox</tt> element is bound to an <tt>Array</tt> model attribute, the element will be checked while its <tt>value</tt> exists within the value array, and unchecked while its <tt>value</tt> is absent from the array. Likewise, toggling the element's <tt>checked</tt> property will add and remove its value from the bound array. Keep in mind that arrays modified within a native <tt>Backbone.Model</tt> will NOT trigger a <tt>"change"</tt> event unless the array <i>instance</i> is changed. Using an <tt>Epoxy.Model</tt> computed will help here by managing object copies, and by performing array comparisons by content.</li>
+
+	 	<li><b>Checkbox toggles:</b> when a <tt>checkbox</tt> element is bound to a primitive model attribute (types <tt>String</tt>, <tt>Boolean</tt>, or <tt>Number</tt>), the element will be checked based on a loosely-typed assessment of the model attribute's truthiness. When the element's <tt>"checked"</tt> status is toggled, it will submit a <tt>Boolean</tt> value back to the model attribute.</li>
+	</ul>
+</div>
+
+<div class="section">
+	<h3 id="handler-classes">classes</h3>
+	<span class="alias">read-only</span>
+	<code>data-bind="classes:{active:modelAttr,'is-active':modelAttr}"</code>
+	<p>Toggles a list of element class names based on the truthiness of their bound model attributes. Class bindings are defined as a hash of key/value pairs, where each key defines a class name and is value references a model attribute that will be loosely-type checked for truthiness; truthy attributes will enable their class, while falsey attributes will disable their class. Class name keys may be defined as strings.</p>
+</div>
+
+<div class="section">
+	<h3 id="handler-collection">collection</h3>
+	<span class="alias">read-only</span>
+	<code>data-bind="collection:$collectionSource"</code>
+	<p>Manages the display of a <tt>Backbone.Collection</tt>. The bound collection must specify a <tt>Backbone.View</tt> constructor for displaying its models, at which time the <b>collection</b> handler will manage adding, removing, resorting, and resetting a list of those views to synchronize the display of the collection's contents. The <b>collection</b> binding performs discrete view management, where collection models will be assigned a single view instance for their lifespans, rather than re-rendering all collection views in response to changes. You may choose to use an <tt>Epoxy.View</tt> constructor for the display of individual collection items, allowing each collection view item to bind to its respective model.</p>
+
+	<p>The <b>collection</b> binding requires the following setup:</p>
+
+	<ul>
+		<li>The binding must target a <tt>Backbone.Collection</tt> data source available within the <b><a href="#view-binding-context">binding context</a></b>. </li>
+
+		<li>The bound view must provide a property called <b>itemView</b>, which defines a <tt>Backbone.View</tt> constructor for rendering collection items (use an <a href="#handler-item-view">itemView</a> binding to access a different view property). This item will receive a <tt>collectionView</tt> option when constructed that references the parent view.</li>
+	</ul>
+
+<pre class="js"><code class="js">// View for individual collection items:
+var ListItemView = Backbone.View.extend({
+    tagName: "li",
+    initialize: function() {
+        this.$el.text( this.model.get("label") );
+    }
+});
+
+// Collection defining a Model and View:
+var ListCollection = Backbone.Collection.extend({
+    model: Backbone.Model
+});
+
+// Binding view for list of collection items:
+var ListView = Backbone.Epoxy.View.extend({
+    el: "&lt;ul data-bind='collection:$collection'&gt;&lt;/ul&gt;",
+    itemView: ListItemView,
+    initialize: function() {
+        this.collection = new ListCollection();
+        this.collection.reset([{label: "Luke Skywalker"}, {label: "Han Solo"}]);
+    }
+});
+
+var view = new ListView();</code></pre>
+
+	<p>Note that the <b>collection</b> binding does not register a <tt>"change"</tt> event on its collection to avoid generally superfluous updates. Instead, you may manually trigger an <tt>"update"</tt> event on the collection to refresh its bindings. For a working demonstration of the <b>collection</b> binding, see the <a href="tutorials.html#epoxy-todos">Epoxy ToDos</a> demo.</p>
+</div>
+
+<div class="section">
+	<h3 id="handler-css">css</h3>
+	<span class="alias">read-only</span>
+	<code>data-bind="css:{color:modelAttribute,'font-size':modelAttribute}"</code>
+	<p>Binds a list of CSS styles to model attributes. CSS style bindings are defined as a hash of key/value pairs, where each key defines a CSS style name and the model attribute defines the style's literal value. CSS keys may be defined as strings.</p>
+</div>
+
+<div class="section">
+	<h3 id="handler-disabled">disabled</h3>
+	<span class="alias">read-only</span>
+	<code>data-bind="disabled:modelAttribute"</code>
+	<p>Toggles a form element's <tt>"disabled"</tt> property based on a loosely-typed assessment of the bound model attribute's truthiness. A truthy value disables the element (inversion of the <b>enabled</b> handler).</p>
+</div>
+
+<div class="section">
+	<h3 id="handler-enabled">enabled</h3>
+	<span class="alias">read-only</span>
+	<code>data-bind="enabled:modelAttribute"</code>
+	<p>Toggles a form element's <tt>"disabled"</tt> status based on a loosely-typed assessment of the bound model attribute's truthiness. A truthy value enables the element (inversion of the <b>disabled</b> handler).</p>
+</div>
+
+<div class="section">
+	<h3 id="handler-events">events</h3>
+	<span class="alias">read-only</span>
+	<code>data-bind="events:['keydown','focus']"</code>
+	<p>The <b>events</b> handler is a special binding used to parameterize what DOM events will trigger changes for read-write element bindings. By default, all read-write bindings will subscribe to their bound element's <tt>"change"</tt> event to trigger model updates. You may bind additional DOM event triggers for the element by listing them in the <b>events</b> array.</p>
+</div>
+
+<div class="section">
+	<h3 id="handler-html">html</h3>
+	<span class="alias">read-only</span>
+	<code>data-bind="html:modelAttribute"</code>
+	<p>Sets the element's HTML content to the bound model attribute value. Uses the jQuery <b>html</b> method.</p>
+</div>
+
+<div class="section">
+	<h3 id="handler-item-view">itemView</h3>
+	<span class="alias">read-only</span>
+	<code>data-bind="collection:$collection,itemView:'myView'"</code>
+	<p>The <b>itemView</b> handler is a special binding used to parameterize what view is used to render <b>collection</b> binding items. By default, a <b>collection</b> binding will access its parent view for a property called <tt>"itemView"</tt>. Use the <b>itemView</b> binding to specify a different attribute of the parent view. This may be useful when binding multiple data sources.</p>
+</div>
+
+<div class="section">
+	<h3 id="handler-options">options</h3>
+	<span class="alias">read-only</span>
+	<code>data-bind="options:arraySource"</code>
+	<p>Binds a <tt>&lt;select&gt;</tt> element's options to an array data source. The bound data source may be an <tt>Array</tt> object, or a <tt>Backbone.Collection</tt> instance from which the <b>models</b> array will be used. Array contents may be formatted using one of the following methods:</p>
+	
+	<ul>
+		<li><tt>["Luke", "Han", "Leia"]</tt> : Primitives list. Given an array of primitives, options will be created using the array values as both the text and value for each option.</li>
+		
+		<li><tt>[{label:"Luke", value:"1"}, {label:"Leia", value:"2"}]</tt> : Label/value pairs. Given an array of objects, options will be created using each object's <b>label</b> and <b>value</b> properties as the text and value of each option. These property names may be adjusted globally through <a href="#binding-config">binding config</a>.</li>
+		
+		<li><tt>Backbone.Collection</tt> : Models list. The collection's <b>models</b> array will be used as the array source. Options will be created using each model's <b>label</b> and <b>value</b> attributes as the text and value of each option. These attribute names may be adjusted globally through <a href="#binding-config">binding config</a>. An <tt>Epoxy.Model</tt> may be used to virtualize these values as computed/computed attributes if needed. Note that the <b>options</b> binding does not register a <tt>"change"</tt> event on its collection to avoid generally superfluous updates. Instead, you may manually trigger an <tt>"update"</tt> event on the collection to refresh its bindings.</li>
+	</ul>
+	
+<pre><code class="js">defaults: {
+    list1: ["Luke"],
+    list2: [{label:"Luke", value:"0"}],
+    list3: new Backbone.Collection( {models:[{label:"Luke", value:"0"}]} )
+}
+
+// list1: &lt;option&nbsp;value='Luke'&gt;Luke&lt;/option&gt;
+// list2: &lt;option&nbsp;value='0'&gt;Luke&lt;/option&gt;
+// list3: &lt;option&nbsp;value='0'&gt;Luke&lt;/option&gt;
+</code></pre>
+	
+	<p>To manage a <tt>&lt;select&gt;</tt> element's default first option and/or empty state, you may choose to also include the <b>optionsDefault</b> and/or <b>optionsEmpty</b> helper bindings.</p>
+</div>
+
+<div class="section">
+	<h3 id="handler-options-default">optionsDefault</h3>
+	<span class="alias">read-only</span>
+	<code>data-bind="options:opts,optionsDefault:modelAttribute"</code>
+	<p>Defines a default option made available at the top of a <tt>&lt;select&gt;</tt> element in addition to the <b>options</b> list. This binding must be used in tandem with the <b>options</b> binding. The <b>optionsDefault</b> value will appear as the first and/or only item in the select, regardless if the <b>options</b> list has content. The <b>optionsDefault</b> value may be formatted using one of the following methods:</p>
+	
+	<ul>
+		<li><tt>"Default Value"</tt> : Given a primitive value (string, number, or boolean), the default option will be created using the primitive as both text and value of the option.</li>
+		
+		<li><tt>{label:"Default", value:""}</tt> : Given an object, the default option will be created using the object's <b>label</b> and <b>value</b> properties as the text and value of the option.</li>
+		
+		<li><tt>Backbone.Model</tt> : Given a Backbone Model, the default option will be created using the model's <b>label</b> and <b>value</b> attributes as the text and value of the option. An <tt>Epoxy.Model</tt> may be used to virtualize these as computed/computed attributes if needed.</li>
+	</ul>
+	
+<pre><code class="js">defaults: {
+    default1: "Choose...",
+    default2: {label:"Choose...", value:""},
+    default3: new Backbone.Model({label:"Choose...", value:""})
+}
+
+// default1: &lt;option&nbsp;value='Choose...'&gt;Choose...&lt;/option&gt;
+// default2: &lt;option&nbsp;value=''&gt;Choose...&lt;/option&gt;
+// default3: &lt;option&nbsp;value=''&gt;Choose...&lt;/option&gt;
+</code></pre>
+	<p>You may also choose to declare <b>optionsDefault</b> as a static object within a binding declaration, as in:<br><tt>data-bind="value:val,options:opts,optionsDefault:{label:'Choose...', value:''}"</tt></p>
+</div>
+
+<div class="section">
+	<h3 id="handler-options-empty">optionsEmpty</h3>
+	<span class="alias">read-only</span>
+	<code>data-bind="options:opts,optionsEmpty:modelAttribute"</code>
+	<p>Defines a placeholder option to apply to an empty <tt>&lt;select&gt;</tt> element, and automatically disables the select element while displaying this placeholder. This must be used in tandem with the <b>options</b> binding, and is generally only needed when there is no default option. The empty placeholder option may be formatted using one of the following methods:</p>
+	
+	<ul>
+		<li><tt>"Placeholder Value"</tt> : Given a primitive value (string, number, or boolean), the placeholder option will be created using the primitive as both text and value of the option.</li>
+		
+		<li><tt>{label:"None", value:""}</tt> : Given an object, the placeholder option will be created using the object's <b>label</b> and <b>value</b> properties as the text and value of the option.</li>
+		
+		<li><tt>Backbone.Model</tt> : Given a Backbone Model, the placeholder option will be created using the model's <b>label</b> and <b>value</b> attributes as the text and value of the option. An <tt>Epoxy.Model</tt> may be used to virtualize these as computed/computed attributes if needed.</li>
+	</ul>
+	
+<pre><code class="js">defaults: {
+    empty1: "None",
+    empty2: {label:"None", value:""},
+    empty3: new Backbone.Model({label:"None", value:""})
+}
+
+// empty1: &lt;option&nbsp;value='None'&gt;None&lt;/option&gt;
+// empty2: &lt;option&nbsp;value=''&gt;None&lt;/option&gt;
+// empty3: &lt;option&nbsp;value=''&gt;None&lt;/option&gt;
+</code></pre>
+	
+	<p>You may also choose to declare <b>optionsEmpty</b> as a static object within a binding declaration, as in:<br><tt>data-bind="value:val,options:opts,optionsEmpty:{label:'none', value:''}"</tt></p>
+</div>
+
+<div class="section">
+	<h3 id="handler-template">template</h3>
+	<span class="alias">read-only</span>
+	<code>data-bind="template:$source"</code>
+	<p>The <b>template</b> binding extracts its element's HTML content while initializing, and then parses that content into an Underscore template using the bound data. You have some options on how both the template string and the bound data sources are defined.</p>
+	
+	<p><b>Defining the template string</b></p>
+	
+	<p>When the <b>template</b> binding initializes, it will extract content from its element to use as the template string. However, to safeguard against malformed HTML within the DOM, the <b>template</b> binding will first search its element for a <tt>&lt;script&gt;</tt> or a <tt>&lt;template&gt;</tt> tag to extract content from, such as:</p>
+
+<pre><code class="html">&lt;div data-bind="template:$model"&gt;
+    &lt;script type="text/tmpl"&gt;&lt;%= firstName %&gt; &lt;%= lastName %&gt;&lt;/script&gt;
+&lt;/div&gt;
+
+&lt;div data-bind="template:$model"&gt;
+    &lt;template&gt;&lt;%= firstName %&gt; &lt;%= lastName %&gt;&lt;/template&gt;
+&lt;/div&gt;</code></pre>
+
+	<p>If a <tt>&lt;script&gt;</tt> or <tt>&lt;template&gt;</tt> container is <i>not</i> found within the element, then the element's entire contents are parsed as the template string. If you choose this approach, then it's highly recommended that you modify Underscore's <a href="http://underscorejs.org/#template">templateSettings</a> param to choose more DOM-friendly field delimiters. Also, to avoid the infamous <a href="http://www.bluerobot.com/web/css/fouc.asp/">FOUC</a>, you're best off hiding the element with CSS and then toggle it's visibility with a binding:</p>
+				
+<pre><code class="html">&lt;div style="display:none;" data-bind="template:$model,toggle:true"&gt;
+    {{ firstName }} {{ lastName }}
+&lt;/div&gt;</code></pre>
+	
+	<p><b>Defining data sources</b></p>
+	
+	<p>The <b>template</b> binding may specify data sources in a few different ways. First, let's assume the following example view configuration:</p>
+
+<pre><code class="js">var MyView = Backbone.Epoxy.View.extend({
+    el: "#my-view",
+    model: new Backbone.Model({
+        firstName: "Luke",
+        lastName: "Skywalker",
+        isActive: false
+    });
+});</code></pre>			
+	
+	<ul>
+		<li>
+			<p><b>Model Source</b> : given the above <tt>MyView</tt> example, the <b>template</b> binding may reference a <tt>Backbone.Model</tt> data source directly through its context reference (<tt>$sourceName</tt>), such as:</p>
+	
+<pre><code class="html">&lt;div id="my-view" data-bind="template:$model"&gt;
+    &lt;template&gt;&lt;%= firstName %&gt; &lt;%= lastName %&gt;&lt;/template&gt;
+&lt;/div&gt;</code></pre>
+	
+			<p>When binding to a model source, all model attributes will be available to the template (this is equivalent to providing <tt>model.toJSON()</tt> to the template renderer). While this is a quick and easy binding method, it may not be the most efficient. The bound template will re-render in response to <i>all</i> model changes, rather than just changes to specific attributes used in the template. In this scenario, our template would re-render in response to <tt>isActive</tt> changing, even though it's not included within the template.</p>
+		</li>
+		<li>
+			<p><b>Array Source</b> : Given the above <tt>MyView</tt> example, the <b>template</b> binding may specify an array of attribute name strings to bind on, such as:</p>
+
+<pre><code class="html">&lt;div id="my-view" data-bind="template:['firstName','lastName']"&gt;
+   &lt;template&gt;&lt;%= firstName %&gt; &lt;%= lastName %&gt;&lt;/template&gt;
+&lt;/div&gt;</code></pre>
+
+			<p>When binding on attribute names, only the specified names are made available to the template. Also, our template will only re-render in response to changes in these attributes (in this scenario, changing the <tt>isActive</tt> attribute will no longer trigger a template refresh).</p>
+		</li>
+		<li>
+			<p><b>Hash Source</b> : Given the above <tt>MyView</tt> example, the <b>template</b> binding may define an object hash that maps keys to data attributes, such as:</p>
+
+<pre><code class="html">&lt;div id="my-view" data-bind="template:{first:firstName, last:lastName}"&gt;
+    &lt;template&gt;&lt;%= first %&gt; &lt;%= last %&gt;&lt;/template&gt;
+&lt;/div&gt;</code></pre>
+
+			<p>When defining a mapping hash, the declared object keys are the variables available within the template, and their values are bound attributes from the model. This is similar to the array declaration method (which effectively builds this hash mapping for you with matching key/value pairs). Like the array method, the template will only re-render in response to changes in the specifically referenced model attributes.</p>
+		</li>
+	</ul>
+</div>
+
+<div class="section">
+	<h3 id="handler-text">text</h3>
+	<span class="alias">read-write</span>
+	<code>data-bind="text:modelAttribute"</code>
+	<p>Sets the element's text content to the bound model attribute value. Uses the jQuery <b>text</b> method.</p>
+
+	<p>To enable a writeable binding, add the HTML5 <tt>contenteditable</tt> property to the element:</p>
+
+<pre><code class="html">&lt;span contenteditable="true" data-bind="text:yourName,events:['blur paste']"&gt;
+    Select to edit your name.
+&lt;/span&gt;</code></pre>
+			</div>
+
+<div class="section">
+	<h3 id="handler-toggle">toggle</h3>
+	<span class="alias">read-only</span>
+	<code>data-bind="toggle:modelAttribute"</code>
+	<p>Toggles the element's display based on a loosely-typed assessment of the bound model attribute's truthiness. Uses the jQuery <b>toggle( [boolean] )</b> method.</p>
+</div>
+
+<div class="section">
+	<h3 id="handler-value">value</h3>
+	<span class="alias">read-write</span>
+	<code>data-bind="value:modelAttribute"</code>
+	<p>Binds an input element's (<tt>input</tt>, <tt>select</tt>, <tt>textarea</tt>) value to an underlying model attribute. The element will set its <tt>value</tt> to the bound model attribute upon change event triggers (see the <b><a href="#handler-events">events</a></b> handler), and update its <tt>value</tt> when the underlying model attribute changes.</p>
+</div>
+
+<div class="section">
+	<h2 id="binding-filters">View Binding Filters</h2>
+	<p>Binding filters provide a layer of flexibility for formatting data attributes directly within a binding declaration; they may perform read-only formatting on multiple inputs, or perform read-write formatting on a single input. Filters are intended to format raw values for binding-specific purposes:</p>
+
+<pre><code class="html">&lt;span data-bind="toggle:not(firstName)"&gt;Please enter a first name.&lt;/span&gt;</code></pre>
+	
+	<p>Binding filters may be parameterized with any data attribute(s) available in the <a href="#view-binding-context">binding context</a>, or with primitive values (<tt>String</tt>, <tt>Number</tt>, or <tt>Boolean</tt>). However, binding filters may <b>NOT</b> be nested within one another &mdash; this is very deliberate: application logic does not belong within binding declarations. If you need to perform multi-pass value formatting, that work should be done in a computed property, or else applied as a custom binding handler.</p>
+	
+	<p>See view <a href="#view-binding-filters">bindingFilters</a> for process on defining your own custom filters.</p>
+</div>
+
+<div class="section">
+	<h3 id="filter-all">all</h3>
+	<span class="alias">read-only</span>
+	<code>data-bind="toggle:all(dataAttribute,[...])"</code>
+	<p>Assesses one or more data attributes as <tt>true</tt> if <i>all</i> attributes are truthy.</p>
+</div>
+
+<div class="section">
+	<h3 id="filter-any">any</h3>
+	<span class="alias">read-only</span>
+	<code>data-bind="toggle:any(dataAttribute,[...])"</code>
+	<p>Assesses one or more data attributes as <tt>true</tt> if <i>any</i> of the attributes are truthy.</p>
+</div>
+
+<div class="section">
+	<h3 id="filter-csv">csv</h3>
+	<span class="alias">read-write</span>
+	<code>data-bind="checked:csv(dataList)"</code>
+	<p>Exchanges comma-separated values data between models and bindings. A string is parsed into a comma-separated array when read through the <b>csv</b> filter, and then is formatted as a comma-separated string when written back through the filter. This is handy for storing a primitive list value within a model, while using it as an array in view bindings. Note that this is only a simple <tt>split/join</tt> implementation of comma-separated values, so advanced CSV formatting (string closures, etc) will not apply.</p>
+</div>
+
+<div class="section">
+	<h3 id="filter-decimal">decimal</h3>
+	<span class="alias">read-write</span>
+	<code>data-bind="checked:decimal(floatAttribute)"</code>
+	<p>Exchanges a floating-point decimal value between models and bindings. A string is parsed into a float when being read or written through the <b>decimal</b> filter. This is handy for preserving float data formatting when binding to input elements.</p>
+</div>
+
+<div class="section">
+	<h3 id="filter-format">format</h3>
+	<span class="alias">read-only</span>
+	<code>data-bind="text:format('$1 of $2',dataAttribute,dataAttribute)"</code>
+	<p>Formats a string with a series of data attribute replacements. Operates the same as string replacement for <tt>RegExp</tt> capture groups, where field insertions are denoted as <tt>"$1,&nbsp;$2,&nbsp;...&nbsp;$n"</tt>. Escape intentional "$n" patterns within the template string as "\$n". Note that the first value insertion index is 1, not 0.</p>
+</div>
+
+<div class="section">
+	<h3 id="filter-integer">integer</h3>
+	<span class="alias">read-write</span>
+	<code>data-bind="checked:integer(numberAttribute)"</code>
+	<p>Exchanges an integer value between models and bindings. A string is parsed into an integer when being read or written through the <b>integer</b> filter. This is handy for preserving numeric data formatting when binding to input elements.</p>
+</div>
+
+<div class="section">
+	<h3 id="filter-length">length</h3>
+	<span class="alias">read-only</span>
+	<code>data-bind="toggle:length(dataAttribute)"</code>
+	<p>Returns the length of an <tt>Array</tt> or <tt>Collection</tt> data attribute, or <tt>0</tt> by default. Useful for loosely-typed assessments of a collection's content status.</p>
+</div>
+
+<div class="section">
+	<h3 id="filter-none">none</h3>
+	<span class="alias">read-only</span>
+	<code>data-bind="toggle:none(dataAttribute,[...])"</code>
+	<p>Assesses one or more data attributes as <tt>true</tt> if <i>none</i> of the attributes are truthy.</p>
+</div>
+
+<div class="section">
+	<h3 id="filter-not">not</h3>
+	<span class="alias">read-only</span>
+	<code>data-bind="toggle:not(dataAttribute)"</code>
+	<p>Inverts the loosely-typed boolean value of a data attribute.</p>
+</div>
+
+<div class="section">
+	<h3 id="filter-select">select</h3>
+	<span class="alias">read-only</span>
+	<code>data-bind="text:select(conditionalValue,truthyValue,falseyValue)"</code>
+	<p>Performs a ternary operation using JavaScript's <tt>?:</tt> operator. The <b>select</b> operation receives three arguments: the first argument is assessed as a loosely-typed conditional; if truthy, the second argument is returned; if falsey, the third argument is returned.</p>
+</div>
+
+<div class="section">
+	<h2 id="binding">Epoxy.binding</h2>
+	<code>Backbone.Epoxy.binding</code>
+	<p>The <tt>Epoxy.binding</tt> API allows customization of Epoxy's default binding capabilities and configuration of binding settings.</p>
+</div>
+
+<div class="section">
+	<h3 id="binding-add-filter">addFilter</h3>
+	<code>Backbone.Epoxy.binding.addFilter( name, filter )</code>
+	<p>Adds a <a href="#binding-filters">binding filter</a> to Epoxy's table of internal defaults. Filters added with this method become available to all Epoxy views. Filters are added with a name string and a filter function/methods object. All filter arguments are pre-processed, so you may safely use conditional logic in filters without breaking automated dependency maps.</p>
+	
+	<p>A <b>one-way</b> filter is defined with a name and a getter function. This getter function requests one or more values from the model, formats them, and then returns the result to the bound view:</p>
+
+<pre><code class="js">Backbone.Epoxy.binding.addFilter("select", function(condition, truthy, falsey) {
+    return condition ? truthy : falsey;
+});</code></pre>
+
+	<p>A <b>two-way</b> filter is defined with a methods object that provides filtering functions for getting/setting a value. A two-way filter may only apply to a single bound model value. The two-way getter function passes a formatted value from the model to the view, while the setter function passes the counter-formatted value from the view to the model:</p>
+			
+<pre><code class="js">Backbone.Epoxy.binding.addFilter("filter_name", {
+    get: function( value ) {
+        // Format the value as it passes from the model to the view...
+        return value;
+    },
+    set: function( value ) {
+        // Format the value as it passes from the view to the model...
+        return value;
+    }
+});</code></pre>
+</div>
+			
+<div class="section">
+	<h3 id="binding-add-handler">addHandler</h3>
+	<code>Backbone.Epoxy.binding.addHandler( name, handler )</code>
+	<p>Adds a <a href="#binding-handlers">binding handler</a> to Epoxy's table of internal defaults. Handlers added with this method become available to all Epoxy views. Binding handlers are added with a name string and a handler function or methods object. A simple one-way binding handler (writes to the DOM) may be defined as:</p>
+
+<pre><code class="js">Backbone.Epoxy.binding.addHandler("readonly", function( $element, value ) {
+    $element.prop( "readonly", !!value );
+});</code></pre>
+
+	<p>Binding handlers may also be defined as a methods object that provides functions for getting/setting the element value, and initialization/cleanup of the handler:</p>
+
+<pre><code class="js">Backbone.Epoxy.binding.addHandler("handler_name", {
+    init: function( $element, value, bindings, context ) {
+        // Initialize the binding handler...
+    },
+    get: function( $element, value, event ) {
+        // Get data from the bound element...
+        return $element.val();
+    },
+    set: function( $element, value ) {
+        // Set data into the bound element...
+        $element.val( value );
+    },
+    clean: function() {
+        // Cleanup the binding handler...
+    }
+});</code></pre>
+
+	<ul>
+		<li><tt>handler.init( $element, value, bindings, context )</tt> : <i>optional</i>. A handler's <b>init</b> method is called immediately to configure the handler. This is generally only needed for complex handlers that store operational data on themselves. The method receives the bound element (as jQuery) and the bound data value as arguments, as well as the hash of parsed bindings being applied to the element, and a reference to the full binding context of all available view data. The <tt>bindings</tt> and <tt>context</tt> arguments are handy for pulling additional data into the handler if needed. The <b>init</b> method may also return a reformatted version of its managed value, although this is only recommended for developers with insight into Epoxy internals. If you're not sure, don't return anything.</li>
+		
+		<li><tt>handler.get( $element, value, event )</tt> : <i>required for two-way bindings</i>. Reads and returns the bound element's value. This should poll data from the DOM element, and then return the value formatted for the model. The existing model value is provided for comparative reference, as well as the event (if any) that has triggered the getter to run.</li>
+		
+		<li><tt>handler.set( $element, value )</tt> : <i>required</i>. Writes a data value into the DOM element. Receives the element (as jQuery) and the value to set, and returns nothing.</li>
+		
+		<li><tt>handler.clean()</tt> : <i>optional</i>. Called during handler disposal; offers a cleanup hook to remove any custom binding configuration as the handler is deprecated.</li>
+	</ul>
+</div>
+
+<div class="section">
+	<h3 id="binding-allowed-params">allowedParams</h3>
+	<code>Backbone.Epoxy.binding.allowedParams</code>
+	<p>A hash defining all non-handler attributes that are allowed within binding declarations. When validating bindings, Epoxy will throw an error for binding declarations that do not have a handler method or an <tt>allowedParams</tt> key. By default, <tt>allowedParams</tt> defines the following allowed keys:</p>
+	<ul>
+		<li><tt>events</tt></li>
+		<li><tt>optionsDefault</tt></li>
+		<li><tt>optionsEmpty</tt></li>
+	</ul>
+
+	<p>If you define a custom binding handler that utilizes additional params within the binding declaration, then you must specifically add these additional parameter names into the <tt>allowedParams</tt> hash.</p>
+
+<pre><code class="js">Epoxy.binding.allowedParams.myCustomParam = true;</code></pre>
+
+	<p>In the above example, Epoxy will no longer throw an error when it encounters a <tt>myCustomParam</tt> definition within a binding declaration.</p>
+</div>
+
+<div class="section">
+	<h3 id="binding-config">config</h3>
+	<code>Backbone.Epoxy.binding.config( settings )</code>
+	<p>Merges a settings object into the bindings API configuration. The following settings may be passed:</p>
+	
+	<ul>
+		<li><tt>optionText</tt> : configures the <b>options</b> binding. Specifies an attribute name to pick from objects and/or models as the text written into <tt>option</tt> elements. Default is <tt>"label"</tt>.</li>
+		<li><tt>optionValue</tt> : configures the <b>options</b> binding. Specifies an attribute name to pick from objects and/or models as the value written into <tt>option</tt> elements. Default is <tt>"value"</tt>.</li>
+	</ul>
+	
+<pre><code class="js">Backbone.Epoxy.binding.config({
+    optionText: "optText",
+    optionValue: "optValue"
+});</code></pre>
+</div>
+
+<div class="section">
+	<h3 id="binding-empty-cache">emptyCache</h3>
+	<code>Backbone.Epoxy.binding.emptyCache()</code>
+	<p>Resets the internal hash table of cached binding parser functions. Cached parser functions are highly efficient for parsing redundant binding schemes (as is: one binding scheme is instanced repeatedly for multiple views). You should rarely (or never) need to empty Epoxy's internal cache. The only circumstance where you may want to consider emptying the cache is on long-running single page applications where numerous different binding schemes are encountered sporadically over time, and may never be reused.</p>
+</div>
