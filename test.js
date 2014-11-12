@@ -906,6 +906,16 @@ describe("Backbone.Epoxy.View", function() {
 		expect( modViewWithInitialCollection.$el.find(":first-child .name-dsp").text() ).to.equal( "B" );
 	});
 
+	it("binding 'collection:' with 'itemView:' should define the collection view item.", function() {
+		var modViewWithItemView = new (Backbone.Epoxy.View.extend({
+			collection: new TestCollection([{name: "A"}]),
+			testView: Backbone.View.extend({el: '<span>test</span>'}),
+			el: "<div data-bind=\"collection:$collection,itemView:'testView'\"></div>",
+		}));
+
+		expect( modViewWithItemView.$el.find(":first-child").text() ).to.equal( "test" );
+	});
+
 	it("binding 'css:' should establish a one-way binding with an element's css styles.", function() {
 		var $el = $(".test-css");
 		expect( $el.css("display") ).to.equal( "none" );

@@ -1,11 +1,11 @@
 {
   "name"          : "backbone.epoxy",
-  "version"       : "1.2.2",
+  "version"       : "1.2.3",
   "main"          : "backbone.epoxy.js",
   "dependencies"  : {
     "backbone"    : ">=0.9.9",
     "jquery"      : ">=1.11.0",
     "underscore"  : ">=1.4.3"
   },
-  "ignore"        : ["backbone.epoxy.min.js", "www", "test", "*.yml", "*.map", "*.html", "*.ico", "*.md", "CNAME"]
+  "ignore"        : ["backbone.epoxy.min.js", "doc", "test", "*.yml", "*.map", "*.html", "*.ico", "*.md", "CNAME"]
 }

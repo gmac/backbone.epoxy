@@ -610,16 +610,17 @@
 
 		// Collection: write-only. Manages a list of views bound to a Backbone.Collection.
 		collection: makeHandler({
-			init: function($element, collection, context) {
+			init: function($element, collection, context, bindings) {
+				this.i = bindings.itemView ? this.view[bindings.itemView] : this.view.itemView;
 				if (!isCollection(collection)) throw('Binding "collection" requires a Collection.');
-				if (!isFunction(this.view.itemView)) throw('Binding "collection" requires an itemView.');
+				if (!isFunction(this.i)) throw('Binding "collection" requires an itemView.');
 				this.v = {};
 			},
 			set: function($element, collection, target) {
 
 				var view;
 				var views = this.v;
-				var ItemView = this.view.itemView;
+				var ItemView = this.i;
 				var models = collection.models;
 
 				// Cache and reset the current dependency graph state:
@@ -959,6 +960,7 @@
 	// These params may be included in binding handlers without throwing errors.
 	var allowedParams = {
 		events: 1,
+		itemView: 1,
 		optionsDefault: 1,
 		optionsEmpty: 1
 	};
