@@ -684,7 +684,7 @@
 						collection.each(function(model) {
 							views[ model.cid ] = view = new ItemView({model: model, collectionView: this.view});
 							frag.appendChild(view.el);
-						});
+						}, this);
 					}
 
 					$element.append(frag);
