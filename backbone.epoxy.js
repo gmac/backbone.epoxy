@@ -1308,7 +1308,7 @@
     var changable = (tag == 'input' || tag == 'select' || tag == 'textarea' || $element.prop('contenteditable') == 'true');
     var triggers = [];
     var reset = function(target) {
-      self.set(self.$el, readAccessor(accessor), target);
+      self.$el && self.set(self.$el, readAccessor(accessor), target);
     };
     
     self.view = view;
