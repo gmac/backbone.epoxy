@@ -556,7 +556,11 @@
 
     // Checked: read-write. Toggles the checked status of a form element.
     checked: makeHandler({
-      get: function($element, currentValue) {
+      get: function($element, currentValue, event) {
+        if ($element.length > 1) {
+          $element = $(event.target);
+        }
+
         var checked = !!$element.prop('checked');
         var value = $element.val();
 
@@ -582,6 +586,15 @@
       set: function($element, value) {
         // Default as loosely-typed boolean:
         var checked = !!value;
+        
+        // If $element matches multiple DOM element then
+        // only set the element whose value matches
+        if ($element.length > 1) {
+          if (($element = $element.filter('[value=' + value + ']')).length === 0) {
+            //No element has the specified value so don't change anything
+            return;
+          }
+        }
 
         if (this.isRadio($element)) {
           // Radio button: match checked state to radio value.
