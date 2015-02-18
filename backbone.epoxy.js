@@ -1089,9 +1089,10 @@
           var $element = queryViewForSelector(self, selector);
 
           // flattern object notated binding declaration
-          if(_.isObject(elementDecs)){
-            elementDecs = flatternBindingDescription(elementDecs);
+          if (isObject(elementDecs)) {
+            elementDecs = flattenBindingDeclaration(elementDecs);
           }
+
           // Ignore empty DOM queries (without errors):
           if ($element.length) {
             bindElementToView(self, $element, elementDecs, context, handlers, filters);
@@ -1294,19 +1295,22 @@
     return values;
   }
 
-  // Converts binding description in object notation to 'flat' string version
-  function flatternBindingDescription(description) {
-    var level = arguments[1] || 1;
-    var value, key, result, stringPair;
-    result = [];
-    for (key in description){
-      value = description[key];
-      if (_.isObject(value)){
-        value = "{" + flatternBindingDescription(value, level + 1) + "}";
+  // Converts a binding declaration object into a flattened string.
+  // Input: {text: 'firstName', attr: {title: '"hello"'}}
+  // Output: 'text:firstName,attr:{title:"hello"}'
+  function flattenBindingDeclaration(declaration) {
+    var result = [];
+
+    for (var key in declaration) {
+      var value = declaration[key];
+
+      if (isObject(value)) {
+        value = '{'+ flattenBindingDeclaration(value) +'}';
       }
-      stringPair = key + ":" + value;
-      result.push(stringPair)
+
+      result.push(key +':'+ value);
     }
+    
     return result.join(',');
   }
 
