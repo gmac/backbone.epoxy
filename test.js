@@ -115,7 +115,7 @@ describe("Backbone.Epoxy.Model", function() {
 
 		Backbone.Epoxy.Model.mixin( MixinModel.prototype );
 		var model = new MixinModel();
-		
+
 		expect( model.get("avgPaymentDsp") ).to.equal( "$500" );
 	});
 
@@ -559,7 +559,7 @@ describe("Backbone.Epoxy.View", function() {
 
 		Backbone.Epoxy.View.mixin( MixinView.prototype );
 		var view = new MixinView();
-		
+
 		expect( view.$el.text() ).to.equal( "Deathstar" );
 	});
 
@@ -576,7 +576,7 @@ describe("Backbone.Epoxy.View", function() {
 
 		Backbone.Epoxy.View.mixin( MixinView.prototype );
 		var view = new MixinView();
-		
+
 		expect( view.$el.text() ).to.equal( "Deathstar" );
 	});
 
@@ -593,7 +593,7 @@ describe("Backbone.Epoxy.View", function() {
 	});
 
 	it("should bind view element to model via binding selector map in object notation.", function() {
-		
+
 		var view = new (Backbone.Epoxy.View.extend({
 			el: "<span class='first-name'></span>",
 			model: dataModel,
@@ -638,6 +638,19 @@ describe("Backbone.Epoxy.View", function() {
 			model: dataModel,
 			bindings: {
 				":el": "text:firstName"
+			}
+		}));
+
+		expect( view.$el.text() ).to.equal( "Luke" );
+	});
+
+	it("should include top-level view container in bindings searches via :scope selector.", function() {
+
+		var view = new (Backbone.Epoxy.View.extend({
+			el: "<span></span>",
+			model: dataModel,
+			bindings: {
+				":scope": "text:firstName"
 			}
 		}));
 

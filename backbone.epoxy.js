@@ -1225,7 +1225,7 @@
   // Queries element selectors within a view:
   // matches elements within the view, and the view's container element.
   function queryViewForSelector(view, selector) {
-    if (selector === ':el') return view.$el;
+    if (selector === ':el' || selector === ':scope') return view.$el;
     var $elements = view.$(selector);
 
     // Include top-level view in bindings search:
@@ -1310,7 +1310,7 @@
 
       result.push(key +':'+ value);
     }
-    
+
     return result.join(',');
   }
 
