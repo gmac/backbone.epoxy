@@ -1178,7 +1178,8 @@
       };
 
       // Compile all model attributes as accessors within the context:
-      _.each(source.toJSON({computed:true}), function(value, attribute) {
+      var modelAttributes = _.extend({}, source.attributes, _.isFunction(source.c) ? source.c() : {});
+      _.each(modelAttributes, function(value, attribute) {
 
         // Create named accessor functions:
         // -> Attributes from 'view.model' use their normal names.
