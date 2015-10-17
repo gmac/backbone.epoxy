@@ -1307,6 +1307,9 @@
     return values;
   }
 
+  var identifierRegex = /^[a-z_$][a-z0-9_$]*$/i;
+  var quotedStringRegex = /^\s*(["']).*\1\s*$/;
+
   // Converts a binding declaration object into a flattened string.
   // Input: {text: 'firstName', attr: {title: '"hello"'}}
   // Output: 'text:firstName,attr:{title:"hello"}'
@@ -1318,6 +1321,11 @@
 
       if (isObject(value)) {
         value = '{'+ flattenBindingDeclaration(value) +'}';
+      }
+
+      // non-identifier keys that aren't already quoted need to be quoted
+      if (!identifierRegex.test(key) && !quotedStringRegex.test(key)) {
+        key = '"' + key + '"';
       }
 
       result.push(key +':'+ value);

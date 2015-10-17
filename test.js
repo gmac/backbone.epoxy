@@ -601,7 +601,9 @@ describe("Backbone.Epoxy.View", function() {
 				".first-name": {
 					text: 'firstName',
 					attr: {
-						title: 'format("$1 $2", firstName, lastName)'
+						title: 'format("$1 $2", firstName, lastName)',
+						'data-last-name': 'lastName',
+						'"data-first-name"': 'firstName'
 					}
 				}
 			}
@@ -609,6 +611,8 @@ describe("Backbone.Epoxy.View", function() {
 
 		expect( view.$el.text() ).to.equal( "Luke" );
 		expect( view.$el.attr('title') ).to.equal( "Luke Skywalker" );
+		expect( view.$el.attr('data-last-name') ).to.equal( "Skywalker" );
+		expect( view.$el.attr('data-first-name') ).to.equal( "Luke" );
 	});
 
 	it("should include top-level view container in bindings searches.", function() {
