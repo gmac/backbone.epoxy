@@ -1,6 +1,6 @@
 // Backbone.Epoxy
 
-// (c) 2013 Greg MacWilliam
+// (c) 2015 Greg MacWilliam
 // Freely distributed under the MIT license
 // For usage and documentation:
 // http://epoxyjs.org
@@ -71,7 +71,7 @@
     constructor: function(attributes, options) {
       _.extend(this, _.pick(options||{}, modelProps));
       _super(this, 'constructor', arguments);
-      this.initComputeds(attributes, options);
+      this.initComputeds(this.attributes, options);
     },
 
     // Gets a copy of a model attribute value:
@@ -773,10 +773,14 @@
             html += self.opt(option, numOptions);
           });
         }
-
         // Set new HTML to the element and toggle disabled status:
         $element.html(html).prop('disabled', !enabled).val(currentValue);
 
+        // Forcibly set default selection:
+        if ($element[0].selectedIndex < 0 && $element.children().length) {
+          $element[0].selectedIndex = 0;
+        }
+        
         // Pull revised value with new options selection state:
         var revisedValue = $element.val();
 

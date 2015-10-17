@@ -1010,7 +1010,8 @@ describe("Backbone.Epoxy.View", function() {
 	});
 
 
-	it("binding 'options:' should bind a collection of model label/value attributes to a select element's options.", function() {
+	it ("binding 'options:' should bind a collection of model label/value attributes to a select element's options.", function() {
+		console.log('Test')
 		var $el = $(".test-select-collect");
 		modView.collection.reset([
 			{label:"Luke Skywalker", value:"Luke"},
