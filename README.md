@@ -12,4 +12,4 @@ Epoxy builds on [jQuery](http://jquery.com "jQuery.js")/[Zepto](http://zeptojs.c
 
 ## Help & Documentation
 
-For complete installation and usage documentation, visit the project's website at [epoxyjs.org](http://epoxyjs.org "Epoxy.js").
+See [documentation](https://codepen.io/anon/pen/aYMxJM).
